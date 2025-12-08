@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int           @id @default(autoincrement())
+  name            String
+  email           String        @unique
+  password        String
+  role            String // super_admin, admin_imobiliaria, diretor, gerente, corretor
+  imobiliariaId   Int?
+  imobiliaria     Imobiliaria?  @relation(fields: [imobiliariaId], references: [id])
+  diretorId       Int? // Se for gerente, aponta para o diretor
+  diretor         User?         @relation("DiretorGerentes", fields: [diretorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gerentes        User[]        @relation("DiretorGerentes")
+  gerenteId       Int? // Se for corretor, aponta para o gerente
+  gerente         User?         @relation("GerenteCorretores", fields: [gerenteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  corretores      User[]        @relation("GerenteCorretores")
+  leadsAsCorretor Lead[]        @relation("LeadCorretor")
+  atendimentos    Atendimento[]
+  propostas       Proposta[]
+  visitas         Visita[]       @relation("AtendenteVisitas")
+  dispensacoes    DispensacaoMaterial[] @relation("DispensadoPor")
+  createdAt       DateTime      @default(now())
+}
+
+model Imobiliaria {
+  id              Int              @id @default(autoincrement())
+  nome            String
+  cnpj            String
+  email           String
+  telefone        String
+  status          String // ativa, inativa, aguardando_aprovacao
+  plan            String // basic, pro, enterprise
+  usuarios        User[]
+  imoveis         Imovel[]
+  leads           Lead[]
+  empreendimentos Empreendimento[]
+  propostas       Proposta[]        @relation("ImobiliariaPropostas")
+  visitas         Visita[]
+  createdAt       DateTime         @default(now())
+}
+
+model Permissao {
+  id            Int      @id @default(autoincrement())
+  role          String // diretor, gerente, corretor
+  recurso       String // empreendimentos, propostas, leads, relatorios
+  acao          String // criar, ler, atualizar, deletar
+  permitido     Boolean  @default(true)
+  imobiliariaId Int? // null = default global, ou específico por imobiliária
+  createdAt     DateTime @default(now())
+
+  @@unique([role, recurso, acao, imobiliariaId])
+}
+
+model Imovel {
+  id            Int         @id @default(autoincrement())
+  titulo        String
+  descricao     String      @db.Text
+  valor         Float
+  endereco      String
+  cidade        String
+  estado        String
+  status        String
+  imobiliariaId Int
+  imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  createdAt     DateTime    @default(now())
+}
+
+model Lead {
+  id            Int           @id @default(autoincrement())
+  nome          String
+  email         String?
+  telefone      String
+  status        String
+  origem        String
+  corretorId    Int?
+  corretor      User?         @relation("LeadCorretor", fields: [corretorId], references: [id])
+  imobiliariaId Int
+  imobiliaria   Imobiliaria   @relation(fields: [imobiliariaId], references: [id])
+  atendimentos  Atendimento[]
+  createdAt     DateTime      @default(now())
+}
+
+model Atendimento {
+  id         Int      @id @default(autoincrement())
+  leadId     Int
+  lead       Lead     @relation(fields: [leadId], references: [id])
+  corretorId Int?
+  corretor   User?    @relation(fields: [corretorId], references: [id])
+  mensagem   String   @db.Text
+  createdAt  DateTime @default(now())
+}
+
+model Empreendimento {
+  id                     Int         @id @default(autoincrement())
+  nome                   String
+  tipoUnidade            String // lote, casa, apartamento
+  quantidadeUnidades     Int
+  imagemUrl              String?
+  bairro                 String
+  cidade                 String
+  estado                 String
+  dataLancamento         DateTime?
+  dataPrevisaoConstrucao DateTime?
+  contatoGerente1        String?
+  nomeGerente1           String?
+  contatoGerente2        String?
+  nomeGerente2           String?
+  contatoGerente3        String?
+  nomeGerente3           String?
+  contatoGerente4        String?
+  nomeGerente4           String?
+  contatoGerente5        String?
+  nomeGerente5           String?
+  imobiliariaId          Int
+  imobiliaria            Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  unidades               Unidade[]
+  propostas              Proposta[]
+  visitas                Visita[]
+  materiaisMarketing     MaterialMarketing[]
+  createdAt              DateTime    @default(now())
+}
+
+model Unidade {
+  id               Int            @id @default(autoincrement())
+  empreendimentoId Int
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  numero           String // número do lote/casa/apartamento
+  valorBase        Float
+  juros            Float          @default(0)
+  valorTotal       Float // valorBase + juros (calculado)
+  status           String         @default("disponivel") // disponivel, reservado, vendido
+  bloco            String?
+  propostas        Proposta[]
+  visitas          Visita[]
+  createdAt        DateTime       @default(now())
+}
+
+model Proposta {
+  id               Int            @id @default(autoincrement())
+  empreendimentoId Int
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id])
+  unidadeId        Int
+  unidade          Unidade        @relation(fields: [unidadeId], references: [id])
+  corretorId       Int
+  corretor         User           @relation(fields: [corretorId], references: [id])
+  imobiliariaId    Int?
+  imobiliaria      Imobiliaria?   @relation("ImobiliariaPropostas", fields: [imobiliariaId], references: [id])
+
+  // Dados do cliente
+  clienteNome        String
+  clienteSobrenome   String
+  clienteRg          String
+  clienteCpf         String
+  clienteProfissao   String
+  clienteRemuneracao Float
+
+  // Forma de pagamento
+  valorAVista     Float?
+  valor30Dias     Float?
+  valor60Dias     Float?
+  valor90Dias     Float?
+  valorMensais    Float?
+  valorSemestrais Float?
+  valorAnuais     Float?
+  valorUnico      Float?
+  saldoFinanciar  Float?
+
+  status      String   @default("pendente") // pendente, aprovada, rejeitada
+  observacoes String?  @db.Text
+  createdAt   DateTime @default(now())
+}
+
+model Visita {
+  id                 Int            @id @default(autoincrement())
+  nomeVisitante      String
+  telefoneVisitante  String
+  emailVisitante     String?
+  tipo               String // agendada, espontanea
+  dataVisita         DateTime       @default(now())
+  empreendimentoId   Int
+  empreendimento     Empreendimento @relation(fields: [empreendimentoId], references: [id])
+  unidadeId          Int?
+  unidade            Unidade?       @relation(fields: [unidadeId], references: [id])
+  imobiliariaId      Int?
+  imobiliaria        Imobiliaria?   @relation(fields: [imobiliariaId], references: [id])
+  atendenteId        Int
+  atendente          User           @relation("AtendenteVisitas", fields: [atendenteId], references: [id])
+  observacoes        String?        @db.Text
+  createdAt          DateTime       @default(now())
+}
+
+model MaterialMarketing {
+  id                 Int                   @id @default(autoincrement())
+  tipo               String // banner, folder
+  empreendimentoId   Int
+  empreendimento     Empreendimento        @relation(fields: [empreendimentoId], references: [id])
+  quantidadeInicial  Int
+  quantidadeEstoque  Int
+  descricao          String?               @db.Text
+  dispensacoes       DispensacaoMaterial[]
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+}
+
+model DispensacaoMaterial {
+  id               Int               @id @default(autoincrement())
+  materialId       Int
+  material         MaterialMarketing @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  quantidade       Int
+  dispensadoPara   String
+  dispensadoPor    Int
+  dispensadoPorUser User             @relation("DispensadoPor", fields: [dispensadoPor], references: [id])
+  dataDispensacao  DateTime          @default(now())
+  observacoes      String?           @db.Text
+}
