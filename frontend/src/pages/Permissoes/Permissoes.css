@@ -1,0 +1,162 @@
+.permissoes-container {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.permissoes-grid {
+  display: grid;
+  gap: 2rem;
+}
+
+.recurso-card {
+  animation: fadeIn 0.3s ease;
+}
+
+.recurso-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+  position: relative;
+}
+
+.recurso-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: var(--gradient-gold);
+}
+
+.recurso-icon {
+  font-size: 2rem;
+}
+
+.recurso-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.permissoes-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.matrix-header,
+.matrix-row {
+  display: grid;
+  grid-template-columns: 150px repeat(4, 1fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.matrix-cell {
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-cell {
+  font-weight: 600;
+  color: var(--dark);
+  font-size: 0.875rem;
+}
+
+.role-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.role-header span:first-child {
+  font-size: 1.5rem;
+}
+
+.action-cell {
+  justify-content: flex-start;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.checkbox-container {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkbox-custom {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: var(--white);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  transition: var(--transition);
+}
+
+.checkbox-container:hover .checkbox-custom {
+  border-color: var(--gold);
+}
+
+.checkbox-container input:checked ~ .checkbox-custom {
+  background: var(--gradient-gold);
+  border-color: var(--gold);
+}
+
+.checkbox-container input:checked ~ .checkbox-custom::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--dark);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .permissoes-container {
+    padding: 1rem;
+  }
+
+  .matrix-header,
+  .matrix-row {
+    grid-template-columns: 100px repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .matrix-cell {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .role-header span:last-child {
+    display: none;
+  }
+}

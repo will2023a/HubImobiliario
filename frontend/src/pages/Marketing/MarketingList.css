@@ -1,0 +1,108 @@
+.marketing-container {
+  padding: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.materiais-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.material-card {
+  padding: 1.5rem !important;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.material-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.material-tipo {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.material-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 0.25rem;
+}
+
+.material-info p {
+  font-size: 0.875rem;
+  color: var(--gray-600);
+}
+
+.material-body {
+  flex: 1;
+}
+
+.material-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.stat-text {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+}
+
+.material-status {
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.material-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.material-actions a {
+  flex: 1;
+}
+
+.material-actions button {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .marketing-container {
+    padding: 1rem;
+  }
+
+  .materiais-grid {
+    grid-template-columns: 1fr;
+  }
+}

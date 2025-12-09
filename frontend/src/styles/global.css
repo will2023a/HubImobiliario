@@ -1,0 +1,140 @@
+/* Design System - Preto, Branco, Cinza e Dourado */
+:root {
+  /* Cores Principais - Dourado */
+  --primary: #d4af37;
+  --primary-dark: #c9a227;
+  --primary-light: #f0d474;
+  
+  --gold: #d4af37;
+  --gold-dark: #b8941f;
+  --gold-light: #e8c766;
+  
+  --secondary: #1a1a1a;
+  --secondary-dark: #0a0a0a;
+  
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
+  
+  /* Tons de Cinza */
+  --black: #000000;
+  --dark: #1a1a1a;
+  --gray-900: #2d2d2d;
+  --gray-800: #3d3d3d;
+  --gray-700: #4d4d4d;
+  --gray-600: #666666;
+  --gray-500: #808080;
+  --gray-400: #999999;
+  --gray-300: #b3b3b3;
+  --gray-200: #cccccc;
+  --gray-100: #e0e0e0;
+  --gray-50: #f5f5f5;
+  --white: #ffffff;
+  
+  /* Backgrounds */
+  --bg-primary: #fafafa;
+  --bg-secondary: #f5f5f5;
+  --bg-dark: #1a1a1a;
+  
+  /* Texto */
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --text-light: #ffffff;
+  
+  /* Bordas */
+  --border-color: #e0e0e0;
+  --border-gold: rgba(212, 175, 55, 0.3);
+  --border-radius: 0.5rem;
+  --border-radius-lg: 1rem;
+  
+  /* Sombras */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 15px 25px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.25);
+  --shadow-gold: 0 4px 15px rgba(212, 175, 55, 0.4);
+  
+  /* Gradientes */
+  --gradient-gold: linear-gradient(135deg, #d4af37 0%, #c9a227 50%, #d4af37 100%);
+  --gradient-dark: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  
+  /* Transições */
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Scrollbar Customizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}

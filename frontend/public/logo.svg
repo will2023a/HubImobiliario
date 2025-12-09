@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 { fill: #005f5f; }
+      .cls-2 { fill: #007f7f; }
+    </style>
+  </defs>
+  <!-- Outline of main building -->
+  <path class="cls-1" d="M145,130 L250,70 L355,130 L355,380 L145,380 Z"/>
+  <!-- Windows of main building -->
+  <rect class="cls-2" x="190" y="140" width="20" height="30"/>
+  <rect class="cls-2" x="230" y="140" width="20" height="30"/>
+  <rect class="cls-2" x="270" y="140" width="20" height="30"/>
+  <rect class="cls-2" x="190" y="190" width="20" height="30"/>
+  <rect class="cls-2" x="230" y="190" width="20" height="30"/>
+  <rect class="cls-2" x="270" y="190" width="20" height="30"/>
+  <rect class="cls-2" x="190" y="240" width="20" height="30"/>
+  <rect class="cls-2" x="230" y="240" width="20" height="30"/>
+  <rect class="cls-2" x="270" y="240" width="20" height="30"/>
+  <rect class="cls-2" x="190" y="290" width="20" height="30"/>
+  <rect class="cls-2" x="230" y="290" width="20" height="30"/>
+  <rect class="cls-2" x="270" y="290" width="20" height="30"/>
+  <!-- Secondary smaller building -->
+  <path class="cls-1" d="M230,180 L300,150 L370,180 L370,380 L230,380 Z"/>
+  <!-- Windows of secondary building -->
+  <rect class="cls-2" x="255" y="200" width="15" height="25"/>
+  <rect class="cls-2" x="285" y="200" width="15" height="25"/>
+  <rect class="cls-2" x="315" y="200" width="15" height="25"/>
+  <rect class="cls-2" x="255" y="245" width="15" height="25"/>
+  <rect class="cls-2" x="285" y="245" width="15" height="25"/>
+  <rect class="cls-2" x="315" y="245" width="15" height="25"/>
+  <rect class="cls-2" x="255" y="290" width="15" height="25"/>
+  <rect class="cls-2" x="285" y="290" width="15" height="25"/>
+  <rect class="cls-2" x="315" y="290" width="15" height="25"/>
+  <!-- Outline border -->
+  <path class="cls-1" stroke="#005f5f" stroke-width="8" fill="none" 
+        d="M145,130 L250,70 L355,130 L355,180 L370,180 L300,150 L230,180 L230,380 L145,380 Z"/>
+  <path class="cls-1" stroke="#005f5f" stroke-width="8" fill="none" 
+        d="M370,180 L370,380 L230,380"/>
+  <!-- Text -->
+  <text x="250" y="430" font-family="Arial, sans-serif" font-size="48" font-weight="bold" 
+        fill="#005f5f" text-anchor="middle">HUB</text>
+  <text x="250" y="470" font-family="Arial, sans-serif" font-size="24" 
+        fill="#005f5f" text-anchor="middle">IMOBILIÁRIO</text>
+</svg>

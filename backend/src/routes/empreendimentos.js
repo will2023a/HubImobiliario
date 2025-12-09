@@ -11,15 +11,53 @@ router.use(multitenant);
 
 // Criar empreendimento
 router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res) => {
-  const data = { 
-    ...req.body, 
-    imobiliariaId: req.body.imobiliariaId || req.imobiliariaId 
-  };
-  
   try {
+    // Permitir que super_admin ou usuário envie imobiliariaId
+    // Se usuário tem imobiliariaId, usar o dele (exceto se for super_admin)
+    let imobiliariaId;
+    
+    if (req.user.role === 'super_admin') {
+      // Super admin pode criar para qualquer imobiliária
+      imobiliariaId = req.body.imobiliariaId || req.user.imobiliariaId;
+    } else if (req.user.imobiliariaId) {
+      // Usuário com imobiliária usa a dele
+      imobiliariaId = req.user.imobiliariaId;
+    } else {
+      // Usuário sem imobiliária precisa informar
+      imobiliariaId = req.body.imobiliariaId;
+    }
+
+    if (!imobiliariaId) {
+      return res.status(400).json({ 
+        error: 'imobiliariaId é obrigatório. Usuário não possui imobiliária associada e nenhuma foi informada.' 
+      });
+    }
+
+    // Preparar dados removendo campos vazios
+    const cleanData = { ...req.body };
+    delete cleanData.imobiliariaId; // Remover para adicionar depois tratado
+    
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === '' || cleanData[key] === null || cleanData[key] === undefined) {
+        delete cleanData[key];
+      }
+    });
+
+    const data = { 
+      ...cleanData, 
+      imobiliariaId: parseInt(imobiliariaId),
+      quantidadeUnidades: parseInt(req.body.quantidadeUnidades),
+      // Converter datas string para Date se fornecidas
+      dataLancamento: req.body.dataLancamento ? new Date(req.body.dataLancamento) : undefined,
+      dataPrevisaoConstrucao: req.body.dataPrevisaoConstrucao ? new Date(req.body.dataPrevisaoConstrucao) : undefined
+    };
+
+    console.log('Criando empreendimento com dados:', JSON.stringify(data, null, 2));
+    
     const empreendimento = await prisma.empreendimento.create({ data });
     res.json(empreendimento);
   } catch (err) {
+    console.error('Erro ao criar empreendimento:', err);
     res.status(400).json({ error: 'Erro ao criar empreendimento', details: err.message });
   }
 });

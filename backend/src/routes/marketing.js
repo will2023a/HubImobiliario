@@ -30,6 +30,20 @@ router.post('/', requirePermission('marketing', 'criar'), async (req, res) => {
   }
 
   try {
+    // Verificar se o empreendimento pertence à imobiliária do usuário
+    if (req.user.role !== 'super_admin') {
+      const empreendimento = await prisma.empreendimento.findUnique({
+        where: { id: parseInt(empreendimentoId) },
+        select: { imobiliariaId: true }
+      });
+      
+      if (!empreendimento || empreendimento.imobiliariaId !== req.user.imobiliariaId) {
+        return res.status(403).json({ 
+          error: 'Acesso negado a este empreendimento' 
+        });
+      }
+    }
+
     const material = await prisma.materialMarketing.create({
       data: {
         tipo,
@@ -53,10 +67,40 @@ router.post('/', requirePermission('marketing', 'criar'), async (req, res) => {
   }
 });
 
-// Listar materiais
+// Listar materiais (filtrados por empreendimento e imobiliária)
 router.get('/', requirePermission('marketing', 'ler'), async (req, res) => {
+  const { empreendimentoId } = req.query;
+  const where = {};
+
+  // Filtrar por empreendimento se fornecido
+  if (empreendimentoId) {
+    where.empreendimentoId = parseInt(empreendimentoId);
+    
+    // Verificar se o empreendimento pertence à imobiliária do usuário
+    if (req.user.role !== 'super_admin') {
+      const empreendimento = await prisma.empreendimento.findUnique({
+        where: { id: parseInt(empreendimentoId) },
+        select: { imobiliariaId: true }
+      });
+      
+      if (!empreendimento || empreendimento.imobiliariaId !== req.user.imobiliariaId) {
+        return res.status(403).json({ 
+          error: 'Acesso negado a este empreendimento' 
+        });
+      }
+    }
+  }
+
+  // Filtrar por imobiliária (exceto super_admin)
+  if (req.user.role !== 'super_admin' && req.user.imobiliariaId) {
+    where.empreendimento = {
+      imobiliariaId: req.user.imobiliariaId
+    };
+  }
+
   try {
     const materiais = await prisma.materialMarketing.findMany({
+      where,
       include: {
         empreendimento: { select: { id: true, nome: true } }
       },
