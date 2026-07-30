@@ -16,6 +16,11 @@ const unidadesRoutes = require('./routes/unidades');
 const propostasRoutes = require('./routes/propostas');
 const visitasRoutes = require('./routes/visitas');
 const marketingRoutes = require('./routes/marketing');
+const pipelineRoutes = require('./routes/pipeline');
+const tasksRoutes = require('./routes/tasks');
+const notificationsRoutes = require('./routes/notifications');
+const searchRoutes = require('./routes/search');
+const configRoutes = require('./routes/config');
 
 const app = express();
 
@@ -36,7 +41,12 @@ app.use('/unidades', unidadesRoutes);
 app.use('/propostas', propostasRoutes);
 app.use('/visitas', visitasRoutes);
 app.use('/marketing', marketingRoutes);
+app.use('/pipeline', pipelineRoutes);
+app.use('/tasks', tasksRoutes);
+app.use('/notifications', notificationsRoutes);
+app.use('/search', searchRoutes);
+app.use('/config', configRoutes);
 
-app.get('/', (req, res) => res.json({ ok: true, message: 'CRM Imobiliário API' }));
+app.get('/', (req, res) => res.json({ ok: true, message: 'Gestor Pro 360 API' }));
 
 module.exports = app;

@@ -1,0 +1,54 @@
+.perfil-page {
+  max-width: 700px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.perfil-header-card {
+  margin-bottom: 1.5rem;
+}
+
+.perfil-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.perfil-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.perfil-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.perfil-email {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.perfil-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.perfil-msg {
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.msg-success { color: var(--success); }
+.msg-error { color: var(--error); }
+
+@media (max-width: 480px) {
+  .perfil-info {
+    flex-direction: column;
+    text-align: center;
+  }
+}

@@ -26,6 +26,8 @@ model User {
   propostas       Proposta[]
   visitas         Visita[]       @relation("AtendenteVisitas")
   dispensacoes    DispensacaoMaterial[] @relation("DispensadoPor")
+  tasks           Task[]         @relation("UserTasks")
+  notifications   Notification[] @relation("UserNotifications")
   createdAt       DateTime      @default(now())
 }
 
@@ -43,6 +45,10 @@ model Imobiliaria {
   empreendimentos Empreendimento[]
   propostas       Proposta[]        @relation("ImobiliariaPropostas")
   visitas         Visita[]
+  pipelineStages  PipelineStage[]
+  tasks           Task[]
+  notifications   Notification[]
+  config          ConfigImobiliaria?
   createdAt       DateTime         @default(now())
 }
 
@@ -79,11 +85,14 @@ model Lead {
   telefone      String
   status        String
   origem        String
+  temperatura   String?       @default("morno") // quente, morno, frio
   corretorId    Int?
   corretor      User?         @relation("LeadCorretor", fields: [corretorId], references: [id])
   imobiliariaId Int
   imobiliaria   Imobiliaria   @relation(fields: [imobiliariaId], references: [id])
   atendimentos  Atendimento[]
+  pipeline      LeadPipeline?
+  tasks         Task[]        @relation("LeadTasks")
   createdAt     DateTime      @default(now())
 }
 
@@ -219,4 +228,88 @@ model DispensacaoMaterial {
   dispensadoPorUser User             @relation("DispensadoPor", fields: [dispensadoPor], references: [id])
   dataDispensacao  DateTime          @default(now())
   observacoes      String?           @db.Text
+}
+
+// ===== PIPELINE CRM =====
+
+model PipelineStage {
+  id            Int           @id @default(autoincrement())
+  nome          String
+  ordem         Int
+  cor           String        @default("#3b82f6")
+  imobiliariaId Int
+  imobiliaria   Imobiliaria   @relation(fields: [imobiliariaId], references: [id])
+  leads         LeadPipeline[]
+  createdAt     DateTime      @default(now())
+
+  @@unique([imobiliariaId, ordem])
+}
+
+model LeadPipeline {
+  id             Int           @id @default(autoincrement())
+  leadId         Int           @unique
+  lead           Lead          @relation(fields: [leadId], references: [id])
+  stageId        Int
+  stage          PipelineStage @relation(fields: [stageId], references: [id])
+  temperatura    String        @default("morno") // quente, morno, frio
+  valorPotencial Float?
+  enteredStageAt DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+// ===== TAREFAS =====
+
+model Task {
+  id            Int         @id @default(autoincrement())
+  titulo        String
+  descricao     String?     @db.Text
+  tipo          String      // follow_up, ligacao, visita, documentacao, outro
+  prioridade    String      @default("media") // baixa, media, alta
+  status        String      @default("pendente") // pendente, concluida, atrasada
+  prazo         DateTime
+  concluidaEm   DateTime?
+  userId        Int
+  user          User        @relation("UserTasks", fields: [userId], references: [id])
+  leadId        Int?
+  lead          Lead?       @relation("LeadTasks", fields: [leadId], references: [id])
+  imobiliariaId Int
+  imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  createdAt     DateTime    @default(now())
+}
+
+// ===== NOTIFICAÇÕES =====
+
+model Notification {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation("UserNotifications", fields: [userId], references: [id])
+  tipo          String      // nova_mensagem, nova_proposta, proposta_aprovada, lead_atribuido, lembrete_tarefa
+  titulo        String
+  mensagem      String
+  lida          Boolean     @default(false)
+  link          String?     // URL de destino ao clicar
+  imobiliariaId Int
+  imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, lida])
+}
+
+// ===== CONFIGURAÇÕES DA IMOBILIÁRIA =====
+
+model ConfigImobiliaria {
+  id                 Int         @id @default(autoincrement())
+  imobiliariaId      Int         @unique
+  imobiliaria        Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  logoUrl            String?
+  corPrimaria        String      @default("#6366f1")
+  corSecundaria      String      @default("#8b5cf6")
+  tema               String      @default("dark") // dark, light
+  horarioInicio      String      @default("08:00")
+  horarioFim         String      @default("18:00")
+  comissaoCorretor   Float       @default(3.0)
+  comissaoGerente    Float       @default(1.0)
+  comissaoDiretor    Float       @default(0.5)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 }

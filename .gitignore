@@ -35,3 +35,8 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Docker volumes
+mysql_data/
+redis_data/
+minio_data/
