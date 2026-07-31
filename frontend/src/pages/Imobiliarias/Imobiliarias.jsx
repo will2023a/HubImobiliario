@@ -3,6 +3,7 @@ import api from '../../services/api'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
+import Modal from '../../components/ui/Modal'
 import './Imobiliarias.css'
 
 export default function Imobiliarias() {
@@ -10,6 +11,15 @@ export default function Imobiliarias() {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('todos')
   const [searchTerm, setSearchTerm] = useState('')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+  const [createForm, setCreateForm] = useState({
+    nome: '',
+    cnpj: '',
+    email: '',
+    telefone: ''
+  })
 
   useEffect(() => {
     loadImobiliarias()
@@ -38,23 +48,66 @@ export default function Imobiliarias() {
     }
   }
 
+  const handleCreateInput = (field, value) => {
+    setCreateForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const resetCreateForm = () => {
+    setCreateForm({ nome: '', cnpj: '', email: '', telefone: '' })
+    setCreateError('')
+  }
+
+  const closeCreateModal = () => {
+    if (creating) return
+    setShowCreateModal(false)
+    resetCreateForm()
+  }
+
+  const handleCreateImobiliaria = async (e) => {
+    e.preventDefault()
+    setCreateError('')
+
+    if (!createForm.nome || !createForm.cnpj || !createForm.email || !createForm.telefone) {
+      setCreateError('Preencha todos os campos obrigatórios.')
+      return
+    }
+
+    try {
+      setCreating(true)
+      await api.post('/imobiliarias', createForm)
+      await loadImobiliarias()
+      setShowCreateModal(false)
+      resetCreateForm()
+      alert('Imobiliária criada com sucesso!')
+    } catch (error) {
+      const message = error.response?.data?.error || 'Erro ao criar imobiliária.'
+      setCreateError(message)
+    } finally {
+      setCreating(false)
+    }
+  }
+
   const filteredImobiliarias = imobiliarias.filter(imob => {
     const matchSearch = imob.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                        imob.cnpj?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchStatus = filterStatus === 'todos' || imob.status === filterStatus
+    const isPendente = imob.status === 'pendente' || imob.status === 'aguardando_aprovacao'
+    const matchStatus =
+      filterStatus === 'todos' ||
+      (filterStatus === 'pendente' ? isPendente : imob.status === filterStatus)
     return matchSearch && matchStatus
   })
 
   const statusConfig = {
     ativa: { label: 'Ativa', color: '#10b981', icon: '✓' },
     pendente: { label: 'Pendente', color: '#f59e0b', icon: '⏳' },
+    aguardando_aprovacao: { label: 'Pendente', color: '#f59e0b', icon: '⏳' },
     inativa: { label: 'Inativa', color: '#ef4444', icon: '✕' }
   }
 
   const stats = {
     total: imobiliarias.length,
     ativas: imobiliarias.filter(i => i.status === 'ativa').length,
-    pendentes: imobiliarias.filter(i => i.status === 'pendente').length,
+    pendentes: imobiliarias.filter(i => i.status === 'pendente' || i.status === 'aguardando_aprovacao').length,
     inativas: imobiliarias.filter(i => i.status === 'inativa').length
   }
 
@@ -65,6 +118,9 @@ export default function Imobiliarias() {
           <h1 className="page-title">Gestão de Imobiliárias</h1>
           <p className="page-subtitle">Administração global de todas as imobiliárias</p>
         </div>
+        <Button icon="+" onClick={() => setShowCreateModal(true)}>
+          Criar Imobiliária
+        </Button>
       </div>
 
       <div className="stats-grid">
@@ -157,7 +213,7 @@ export default function Imobiliarias() {
                     </td>
                     <td>
                       <div className="actions">
-                        {imob.status === 'pendente' && (
+                        {(imob.status === 'pendente' || imob.status === 'aguardando_aprovacao') && (
                           <>
                             <Button
                               size="sm"
@@ -202,6 +258,60 @@ export default function Imobiliarias() {
           </div>
         )}
       </Card>
+
+      <Modal
+        isOpen={showCreateModal}
+        onClose={closeCreateModal}
+        title="Nova Imobiliária"
+        size="md"
+        footer={(
+          <>
+            <Button variant="secondary" onClick={closeCreateModal} disabled={creating}>
+              Cancelar
+            </Button>
+            <Button type="submit" form="create-imobiliaria-form" loading={creating}>
+              Criar Imobiliária
+            </Button>
+          </>
+        )}
+      >
+        <form id="create-imobiliaria-form" className="create-imob-form" onSubmit={handleCreateImobiliaria}>
+          <Input
+            label="Nome"
+            placeholder="Nome da imobiliária"
+            value={createForm.nome}
+            onChange={(e) => handleCreateInput('nome', e.target.value)}
+            required
+            fullWidth
+          />
+          <Input
+            label="CNPJ"
+            placeholder="00.000.000/0000-00"
+            value={createForm.cnpj}
+            onChange={(e) => handleCreateInput('cnpj', e.target.value)}
+            required
+            fullWidth
+          />
+          <Input
+            label="Email"
+            type="email"
+            placeholder="contato@imobiliaria.com"
+            value={createForm.email}
+            onChange={(e) => handleCreateInput('email', e.target.value)}
+            required
+            fullWidth
+          />
+          <Input
+            label="Telefone"
+            placeholder="(11) 99999-9999"
+            value={createForm.telefone}
+            onChange={(e) => handleCreateInput('telefone', e.target.value)}
+            required
+            fullWidth
+          />
+          {createError && <p className="form-error">{createError}</p>}
+        </form>
+      </Modal>
     </div>
   )
 }

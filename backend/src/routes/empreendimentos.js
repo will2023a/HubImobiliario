@@ -33,9 +33,21 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
       });
     }
 
+    // Dados extras opcionais para fluxo de cadastro avançado
+    const additionalImobiliariaIds = Array.isArray(req.body.additionalImobiliariaIds)
+      ? req.body.additionalImobiliariaIds
+      : [];
+    const configuracaoApartamento = req.body.configuracaoApartamento || null;
+    const galeria = Array.isArray(req.body.galeria) ? req.body.galeria : [];
+    const tabelaPreco = req.body.tabelaPreco || null;
+
     // Preparar dados removendo campos vazios
     const cleanData = { ...req.body };
     delete cleanData.imobiliariaId; // Remover para adicionar depois tratado
+    delete cleanData.additionalImobiliariaIds;
+    delete cleanData.configuracaoApartamento;
+    delete cleanData.galeria;
+    delete cleanData.tabelaPreco;
     
     Object.keys(cleanData).forEach(key => {
       if (cleanData[key] === '' || cleanData[key] === null || cleanData[key] === undefined) {
@@ -43,7 +55,7 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
       }
     });
 
-    const data = { 
+    const data = {
       ...cleanData, 
       imobiliariaId: parseInt(imobiliariaId),
       quantidadeUnidades: parseInt(req.body.quantidadeUnidades),
@@ -52,9 +64,125 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
       dataPrevisaoConstrucao: req.body.dataPrevisaoConstrucao ? new Date(req.body.dataPrevisaoConstrucao) : undefined
     };
 
+    if (data.tipoUnidade === 'apartamento' && configuracaoApartamento) {
+      const blocos = parseInt(configuracaoApartamento.blocosCount || 0);
+      const andares = parseInt(configuracaoApartamento.andaresPorBloco || 0);
+      const aptos = parseInt(configuracaoApartamento.apartamentosPorAndar || 0);
+
+      if (blocos > 0 && andares > 0 && aptos > 0) {
+        data.blocosCount = blocos;
+        data.andaresPorBloco = andares;
+        data.apartamentosPorAndar = aptos;
+        data.quantidadeUnidades = blocos * andares * aptos;
+      }
+    }
+
     console.log('Criando empreendimento com dados:', JSON.stringify(data, null, 2));
-    
-    const empreendimento = await prisma.empreendimento.create({ data });
+
+    const empreendimento = await prisma.$transaction(async (tx) => {
+      const created = await tx.empreendimento.create({ data });
+
+      const equipeIds = Array.from(new Set([
+        parseInt(imobiliariaId),
+        ...additionalImobiliariaIds
+          .map((id) => parseInt(id))
+          .filter((id) => !isNaN(id))
+      ]));
+
+      if (equipeIds.length > 0) {
+        await tx.empreendimentoEquipe.createMany({
+          data: equipeIds.map((id) => ({
+            empreendimentoId: created.id,
+            imobiliariaId: id,
+            comissaoPercent: 5.0,
+            ativa: true
+          })),
+          skipDuplicates: true
+        });
+      }
+
+      if (galeria.length > 0) {
+        const galeriaData = galeria
+          .filter((img) => img && typeof img.url === 'string' && img.url.trim().length > 0)
+          .map((img, idx) => ({
+            empreendimentoId: created.id,
+            url: img.url,
+            categoria: img.categoria || 'outros',
+            titulo: img.titulo || null,
+            isCapa: Boolean(img.isCapa),
+            ordem: idx
+          }));
+
+        if (galeriaData.length > 0) {
+          await tx.galeriaImagem.createMany({ data: galeriaData });
+          const capa = galeriaData.find((img) => img.isCapa) || galeriaData[0];
+          if (capa?.url) {
+            await tx.empreendimento.update({
+              where: { id: created.id },
+              data: { imagemUrl: capa.url }
+            });
+          }
+        }
+      }
+
+      if (data.tipoUnidade === 'apartamento' && data.blocosCount && data.andaresPorBloco && data.apartamentosPorAndar) {
+        const valorBasePadrao = parseFloat(configuracaoApartamento?.valorBasePadrao || 0);
+        const jurosPadrao = parseFloat(configuracaoApartamento?.jurosPadrao || 0);
+        const unidades = [];
+
+        for (let bloco = 1; bloco <= data.blocosCount; bloco += 1) {
+          for (let andar = 1; andar <= data.andaresPorBloco; andar += 1) {
+            for (let apto = 1; apto <= data.apartamentosPorAndar; apto += 1) {
+              const numero = `B${String(bloco).padStart(2, '0')}-A${String(andar).padStart(2, '0')}-AP${String(apto).padStart(2, '0')}`;
+              unidades.push({
+                empreendimentoId: created.id,
+                numero,
+                bloco: `Bloco ${bloco}`,
+                valorBase: valorBasePadrao,
+                juros: jurosPadrao,
+                valorTotal: valorBasePadrao + jurosPadrao
+              });
+            }
+          }
+        }
+
+        if (unidades.length > 0) {
+          await tx.unidade.createMany({ data: unidades });
+        }
+      }
+
+      if (tabelaPreco && tabelaPreco.nome) {
+        const itens = Array.isArray(tabelaPreco.itens) ? tabelaPreco.itens : [];
+
+        await tx.tabelaPreco.create({
+          data: {
+            empreendimentoId: created.id,
+            nome: tabelaPreco.nome,
+            grupo: tabelaPreco.grupo || 'padrao',
+            modelo: tabelaPreco.modelo || 'modelo_1',
+            incluirDesconto: Boolean(tabelaPreco.incluirDesconto),
+            incluirJuros: Boolean(tabelaPreco.incluirJuros),
+            itens: itens.length > 0
+              ? {
+                  create: itens.map((item, idx) => ({
+                    descricao: item.descricao || `Item ${idx + 1}`,
+                    valor: parseFloat(item.valor) || 0,
+                    parcelas: item.parcelas ? parseInt(item.parcelas) : null,
+                    valorParcela: item.valorParcela ? parseFloat(item.valorParcela) : null,
+                    desconto: item.desconto ? parseFloat(item.desconto) : null,
+                    juros: item.juros ? parseFloat(item.juros) : null,
+                    observacao: item.observacao || null,
+                    ordem: idx
+                  }))
+                }
+              : undefined
+          }
+        });
+      }
+
+      return created;
+    });
+
     res.json(empreendimento);
   } catch (err) {
     console.error('Erro ao criar empreendimento:', err);
@@ -93,6 +221,21 @@ router.get('/:id', requirePermission('empreendimentos', 'ler'), async (req, res)
     const empreendimento = await prisma.empreendimento.findUnique({ 
       where: { id },
       include: {
+        galeria: {
+          orderBy: { ordem: 'asc' }
+        },
+        equipes: {
+          include: {
+            imobiliaria: { select: { id: true, nome: true, status: true } }
+          }
+        },
+        tabelasPreco: {
+          include: {
+            itens: {
+              orderBy: { ordem: 'asc' }
+            }
+          }
+        },
         unidades: {
           include: {
             _count: { select: { propostas: true } }

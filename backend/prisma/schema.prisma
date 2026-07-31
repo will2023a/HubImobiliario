@@ -113,7 +113,10 @@ model Empreendimento {
   nome                   String
   tipoUnidade            String // lote, casa, apartamento
   quantidadeUnidades     Int
-  imagemUrl              String?
+  imagemUrl              String?     @db.LongText
+  blocosCount            Int?
+  andaresPorBloco        Int?
+  apartamentosPorAndar   Int?
   bairro                 String
   cidade                 String
   estado                 String
@@ -329,9 +332,10 @@ model GaleriaImagem {
   id               Int            @id @default(autoincrement())
   empreendimentoId Int
   empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
-  url              String
+  url              String         @db.LongText
   categoria        String         // fachada, areas_comuns, decorados, plantas, outros
   titulo           String?
+  isCapa           Boolean        @default(false)
   ordem            Int            @default(0)
   createdAt        DateTime       @default(now())
 }
