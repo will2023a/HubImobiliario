@@ -5,6 +5,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import VisitasList from '../Visitas/VisitasList'
 import MarketingList from '../Marketing/MarketingList'
+import MapaDisponibilidade from './MapaDisponibilidade'
 import './EmpreendimentoDashboard.css'
 
 export default function EmpreendimentoDashboard() {
@@ -190,6 +191,12 @@ export default function EmpreendimentoDashboard() {
         >
           💰 Gerador de Propostas
         </button>
+        <button
+          className={`tab ${activeTab === 'mapa' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('mapa')}
+        >
+          🗺️ Mapa de Disponibilidade
+        </button>
       </div>
 
       {/* Content */}
@@ -363,6 +370,13 @@ export default function EmpreendimentoDashboard() {
             )}
           </div>
         </Card>
+      )}
+
+      {activeTab === 'mapa' && (
+        <MapaDisponibilidade
+          unidades={unidades}
+          empreendimentoNome={empreendimento.nome}
+        />
       )}
     </div>
   )

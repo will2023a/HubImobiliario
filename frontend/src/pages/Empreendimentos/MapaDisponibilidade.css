@@ -1,0 +1,256 @@
+.mapa-disp { animation: fadeIn 0.3s ease-out; }
+
+.mapa-disp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.mapa-disp-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.mapa-disp-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mapa-disp-select {
+  padding: 0.4rem 2rem 0.4rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: var(--white);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.4rem center;
+  background-repeat: no-repeat;
+  background-size: 1.1em 1.1em;
+}
+
+.mapa-disp-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.8rem;
+  font-family: inherit;
+  background: var(--white);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mapa-disp-btn.active {
+  background: var(--gold);
+  color: var(--dark);
+  border-color: var(--gold);
+}
+
+/* Legenda */
+.mapa-disp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border-radius: var(--border-radius);
+}
+
+.mapa-disp-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-family: inherit;
+  cursor: pointer;
+  background: var(--white);
+  transition: var(--transition);
+}
+
+.mapa-disp-legend-item:hover {
+  border-color: var(--gray-300);
+}
+
+.legend-active {
+  border-color: var(--gold) !important;
+  background: rgba(212, 175, 55, 0.08);
+  font-weight: 600;
+}
+
+.legend-dimmed {
+  opacity: 0.4;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  white-space: nowrap;
+}
+
+/* Resumo */
+.mapa-disp-resumo {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+}
+
+.mapa-disp-resumo h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.resumo-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.resumo-item {
+  display: grid;
+  grid-template-columns: 10px 1fr 50px 120px;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.resumo-item:last-child { border-bottom: none; }
+
+.resumo-total {
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 2px solid var(--border-color);
+  border-bottom: none;
+}
+
+.resumo-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.resumo-qty {
+  text-align: center;
+  font-weight: 600;
+}
+
+.resumo-valor {
+  text-align: right;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+/* Grid de Unidades */
+.mapa-disp-grid-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mapa-disp-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary);
+}
+
+.mapa-disp-group-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.mapa-disp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+}
+
+.mapa-grid-compact {
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 0.25rem;
+}
+
+.mapa-disp-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 0.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background: var(--white);
+  text-align: center;
+  transition: var(--transition);
+  overflow: hidden;
+  cursor: default;
+}
+
+.mapa-disp-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: var(--status-color, var(--border-color));
+}
+
+.cell-vendido {
+  background: rgba(239, 68, 68, 0.06) !important;
+  border-color: #ef4444 !important;
+}
+
+.cell-numero {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cell-valor {
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.cell-status {
+  font-size: 0.6rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cell-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+/* Compact mode */
+.mapa-grid-compact .mapa-disp-cell {
+  padding: 0.4rem;
+}
+
+.mapa-grid-compact .cell-numero {
+  font-size: 0.7rem;
+}

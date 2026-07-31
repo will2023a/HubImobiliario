@@ -144,7 +144,7 @@ model Unidade {
   valorBase        Float
   juros            Float          @default(0)
   valorTotal       Float // valorBase + juros (calculado)
-  status           String         @default("disponivel") // disponivel, reservado, vendido
+  status           String         @default("disponivel") // disponivel, reservada, em_aprovacao, em_negociacao, venda_suspensa, vendido, permuta, alugada, fora_de_venda, pre_reservada
   bloco            String?
   propostas        Proposta[]
   visitas          Visita[]
