@@ -8,6 +8,7 @@ import MarketingList from '../Marketing/MarketingList'
 import MapaDisponibilidade from './MapaDisponibilidade'
 import MiniMap from '../../components/shared/MiniMap'
 import ImageGallery from '../../components/shared/ImageGallery'
+import TabelaPrecos from './TabelaPrecos'
 import './EmpreendimentoDashboard.css'
 
 export default function EmpreendimentoDashboard() {
@@ -170,6 +171,12 @@ export default function EmpreendimentoDashboard() {
           🏠 Unidades ({unidades.length})
         </button>
         <button
+          className={`tab ${activeTab === 'tabela-preco' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('tabela-preco')}
+        >
+          💰 Tabela de Preços
+        </button>
+        <button
           className={`tab ${activeTab === 'propostas' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('propostas')}
         >
@@ -287,6 +294,10 @@ export default function EmpreendimentoDashboard() {
             </div>
           </div>
         </Card>
+      )}
+
+      {activeTab === 'tabela-preco' && (
+        <TabelaPrecos empreendimentoId={id} />
       )}
 
       {activeTab === 'unidades' && (

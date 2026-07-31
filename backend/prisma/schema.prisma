@@ -39,6 +39,7 @@ model Imobiliaria {
   telefone        String
   status          String // ativa, inativa, aguardando_aprovacao
   plan            String // basic, pro, enterprise
+  comissaoPercent Float            @default(5.0) // % de comissão padrão desta imobiliária
   usuarios        User[]
   imoveis         Imovel[]
   leads           Lead[]
@@ -49,6 +50,7 @@ model Imobiliaria {
   tasks           Task[]
   notifications   Notification[]
   config          ConfigImobiliaria?
+  empreendimentosVinculados EmpreendimentoEquipe[]
   createdAt       DateTime         @default(now())
 }
 
@@ -138,6 +140,8 @@ model Empreendimento {
   visitas                Visita[]
   materiaisMarketing     MaterialMarketing[]
   galeria                GaleriaImagem[]
+  equipes                EmpreendimentoEquipe[]
+  tabelasPreco           TabelaPreco[]
   createdAt              DateTime    @default(now())
 }
 
@@ -330,4 +334,52 @@ model GaleriaImagem {
   titulo           String?
   ordem            Int            @default(0)
   createdAt        DateTime       @default(now())
+}
+
+// ===== VINCULAÇÃO EQUIPE (IMOBILIÁRIA) ↔ EMPREENDIMENTO =====
+
+model EmpreendimentoEquipe {
+  id               Int            @id @default(autoincrement())
+  empreendimentoId Int
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  imobiliariaId    Int
+  imobiliaria      Imobiliaria    @relation(fields: [imobiliariaId], references: [id])
+  comissaoPercent  Float          @default(5.0) // % de comissão específica para esta equipe neste empreendimento
+  ativa            Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+
+  @@unique([empreendimentoId, imobiliariaId])
+}
+
+// ===== TABELA DE PREÇOS (NCC) =====
+
+model TabelaPreco {
+  id               Int            @id @default(autoincrement())
+  empreendimentoId Int
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  nome             String         // Ex: "Tabela Padrão", "Tabela Promocional", "NCC Julho 2026"
+  grupo            String         @default("padrao") // padrao, promocional, especial
+  modelo           String         @default("modelo_1") // modelo_1 a modelo_5, flex_01, flex_02
+  ativa            Boolean        @default(true)
+  incluirDesconto  Boolean        @default(false)
+  incluirJuros     Boolean        @default(false)
+  itens            TabelaPrecoItem[]
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model TabelaPrecoItem {
+  id             Int         @id @default(autoincrement())
+  tabelaId       Int
+  tabela         TabelaPreco @relation(fields: [tabelaId], references: [id], onDelete: Cascade)
+  unidadeId      Int?        // Se vinculado a uma unidade específica (null = item genérico)
+  descricao      String      // Ex: "Entrada", "Parcelas mensais", "Saldo financiamento"
+  valor          Float
+  parcelas       Int?        // Número de parcelas (null = à vista)
+  valorParcela   Float?      // Valor de cada parcela
+  desconto       Float?      // % de desconto
+  juros          Float?      // % de juros
+  observacao     String?     @db.Text
+  ordem          Int         @default(0)
+  createdAt      DateTime    @default(now())
 }
