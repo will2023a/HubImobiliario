@@ -223,6 +223,38 @@
   background: var(--success);
 }
 
+/* Unidade vendida - destaque vermelho */
+.data-table tbody tr:has(.status-pill[style*="rgb(239, 68, 68)"]),
+.data-table tbody tr:has(.status-pill[style*="#ef4444"]) {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.data-table tbody tr:has(.status-pill[style*="rgb(239, 68, 68)"]) td,
+.data-table tbody tr:has(.status-pill[style*="#ef4444"]) td {
+  color: #991b1b;
+}
+
+/* Fallback class-based approach */
+.row-vendido {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.row-vendido td {
+  color: #991b1b !important;
+  font-weight: 500;
+}
+
+.row-vendido .status-pill {
+  background: #dc2626 !important;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: pulseRed 2s infinite;
+}
+
+@keyframes pulseRed {
+  0%, 100% { box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 2px 16px rgba(239, 68, 68, 0.6); }
+}
+
 .status-rejeitada {
   background: var(--error);
 }

@@ -57,7 +57,7 @@ export default function EmpreendimentoDashboard() {
   const statusColors = {
     disponivel: '#10b981',
     reservado: '#f59e0b',
-    vendido: '#6366f1'
+    vendido: '#ef4444'
   }
 
   const formatCurrency = (value) => {
@@ -272,7 +272,7 @@ export default function EmpreendimentoDashboard() {
               </thead>
               <tbody>
                 {unidades.map(unidade => (
-                  <tr key={unidade.id}>
+                  <tr key={unidade.id} className={unidade.status === 'vendido' ? 'row-vendido' : ''}>
                     <td>
                       <strong>{unidade.identificacao}</strong>
                     </td>

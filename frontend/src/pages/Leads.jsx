@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { Badge, Table, Pagination, Spinner, EmptyState } from '../components/ui'
 import Button from '../components/ui/Button'
+import DateRangeFilter from '../components/shared/DateRangeFilter'
 import './Leads.css'
 
 const statusColors = {
@@ -30,6 +31,7 @@ export default function Leads() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [origemFilter, setOrigemFilter] = useState('')
+  const [dateFilter, setDateFilter] = useState({ startDate: null, endDate: null })
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
   const navigate = useNavigate()
@@ -56,7 +58,14 @@ export default function Leads() {
       lead.email?.toLowerCase().includes(search.toLowerCase())
     const matchStatus = !statusFilter || lead.status === statusFilter
     const matchOrigem = !origemFilter || lead.origem === origemFilter
-    return matchSearch && matchStatus && matchOrigem
+    const matchDate = (() => {
+      if (!dateFilter.startDate && !dateFilter.endDate) return true
+      const created = new Date(lead.createdAt)
+      if (dateFilter.startDate && created < new Date(dateFilter.startDate)) return false
+      if (dateFilter.endDate && created > new Date(dateFilter.endDate + 'T23:59:59')) return false
+      return true
+    })()
+    return matchSearch && matchStatus && matchOrigem && matchDate
   })
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage)
@@ -127,6 +136,12 @@ export default function Leads() {
           <option value="manual">Manual</option>
         </select>
       </div>
+
+      <DateRangeFilter
+        onFilter={(dates) => { setDateFilter(dates); setCurrentPage(1) }}
+        onClear={() => { setDateFilter({ startDate: null, endDate: null }); setCurrentPage(1) }}
+        className="leads-date-filter"
+      />
 
       {filtered.length === 0 ? (
         <EmptyState
