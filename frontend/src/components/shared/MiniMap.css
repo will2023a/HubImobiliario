@@ -1,0 +1,33 @@
+.minimap-container {
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.minimap {
+  width: 100%;
+  z-index: 1;
+}
+
+.minimap-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--gray-50);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--border-radius-lg);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.minimap-placeholder-icon {
+  font-size: 2rem;
+}
+
+.minimap-placeholder-hint {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}

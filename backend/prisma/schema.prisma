@@ -115,8 +115,12 @@ model Empreendimento {
   bairro                 String
   cidade                 String
   estado                 String
+  endereco               String?     // Endereço completo (rua, número)
+  latitude               Float?      // Geolocalização
+  longitude              Float?      // Geolocalização
   dataLancamento         DateTime?
   dataPrevisaoConstrucao DateTime?
+  descricao              String?     @db.Text
   contatoGerente1        String?
   nomeGerente1           String?
   contatoGerente2        String?
@@ -133,6 +137,7 @@ model Empreendimento {
   propostas              Proposta[]
   visitas                Visita[]
   materiaisMarketing     MaterialMarketing[]
+  galeria                GaleriaImagem[]
   createdAt              DateTime    @default(now())
 }
 
@@ -312,4 +317,17 @@ model ConfigImobiliaria {
   comissaoDiretor    Float       @default(0.5)
   createdAt          DateTime    @default(now())
   updatedAt          DateTime    @updatedAt
+}
+
+// ===== GALERIA DE IMAGENS DO EMPREENDIMENTO =====
+
+model GaleriaImagem {
+  id               Int            @id @default(autoincrement())
+  empreendimentoId Int
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  url              String
+  categoria        String         // fachada, areas_comuns, decorados, plantas, outros
+  titulo           String?
+  ordem            Int            @default(0)
+  createdAt        DateTime       @default(now())
 }

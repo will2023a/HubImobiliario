@@ -6,6 +6,8 @@ import Button from '../../components/ui/Button'
 import VisitasList from '../Visitas/VisitasList'
 import MarketingList from '../Marketing/MarketingList'
 import MapaDisponibilidade from './MapaDisponibilidade'
+import MiniMap from '../../components/shared/MiniMap'
+import ImageGallery from '../../components/shared/ImageGallery'
 import './EmpreendimentoDashboard.css'
 
 export default function EmpreendimentoDashboard() {
@@ -201,30 +203,56 @@ export default function EmpreendimentoDashboard() {
 
       {/* Content */}
       {activeTab === 'visao-geral' && (
-        <Card>
-          <div className="visao-geral-content">
-            <h3>Informações do Empreendimento</h3>
-            <div className="info-grid">
-              <div className="info-item">
-                <strong>Bairro:</strong> {empreendimento.bairro}
+        <div className="visao-geral-layout">
+          <Card>
+            <div className="visao-geral-content">
+              <h3>Informações do Empreendimento</h3>
+              <div className="info-grid">
+                <div className="info-item">
+                  <strong>Endereço:</strong> {empreendimento.endereco || `${empreendimento.bairro}, ${empreendimento.cidade} - ${empreendimento.estado}`}
+                </div>
+                <div className="info-item">
+                  <strong>Bairro:</strong> {empreendimento.bairro}
+                </div>
+                <div className="info-item">
+                  <strong>Cidade:</strong> {empreendimento.cidade} - {empreendimento.estado}
+                </div>
+                <div className="info-item">
+                  <strong>Tipo de Unidade:</strong> {empreendimento.tipoUnidade}
+                </div>
+                <div className="info-item">
+                  <strong>Quantidade de Unidades:</strong> {empreendimento.quantidadeUnidades}
+                </div>
               </div>
-              <div className="info-item">
-                <strong>Cidade:</strong> {empreendimento.cidade} - {empreendimento.estado}
-              </div>
-              <div className="info-item">
-                <strong>Tipo de Unidade:</strong> {empreendimento.tipoUnidade}
-              </div>
-              <div className="info-item">
-                <strong>Quantidade de Unidades:</strong> {empreendimento.quantidadeUnidades}
-              </div>
+              {empreendimento.dataLancamento && (
+                <p className="info-item">
+                  <strong>Data de Lançamento:</strong> {new Date(empreendimento.dataLancamento).toLocaleDateString('pt-BR')}
+                </p>
+              )}
+              {empreendimento.descricao && (
+                <div className="info-descricao">
+                  <strong>Descrição:</strong>
+                  <p>{empreendimento.descricao}</p>
+                </div>
+              )}
             </div>
-            {empreendimento.dataLancamento && (
-              <p className="info-item">
-                <strong>Data de Lançamento:</strong> {new Date(empreendimento.dataLancamento).toLocaleDateString('pt-BR')}
-              </p>
-            )}
-          </div>
-        </Card>
+          </Card>
+
+          {/* Mini Mapa de Localização */}
+          <Card title="Localização" subtitle={empreendimento.endereco || `${empreendimento.bairro}, ${empreendimento.cidade}`}>
+            <MiniMap
+              latitude={empreendimento.latitude}
+              longitude={empreendimento.longitude}
+              endereco={empreendimento.endereco || `${empreendimento.bairro}, ${empreendimento.cidade} - ${empreendimento.estado}`}
+              height="280px"
+            />
+          </Card>
+
+          {/* Galeria de Imagens */}
+          <Card title="Galeria" subtitle="Fotos do empreendimento">
+            <ImageGallery images={empreendimento.galeria || []} />
+          </Card>
+        </div>
       )}
 
       {activeTab === 'visitas' && (
