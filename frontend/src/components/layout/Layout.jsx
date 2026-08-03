@@ -21,6 +21,10 @@ const pageTitles = {
   '/dashboard/permissoes': 'Permissões',
   '/dashboard/configuracoes': 'Configurações',
   '/dashboard/analytics': 'Analytics',
+  '/dashboard/financeiro/comissoes': 'Comissões',
+  '/dashboard/agenda': 'Agenda',
+  '/dashboard/templates': 'Templates',
+  '/dashboard/inbox': 'Inbox',
   '/dashboard/perfil': 'Perfil',
   '/super/imobiliarias': 'Imobiliárias',
 }

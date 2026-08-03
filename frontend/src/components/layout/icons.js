@@ -102,3 +102,9 @@ export const IconCalendar = () => (
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
   </svg>
 )
+
+export const IconChart = () => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+  </svg>
+)

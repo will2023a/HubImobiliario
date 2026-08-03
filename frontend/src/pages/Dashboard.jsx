@@ -31,6 +31,8 @@ import Configuracoes from './admin/Configuracoes'
 import Inbox from './inbox/Inbox'
 import Templates from './inbox/Templates'
 import Agenda from './agenda/Agenda'
+import Analytics from './analytics/Analytics'
+import Comissoes from './financeiro/Comissoes'
 import './Dashboard.css'
 
 export default function Dashboard(){
@@ -69,6 +71,8 @@ export default function Dashboard(){
           <Route path="inbox" element={<Inbox/>} />
           <Route path="templates" element={<Templates/>} />
           <Route path="agenda" element={<Agenda/>} />
+          <Route path="analytics" element={<Analytics/>} />
+          <Route path="financeiro/comissoes" element={<Comissoes/>} />
         </Routes>
       </Layout>
     </RequireAuth>

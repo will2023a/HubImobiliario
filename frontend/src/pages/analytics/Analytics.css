@@ -1,0 +1,121 @@
+.analytics-page { animation: fadeIn 0.3s ease-out; }
+.analytics-title { font-size: 1.5rem; font-weight: 700; margin: 0 0 1.5rem 0; }
+
+.analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .analytics-grid { grid-template-columns: 1fr; }
+}
+
+/* Funil */
+.funnel-chart { display: flex; flex-direction: column; gap: 0.625rem; }
+
+.funnel-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 40px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.funnel-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.funnel-bar-container {
+  height: 1.25rem;
+  background: var(--gray-100);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.funnel-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--gold-dark) 100%);
+  border-radius: 4px;
+  min-width: 4px;
+  transition: width 0.5s ease;
+}
+
+.funnel-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Ranking */
+.ranking-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.ranking-item:last-child { border-bottom: none; }
+
+.ranking-pos {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold);
+  min-width: 28px;
+}
+
+.ranking-name {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ranking-stats { display: flex; gap: 0.375rem; }
+
+/* Origins */
+.origins-chart { display: flex; flex-direction: column; gap: 0.625rem; }
+
+.origin-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 30px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.origin-label {
+  font-size: 0.75rem;
+  text-transform: capitalize;
+  color: var(--text-secondary);
+}
+
+.origin-bar-container {
+  height: 1rem;
+  background: var(--gray-100);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.origin-bar {
+  height: 100%;
+  background: var(--info);
+  border-radius: 4px;
+  min-width: 4px;
+}
+
+.origin-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: right;
+}

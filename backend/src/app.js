@@ -28,6 +28,8 @@ const templatesRoutes = require('./routes/templates');
 const webhooksReceiverRoutes = require('./routes/webhooks-receiver');
 const aiRoutes = require('./routes/ai');
 const agendaRoutes = require('./routes/agenda');
+const analyticsRoutes = require('./routes/analytics');
+const comissoesRoutes = require('./routes/comissoes');
 
 const app = express();
 
@@ -60,6 +62,8 @@ app.use('/templates', templatesRoutes);
 app.use('/webhooks', webhooksReceiverRoutes);
 app.use('/ai', aiRoutes);
 app.use('/agenda', agendaRoutes);
+app.use('/analytics', analyticsRoutes);
+app.use('/comissoes', comissoesRoutes);
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'Gestor Pro 360 API' }));
 

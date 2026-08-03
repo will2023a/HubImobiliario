@@ -29,6 +29,7 @@ model User {
   tasks           Task[]         @relation("UserTasks")
   notifications   Notification[] @relation("UserNotifications")
   conversations   Conversation[] @relation("ConversationAssigned")
+  comissoes       Comissao[]     @relation("UserComissoes")
   createdAt       DateTime      @default(now())
 }
 
@@ -54,6 +55,7 @@ model Imobiliaria {
   empreendimentosVinculados EmpreendimentoEquipe[]
   conversations   Conversation[]
   templates       MessageTemplate[]
+  comissoes       Comissao[]
   createdAt       DateTime         @default(now())
 }
 
@@ -199,6 +201,7 @@ model Proposta {
 
   status      String   @default("pendente") // pendente, aprovada, rejeitada
   observacoes String?  @db.Text
+  comissoes   Comissao[]
   createdAt   DateTime @default(now())
 }
 
@@ -442,4 +445,23 @@ model MessageTemplate {
   imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+// ===== COMISSÕES =====
+
+model Comissao {
+  id            Int         @id @default(autoincrement())
+  propostaId    Int
+  proposta      Proposta    @relation(fields: [propostaId], references: [id])
+  userId        Int
+  user          User        @relation("UserComissoes", fields: [userId], references: [id])
+  role          String      // role do usuário no momento do cálculo
+  percentual    Float       // % da comissão
+  valorVenda    Float       // valor total da venda
+  valorComissao Float       // valor calculado
+  status        String      @default("pendente") // pendente, paga
+  dataPagamento DateTime?
+  imobiliariaId Int
+  imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  createdAt     DateTime    @default(now())
 }
