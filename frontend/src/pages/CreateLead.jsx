@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { Input, Select } from '../components/ui/Input'
+import MaskedInput from '../components/ui/MaskedInput'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 
@@ -44,9 +45,9 @@ export default function CreateLead() {
             onChange={e => handleChange('nome', e.target.value)}
             fullWidth
           />
-          <Input
+          <MaskedInput
+            mask="phone"
             label="Telefone *"
-            placeholder="(11) 99999-9999"
             value={form.telefone}
             onChange={e => handleChange('telefone', e.target.value)}
             fullWidth
