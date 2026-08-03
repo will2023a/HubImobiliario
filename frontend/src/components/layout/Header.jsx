@@ -5,7 +5,7 @@ import Avatar from '../ui/Avatar'
 import NotificationBell from '../shared/NotificationBell'
 import SearchGlobal from '../shared/SearchGlobal'
 
-export default function Header({ title }) {
+export default function Header({ title, onMenuClick, isMobile }) {
   const { user, logout } = useContext(AuthContext)
   const navigate = useNavigate()
   const [searchOpen, setSearchOpen] = useState(false)
@@ -13,11 +13,15 @@ export default function Header({ title }) {
   return (
     <header className="header">
       <div className="header-left">
+        {isMobile && (
+          <button className="hamburger-btn" onClick={onMenuClick} aria-label="Menu">
+            ☰
+          </button>
+        )}
         <h1 className="page-title">{title || 'Dashboard'}</h1>
       </div>
 
       <div className="header-right">
-        {/* Search */}
         <div className="header-search-placeholder">
           <button
             className="header-search-btn"

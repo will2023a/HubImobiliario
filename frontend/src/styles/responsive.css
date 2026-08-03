@@ -1,0 +1,148 @@
+/* ===== Global Mobile Responsive Styles ===== */
+
+/* Tables on mobile: horizontal scroll */
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  /* KPI grids */
+  .dashboard-kpis,
+  .analytics-kpis {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem;
+  }
+
+  /* Forms: stack */
+  .config-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pipeline: horizontal scroll */
+  .pipeline-board {
+    min-height: auto;
+  }
+
+  .pipeline-column {
+    flex: 0 0 260px;
+    max-height: 60vh;
+  }
+
+  /* Inbox: hide sidebar by default */
+  .inbox-page {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Leads/Imoveis filters */
+  .leads-filters {
+    flex-direction: column;
+  }
+
+  .leads-search,
+  .leads-filter-select {
+    width: 100% !important;
+  }
+
+  /* Date range filter */
+  .date-range-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-range-inputs {
+    flex-direction: column;
+  }
+
+  .date-range-input {
+    width: 100%;
+  }
+
+  /* Cards grid */
+  .imoveis-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Mapa disponibilidade */
+  .mapa-disp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+  }
+
+  /* Modal */
+  .modal {
+    margin: 0.5rem;
+    max-height: 95vh;
+  }
+
+  /* Search overlay */
+  .search-modal {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+  }
+
+  /* Agenda */
+  .agenda-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .agenda-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Notification dropdown */
+  .notif-dropdown {
+    width: calc(100vw - 2rem);
+    right: -1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-kpis,
+  .analytics-kpis {
+    grid-template-columns: 1fr !important;
+  }
+
+  .pipeline-column {
+    flex: 0 0 240px;
+  }
+
+  .mapa-disp-legend {
+    gap: 0.25rem;
+  }
+
+  .mapa-disp-legend-item {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+/* Touch-friendly */
+@media (pointer: coarse) {
+  .nav-item {
+    padding: 0.875rem 1.5rem;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    min-height: 2.5rem;
+  }
+
+  .table td,
+  .table th {
+    padding: 0.875rem 1rem;
+  }
+
+  .pipeline-card {
+    padding: 1rem;
+  }
+
+  .inbox-conv-item {
+    padding: 1rem;
+  }
+}

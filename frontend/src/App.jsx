@@ -11,6 +11,7 @@ import { NotificationProvider } from './contexts/NotificationContext'
 import { ToastProvider } from './components/ui/Toast'
 import PrivateRoute from './components/PrivateRoute'
 import './styles/global.css'
+import './styles/responsive.css'
 
 export default function App(){
   return (
