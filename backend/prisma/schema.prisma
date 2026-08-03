@@ -28,6 +28,7 @@ model User {
   dispensacoes    DispensacaoMaterial[] @relation("DispensadoPor")
   tasks           Task[]         @relation("UserTasks")
   notifications   Notification[] @relation("UserNotifications")
+  conversations   Conversation[] @relation("ConversationAssigned")
   createdAt       DateTime      @default(now())
 }
 
@@ -51,6 +52,8 @@ model Imobiliaria {
   notifications   Notification[]
   config          ConfigImobiliaria?
   empreendimentosVinculados EmpreendimentoEquipe[]
+  conversations   Conversation[]
+  templates       MessageTemplate[]
   createdAt       DateTime         @default(now())
 }
 
@@ -95,6 +98,7 @@ model Lead {
   atendimentos  Atendimento[]
   pipeline      LeadPipeline?
   tasks         Task[]        @relation("LeadTasks")
+  conversations Conversation[]
   createdAt     DateTime      @default(now())
 }
 
@@ -386,4 +390,56 @@ model TabelaPrecoItem {
   observacao     String?     @db.Text
   ordem          Int         @default(0)
   createdAt      DateTime    @default(now())
+}
+
+// ===== INBOX / CONVERSAS =====
+
+model Conversation {
+  id            Int           @id @default(autoincrement())
+  canal         String        // whatsapp, instagram, facebook, email, chat
+  status        String        @default("aberta") // aberta, pendente, resolvida
+  externalId    String?       // ID externo (WhatsApp message ID, etc)
+  contactName   String
+  contactPhone  String?
+  contactEmail  String?
+  leadId        Int?
+  lead          Lead?         @relation(fields: [leadId], references: [id])
+  assignedToId  Int?
+  assignedTo    User?         @relation("ConversationAssigned", fields: [assignedToId], references: [id])
+  imobiliariaId Int
+  imobiliaria   Imobiliaria   @relation(fields: [imobiliariaId], references: [id])
+  messages      Message[]
+  lastMessageAt DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+
+  @@index([imobiliariaId, status])
+  @@index([imobiliariaId, canal])
+}
+
+model Message {
+  id              Int          @id @default(autoincrement())
+  conversationId  Int
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction       String       // inbound, outbound
+  content         String       @db.Text
+  contentType     String       @default("text") // text, image, audio, document
+  mediaUrl        String?
+  status          String       @default("sent") // sent, delivered, read, failed
+  senderName      String?
+  isAI            Boolean      @default(false)
+  createdAt       DateTime     @default(now())
+}
+
+// ===== TEMPLATES DE MENSAGENS =====
+
+model MessageTemplate {
+  id            Int         @id @default(autoincrement())
+  nome          String
+  categoria     String      // boas_vindas, follow_up, agendamento, proposta, documentacao
+  conteudo      String      @db.Text // Com variáveis {{nome_lead}}, {{empreendimento}}, etc
+  canal         String      @default("todos") // whatsapp, email, todos
+  imobiliariaId Int
+  imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 }

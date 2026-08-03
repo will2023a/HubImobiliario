@@ -23,6 +23,7 @@ const searchRoutes = require('./routes/search');
 const configRoutes = require('./routes/config');
 const equipesEmpreendimentoRoutes = require('./routes/equipes-empreendimento');
 const tabelaPrecoRoutes = require('./routes/tabela-preco');
+const conversationsRoutes = require('./routes/conversations');
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use('/search', searchRoutes);
 app.use('/config', configRoutes);
 app.use('/equipes-empreendimento', equipesEmpreendimentoRoutes);
 app.use('/tabela-preco', tabelaPrecoRoutes);
+app.use('/conversations', conversationsRoutes);
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'Gestor Pro 360 API' }));
 

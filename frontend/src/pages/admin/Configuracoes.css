@@ -1,0 +1,38 @@
+.configuracoes-page { animation: fadeIn 0.3s ease-out; max-width: 800px; }
+
+.configuracoes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.configuracoes-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+
+.config-message {
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.config-message.msg-success { background: rgba(16,185,129,0.1); color: #059669; }
+.config-message.msg-error { background: rgba(239,68,68,0.1); color: #dc2626; }
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.config-hint {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+}
+
+.config-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}

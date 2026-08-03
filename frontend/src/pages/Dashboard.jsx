@@ -27,6 +27,8 @@ import api from '../services/api'
 import Perfil from './Perfil'
 import Pipeline from './crm/Pipeline'
 import Tarefas from './crm/Tarefas'
+import Configuracoes from './admin/Configuracoes'
+import Inbox from './inbox/Inbox'
 import './Dashboard.css'
 
 export default function Dashboard(){
@@ -61,6 +63,8 @@ export default function Dashboard(){
           <Route path="create/imovel" element={<CreateImovel/>} />
           <Route path="create/user" element={<CreateUser/>} />
           <Route path="perfil" element={<Perfil/>} />
+          <Route path="configuracoes" element={<Configuracoes/>} />
+          <Route path="inbox" element={<Inbox/>} />
         </Routes>
       </Layout>
     </RequireAuth>
