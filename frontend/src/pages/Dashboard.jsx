@@ -29,6 +29,8 @@ import Pipeline from './crm/Pipeline'
 import Tarefas from './crm/Tarefas'
 import Configuracoes from './admin/Configuracoes'
 import Inbox from './inbox/Inbox'
+import Templates from './inbox/Templates'
+import Agenda from './agenda/Agenda'
 import './Dashboard.css'
 
 export default function Dashboard(){
@@ -65,6 +67,8 @@ export default function Dashboard(){
           <Route path="perfil" element={<Perfil/>} />
           <Route path="configuracoes" element={<Configuracoes/>} />
           <Route path="inbox" element={<Inbox/>} />
+          <Route path="templates" element={<Templates/>} />
+          <Route path="agenda" element={<Agenda/>} />
         </Routes>
       </Layout>
     </RequireAuth>
