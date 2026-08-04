@@ -597,7 +597,7 @@ export default function EmpreendimentoForm() {
       <div className="page-header">
         <div>
           <h1 className="page-title">
-            {isEdit ? '✏️ Editar Empreendimento' : '➕ Novo Empreendimento'}
+            {isEdit ? 'Editar empreendimento' : 'Novo empreendimento'}
           </h1>
           <p className="page-subtitle">
             {isEdit 
@@ -610,7 +610,7 @@ export default function EmpreendimentoForm() {
       <form onSubmit={handleSubmit} className="empreendimento-form">
         <Card padding="lg">
           <div className="form-section">
-            <h2 className="section-title">📋 Informações Básicas</h2>
+            <h2 className="section-title">Informações básicas</h2>
             
             <div className="form-grid">
               <div className="form-field-full">
@@ -766,7 +766,7 @@ export default function EmpreendimentoForm() {
           <div className="form-divider"></div>
 
           <div className="form-section">
-            <h2 className="section-title">📍 Localização</h2>
+            <h2 className="section-title">Localização</h2>
             
             <div className="form-grid">
               <div className="form-field">
@@ -813,7 +813,7 @@ export default function EmpreendimentoForm() {
           <div className="form-divider"></div>
 
           <div className="form-section">
-            <h2 className="section-title">📅 Datas e Informações Adicionais</h2>
+            <h2 className="section-title">Datas e informações adicionais</h2>
             
             <div className="form-grid">
               <div className="form-field">
@@ -855,7 +855,7 @@ export default function EmpreendimentoForm() {
           <div className="form-divider"></div>
 
           <div className="form-section">
-            <h2 className="section-title">👥 Contatos dos Gerentes</h2>
+            <h2 className="section-title">Contatos dos gerentes</h2>
             
             <div className="form-grid">
               <div className="form-field">
@@ -926,7 +926,7 @@ export default function EmpreendimentoForm() {
           <div className="form-divider"></div>
 
           <div className="form-section">
-            <h2 className="section-title">🖼️ Galeria de Fotos</h2>
+            <h2 className="section-title">Galeria de fotos</h2>
 
             <div className="form-grid">
               <div className="form-field-full">
@@ -989,7 +989,7 @@ export default function EmpreendimentoForm() {
           <div className="form-divider"></div>
 
           <div className="form-section">
-            <h2 className="section-title">💰 Tabela de Preço Inicial</h2>
+            <h2 className="section-title">Tabela de preço inicial</h2>
 
             <input
               ref={csvInputRef}
@@ -1178,7 +1178,7 @@ export default function EmpreendimentoForm() {
               variant="primary"
               disabled={loading}
             >
-              {loading ? '⏳ Salvando...' : isEdit ? '💾 Atualizar' : '✅ Criar Empreendimento'}
+              {loading ? 'Salvando...' : isEdit ? 'Atualizar' : 'Criar empreendimento'}
             </Button>
           </div>
         </Card>

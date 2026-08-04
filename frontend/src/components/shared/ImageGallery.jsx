@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import Modal from '../ui/Modal'
 import './ImageGallery.css'
+import AppIcon from '../ui/AppIcon'
 
 const categoriaLabels = {
   fachada: 'Fachada',
@@ -29,7 +30,7 @@ export default function ImageGallery({ images = [] }) {
   if (images.length === 0) {
     return (
       <div className="gallery-empty">
-        <span className="gallery-empty-icon">🖼️</span>
+        <span className="gallery-empty-icon"><AppIcon name="building" size={28} /></span>
         <p>Nenhuma imagem cadastrada</p>
         <p className="gallery-empty-hint">Adicione imagens na edição do empreendimento</p>
       </div>

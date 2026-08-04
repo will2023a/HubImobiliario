@@ -6,7 +6,7 @@ import Modal from '../../components/ui/Modal'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import './Agenda.css'
 
-const tipoColors = { visita: '#10b981', tarefa: '#f59e0b', evento: '#3b82f6', lembrete: '#8b5cf6' }
+const tipoColors = { visita: '#d4af37', tarefa: '#b8941f', evento: '#1a1a1a', lembrete: '#666666' }
 
 export default function Agenda() {
   const [events, setEvents] = useState([])

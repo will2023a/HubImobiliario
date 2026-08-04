@@ -5,13 +5,13 @@ import Button from '../../components/ui/Button'
 import './Pipeline.css'
 
 const defaultStages = [
-  { nome: 'Novo', ordem: 1, cor: '#3b82f6' },
-  { nome: 'Contato', ordem: 2, cor: '#8b5cf6' },
-  { nome: 'Qualificado', ordem: 3, cor: '#f59e0b' },
-  { nome: 'Visita', ordem: 4, cor: '#06b6d4' },
-  { nome: 'Proposta', ordem: 5, cor: '#10b981' },
-  { nome: 'Fechado', ordem: 6, cor: '#059669' },
-  { nome: 'Perdido', ordem: 7, cor: '#ef4444' },
+  { nome: 'Novo', ordem: 1, cor: '#d4af37' },
+  { nome: 'Contato', ordem: 2, cor: '#b8941f' },
+  { nome: 'Qualificado', ordem: 3, cor: '#999999' },
+  { nome: 'Visita', ordem: 4, cor: '#808080' },
+  { nome: 'Proposta', ordem: 5, cor: '#666666' },
+  { nome: 'Fechado', ordem: 6, cor: '#1a1a1a' },
+  { nome: 'Perdido', ordem: 7, cor: '#3d3d3d' },
 ]
 
 const tempColors = { quente: 'hot', morno: 'warm', frio: 'cold' }
@@ -136,7 +136,7 @@ export default function Pipeline() {
                         </Badge>
                       </div>
                       <div className="pipeline-card-meta">
-                        {pl.lead?.telefone && <span>📱 {pl.lead.telefone}</span>}
+                        {pl.lead?.telefone && <span>{pl.lead.telefone}</span>}
                       </div>
                       <div className="pipeline-card-footer">
                         <span className="pipeline-card-corretor">

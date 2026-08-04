@@ -40,11 +40,11 @@ export default function Analytics() {
 
       {/* KPIs */}
       <div className="analytics-kpis">
-        <KPICard icon="👤" title="Total Leads" value={data?.totalLeads || 0} subtitle="Cadastrados" />
-        <KPICard icon="📄" title="Propostas" value={data?.totalPropostas || 0} subtitle="Total criadas" />
-        <KPICard icon="✅" title="Vendas" value={data?.propostasAprovadas || 0} subtitle="Aprovadas" />
-        <KPICard icon="📈" title="Conversão" value={`${data?.conversao || 0}%`} subtitle="Leads → Vendas" />
-        <KPICard icon="🏠" title="Unidades Vendidas" value={data?.totalUnidadesVendidas || 0} subtitle="Total" />
+        <KPICard icon="users" title="Total Leads" value={data?.totalLeads || 0} subtitle="Cadastrados" />
+        <KPICard icon="document" title="Propostas" value={data?.totalPropostas || 0} subtitle="Total criadas" />
+        <KPICard icon="check" title="Vendas" value={data?.propostasAprovadas || 0} subtitle="Aprovadas" />
+        <KPICard icon="chart" title="Conversão" value={`${data?.conversao || 0}%`} subtitle="Leads → Vendas" />
+        <KPICard icon="building" title="Unidades Vendidas" value={data?.totalUnidadesVendidas || 0} subtitle="Total" />
       </div>
 
       <div className="analytics-grid">

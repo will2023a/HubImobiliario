@@ -9,6 +9,7 @@ import MapaDisponibilidade from './MapaDisponibilidade'
 import MiniMap from '../../components/shared/MiniMap'
 import ImageGallery from '../../components/shared/ImageGallery'
 import TabelaPrecos from './TabelaPrecos'
+import AppIcon from '../../components/ui/AppIcon'
 import './EmpreendimentoDashboard.css'
 
 export default function EmpreendimentoDashboard() {
@@ -86,7 +87,7 @@ export default function EmpreendimentoDashboard() {
           <div className="dashboard-meta">
             <span className="meta-item">{empreendimento.tipo}</span>
             <span className="meta-separator">•</span>
-            <span className="meta-item">📍 {empreendimento.cidade} - {empreendimento.estado}</span>
+            <span className="meta-item meta-with-icon"><AppIcon name="pin" size={14} /> {empreendimento.cidade} - {empreendimento.estado}</span>
             <span className="meta-separator">•</span>
             <span className="meta-item status-label" style={{ color: statusColors[empreendimento.status] }}>
               {empreendimento.status}
@@ -108,7 +109,7 @@ export default function EmpreendimentoDashboard() {
       <div className="stats-grid">
         <Card className="stat-card-dash">
           <div className="stat-header">
-            <span className="stat-icon-dash">🏠</span>
+            <span className="stat-icon-dash"><AppIcon name="building" /></span>
             <span className="stat-trend up">+12%</span>
           </div>
           <div className="stat-value-dash">{stats.totalUnidades}</div>
@@ -117,7 +118,7 @@ export default function EmpreendimentoDashboard() {
 
         <Card className="stat-card-dash stat-success-bg">
           <div className="stat-header">
-            <span className="stat-icon-dash">✅</span>
+            <span className="stat-icon-dash"><AppIcon name="check" /></span>
           </div>
           <div className="stat-value-dash">{stats.disponiveis}</div>
           <div className="stat-label-dash">Disponíveis</div>
@@ -125,7 +126,7 @@ export default function EmpreendimentoDashboard() {
 
         <Card className="stat-card-dash stat-warning-bg">
           <div className="stat-header">
-            <span className="stat-icon-dash">⏳</span>
+            <span className="stat-icon-dash"><AppIcon name="clock" /></span>
           </div>
           <div className="stat-value-dash">{stats.reservadas}</div>
           <div className="stat-label-dash">Reservadas</div>
@@ -133,7 +134,7 @@ export default function EmpreendimentoDashboard() {
 
         <Card className="stat-card-dash stat-primary-bg">
           <div className="stat-header">
-            <span className="stat-icon-dash">💰</span>
+            <span className="stat-icon-dash"><AppIcon name="check" /></span>
           </div>
           <div className="stat-value-dash">{stats.vendidas}</div>
           <div className="stat-label-dash">Vendidas</div>
@@ -141,7 +142,7 @@ export default function EmpreendimentoDashboard() {
 
         <Card className="stat-card-dash stat-info-bg">
           <div className="stat-header">
-            <span className="stat-icon-dash">💵</span>
+            <span className="stat-icon-dash"><AppIcon name="money" /></span>
           </div>
           <div className="stat-value-dash">{formatCurrency(stats.valorTotal)}</div>
           <div className="stat-label-dash">Valor Total</div>
@@ -149,7 +150,7 @@ export default function EmpreendimentoDashboard() {
 
         <Card className="stat-card-dash">
           <div className="stat-header">
-            <span className="stat-icon-dash">📄</span>
+            <span className="stat-icon-dash"><AppIcon name="document" /></span>
           </div>
           <div className="stat-value-dash">{stats.propostasAbertas}</div>
           <div className="stat-label-dash">Propostas Abertas</div>
@@ -162,25 +163,25 @@ export default function EmpreendimentoDashboard() {
           className={`tab ${activeTab === 'visao-geral' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('visao-geral')}
         >
-          📊 Visão Geral
+          Visão Geral
         </button>
         <button
           className={`tab ${activeTab === 'unidades' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('unidades')}
         >
-          🏠 Unidades ({unidades.length})
+          Unidades ({unidades.length})
         </button>
         <button
           className={`tab ${activeTab === 'tabela-preco' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('tabela-preco')}
         >
-          💰 Tabela de Preços
+          Tabela de Preços
         </button>
         <button
           className={`tab ${activeTab === 'propostas' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('propostas')}
         >
-          📄 Propostas ({propostas.length})
+          Propostas ({propostas.length})
         </button>
         <button
           className={`tab ${activeTab === 'visitas' ? 'tab-active' : ''}`}
@@ -198,13 +199,13 @@ export default function EmpreendimentoDashboard() {
           className={`tab ${activeTab === 'gerador' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('gerador')}
         >
-          💰 Gerador de Propostas
+          Gerador de Propostas
         </button>
         <button
           className={`tab ${activeTab === 'mapa' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('mapa')}
         >
-          🗺️ Mapa de Disponibilidade
+          Mapa de Disponibilidade
         </button>
       </div>
 

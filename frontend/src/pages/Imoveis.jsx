@@ -63,7 +63,7 @@ export default function Imoveis() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon="🏠"
+          icon="home"
           title="Nenhum imóvel encontrado"
           description="Cadastre imóveis para que sua equipe possa oferecê-los aos clientes."
           action={<Button onClick={() => navigate('/dashboard/create/imovel')}>Cadastrar Imóvel</Button>}

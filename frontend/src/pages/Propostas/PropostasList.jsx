@@ -4,6 +4,7 @@ import api from '../../services/api'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
+import AppIcon from '../../components/ui/AppIcon'
 import './PropostasList.css'
 
 export default function PropostasList() {
@@ -36,10 +37,10 @@ export default function PropostasList() {
   })
 
   const statusConfig = {
-    pendente: { label: 'Pendente', color: '#f59e0b', icon: '⏳' },
-    analise: { label: 'Em Análise', color: '#3b82f6', icon: '🔍' },
-    aprovada: { label: 'Aprovada', color: '#10b981', icon: '✓' },
-    rejeitada: { label: 'Rejeitada', color: '#ef4444', icon: '✕' }
+    pendente: { label: 'Pendente' },
+    analise: { label: 'Em análise' },
+    aprovada: { label: 'Aprovada' },
+    rejeitada: { label: 'Rejeitada' }
   }
 
   const formatCurrency = (value) => {
@@ -72,28 +73,28 @@ export default function PropostasList() {
 
       <div className="stats-grid">
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #d4af37 0%, #c9a227 100%)' }}>📊</div>
+          <div className="stat-icon"><AppIcon name="chart" /></div>
           <div className="stat-content">
             <div className="stat-label">Total</div>
             <div className="stat-value">{stats.total}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>⏳</div>
+          <div className="stat-icon"><AppIcon name="clock" /></div>
           <div className="stat-content">
             <div className="stat-label">Pendentes</div>
             <div className="stat-value">{stats.pendentes}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>✓</div>
+          <div className="stat-icon"><AppIcon name="check" /></div>
           <div className="stat-content">
             <div className="stat-label">Aprovadas</div>
             <div className="stat-value">{stats.aprovadas}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)' }}>💰</div>
+          <div className="stat-icon"><AppIcon name="money" /></div>
           <div className="stat-content">
             <div className="stat-label">Valor Total</div>
             <div className="stat-value">{formatCurrency(stats.valorTotal)}</div>
@@ -124,7 +125,7 @@ export default function PropostasList() {
           </div>
         ) : filteredPropostas.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📄</div>
+            <div className="empty-icon"><AppIcon name="document" size={32} /></div>
             <h3>Nenhuma proposta encontrada</h3>
             <p>Crie sua primeira proposta comercial</p>
           </div>
@@ -138,11 +139,8 @@ export default function PropostasList() {
                       <h3 className="proposta-cliente">{proposta.clienteNome}</h3>
                       <p className="proposta-info">{proposta.clienteEmail}</p>
                     </div>
-                    <div className="proposta-status" style={{ 
-                      background: statusConfig[proposta.status]?.color,
-                      color: 'white'
-                    }}>
-                      {statusConfig[proposta.status]?.icon} {statusConfig[proposta.status]?.label}
+                    <div className={`proposta-status status-${proposta.status}`}>
+                      {statusConfig[proposta.status]?.label}
                     </div>
                   </div>
                   <div className="proposta-details">

@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
 import Modal from '../../components/ui/Modal'
 import './Imobiliarias.css'
+import AppIcon from '../../components/ui/AppIcon'
 
 export default function Imobiliarias() {
   const [imobiliarias, setImobiliarias] = useState([])
@@ -98,10 +99,10 @@ export default function Imobiliarias() {
   })
 
   const statusConfig = {
-    ativa: { label: 'Ativa', color: '#10b981', icon: '✓' },
-    pendente: { label: 'Pendente', color: '#f59e0b', icon: '⏳' },
-    aguardando_aprovacao: { label: 'Pendente', color: '#f59e0b', icon: '⏳' },
-    inativa: { label: 'Inativa', color: '#ef4444', icon: '✕' }
+    ativa: { label: 'Ativa', color: '#1a1a1a' },
+    pendente: { label: 'Pendente', color: '#b8941f' },
+    aguardando_aprovacao: { label: 'Pendente', color: '#b8941f' },
+    inativa: { label: 'Inativa', color: '#666666' }
   }
 
   const stats = {
@@ -125,28 +126,28 @@ export default function Imobiliarias() {
 
       <div className="stats-grid">
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #1a1a1a, #2d2d2d)' }}>🏢</div>
+          <div className="stat-icon"><AppIcon name="building" /></div>
           <div className="stat-content">
             <div className="stat-label">Total</div>
             <div className="stat-value">{stats.total}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>✓</div>
+          <div className="stat-icon"><AppIcon name="check" /></div>
           <div className="stat-content">
             <div className="stat-label">Ativas</div>
             <div className="stat-value">{stats.ativas}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>⏳</div>
+          <div className="stat-icon"><AppIcon name="clock" /></div>
           <div className="stat-content">
             <div className="stat-label">Pendentes</div>
             <div className="stat-value">{stats.pendentes}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>✕</div>
+          <div className="stat-icon"><AppIcon name="building" /></div>
           <div className="stat-content">
             <div className="stat-label">Inativas</div>
             <div className="stat-value">{stats.inativas}</div>
@@ -176,7 +177,7 @@ export default function Imobiliarias() {
           </div>
         ) : filteredImobiliarias.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🏢</div>
+            <div className="empty-icon"><AppIcon name="building" size={32} /></div>
             <h3>Nenhuma imobiliária encontrada</h3>
           </div>
         ) : (

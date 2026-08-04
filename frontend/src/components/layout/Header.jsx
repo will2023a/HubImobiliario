@@ -4,6 +4,7 @@ import { AuthContext } from '../../contexts/AuthContext'
 import Avatar from '../ui/Avatar'
 import NotificationBell from '../shared/NotificationBell'
 import SearchGlobal from '../shared/SearchGlobal'
+import AppIcon from '../ui/AppIcon'
 
 export default function Header({ title, onMenuClick, isMobile }) {
   const { user, logout } = useContext(AuthContext)
@@ -15,7 +16,7 @@ export default function Header({ title, onMenuClick, isMobile }) {
       <div className="header-left">
         {isMobile && (
           <button className="hamburger-btn" onClick={onMenuClick} aria-label="Menu">
-            ☰
+            <span className="hamburger-lines" aria-hidden="true" />
           </button>
         )}
         <h1 className="page-title">{title || 'Dashboard'}</h1>
@@ -28,7 +29,7 @@ export default function Header({ title, onMenuClick, isMobile }) {
             onClick={() => setSearchOpen(true)}
             title="Buscar (Ctrl+K)"
           >
-            🔍 <span className="header-search-text">Buscar...</span>
+            <AppIcon name="search" size={17} /> <span className="header-search-text">Buscar...</span>
           </button>
         </div>
 

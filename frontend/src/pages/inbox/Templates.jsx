@@ -54,7 +54,7 @@ export default function Templates() {
     { key: 'canal', label: 'Canal', render: val => <Badge variant="default" size="sm">{val}</Badge> },
     { key: 'conteudo', label: 'Preview', render: val => <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{val?.slice(0, 60)}...</span> },
     { key: 'id', label: 'Ações', render: (val) => (
-      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(val) }}>🗑️</Button>
+      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(val) }}>Excluir</Button>
     )}
   ]
 

@@ -61,9 +61,9 @@ export default function Comissoes() {
       </div>
 
       <div className="dashboard-kpis" style={{ marginBottom: '1.5rem' }}>
-        <KPICard icon="💰" title="Total Vendas" value={formatCurrency(data.totais.valorVendas)} />
-        <KPICard icon="🏆" title="Total Comissões" value={formatCurrency(data.totais.valorComissoes)} />
-        <KPICard icon="⏳" title="Pendentes" value={formatCurrency(data.totais.pendentes)} variant="warning" />
+        <KPICard icon="money" title="Total Vendas" value={formatCurrency(data.totais.valorVendas)} />
+        <KPICard icon="money" title="Total Comissões" value={formatCurrency(data.totais.valorComissoes)} />
+        <KPICard icon="clock" title="Pendentes" value={formatCurrency(data.totais.pendentes)} variant="warning" />
       </div>
 
       <div className="leads-filters" style={{ marginBottom: '1.25rem' }}>

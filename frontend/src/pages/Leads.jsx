@@ -145,7 +145,7 @@ export default function Leads() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon="👤"
+          icon="users"
           title="Nenhum lead encontrado"
           description="Tente ajustar os filtros ou cadastre um novo lead."
           action={<Button onClick={() => navigate('/dashboard/create/lead')}>Cadastrar Lead</Button>}

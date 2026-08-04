@@ -1,8 +1,8 @@
 .card {
-  background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
+  background: var(--white);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-sm);
   transition: var(--transition);
   overflow: hidden;
   position: relative;
@@ -39,11 +39,11 @@
 }
 
 .card-padding-md .card-body {
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .card-padding-lg .card-body {
-  padding: 2rem;
+  padding: 1.25rem;
 }
 
 .card-header {

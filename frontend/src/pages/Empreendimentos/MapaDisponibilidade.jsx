@@ -3,16 +3,16 @@ import './MapaDisponibilidade.css'
 
 // 10 status completos estilo Anapro
 const STATUS_CONFIG = {
-  disponivel:      { label: 'Disponível', cor: '#10b981', icon: '●' },
-  reservada:       { label: 'Reservada', cor: '#f59e0b', icon: '●' },
-  em_aprovacao:    { label: 'Em aprovação', cor: '#8b5cf6', icon: '●' },
-  em_negociacao:   { label: 'Em negociação', cor: '#06b6d4', icon: '●' },
-  venda_suspensa:  { label: 'Venda suspensa', cor: '#f97316', icon: '●' },
-  vendido:         { label: 'Venda aprovada', cor: '#ef4444', icon: '●' },
-  permuta:         { label: 'Permuta', cor: '#ec4899', icon: '●' },
-  alugada:         { label: 'Alugada', cor: '#64748b', icon: '●' },
-  fora_de_venda:   { label: 'Fora de venda', cor: '#374151', icon: '●' },
-  pre_reservada:   { label: 'Pré-reservada', cor: '#a855f7', icon: '●' },
+  disponivel:      { label: 'Disponível', cor: '#d4af37', icon: '●' },
+  reservada:       { label: 'Reservada', cor: '#b8941f', icon: '●' },
+  em_aprovacao:    { label: 'Em aprovação', cor: '#999999', icon: '●' },
+  em_negociacao:   { label: 'Em negociação', cor: '#666666', icon: '●' },
+  venda_suspensa:  { label: 'Venda suspensa', cor: '#4d4d4d', icon: '●' },
+  vendido:         { label: 'Venda aprovada', cor: '#1a1a1a', icon: '●' },
+  permuta:         { label: 'Permuta', cor: '#808080', icon: '●' },
+  alugada:         { label: 'Alugada', cor: '#b3b3b3', icon: '●' },
+  fora_de_venda:   { label: 'Fora de venda', cor: '#2d2d2d', icon: '●' },
+  pre_reservada:   { label: 'Pré-reservada', cor: '#e8c766', icon: '●' },
 }
 
 export default function MapaDisponibilidade({ unidades = [], empreendimentoNome }) {

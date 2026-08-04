@@ -10,15 +10,15 @@ import './AutomacaoEditor.css'
 const nodeTypes = {}
 
 const NODE_TEMPLATES = [
-  { type: 'trigger', label: '⚡ Gatilho', color: '#10b981' },
-  { type: 'condition', label: '❓ Condição', color: '#f59e0b' },
-  { type: 'wait', label: '⏱️ Espera', color: '#8b5cf6' },
-  { type: 'action_whatsapp', label: '💬 Enviar WhatsApp', color: '#25d366' },
-  { type: 'action_email', label: '✉️ Enviar E-mail', color: '#3b82f6' },
-  { type: 'action_task', label: '✓ Criar Tarefa', color: '#06b6d4' },
-  { type: 'action_pipeline', label: '🔀 Mover Pipeline', color: '#ec4899' },
-  { type: 'action_assign', label: '👤 Atribuir Corretor', color: '#f97316' },
-  { type: 'ai_decide', label: '🤖 IA Decide', color: '#6366f1' },
+  { type: 'trigger', label: 'Gatilho', color: '#d4af37' },
+  { type: 'condition', label: 'Condição', color: '#666666' },
+  { type: 'wait', label: 'Espera', color: '#999999' },
+  { type: 'action_whatsapp', label: 'Enviar WhatsApp', color: '#1a1a1a' },
+  { type: 'action_email', label: 'Enviar e-mail', color: '#3d3d3d' },
+  { type: 'action_task', label: 'Criar tarefa', color: '#b8941f' },
+  { type: 'action_pipeline', label: 'Mover pipeline', color: '#666666' },
+  { type: 'action_assign', label: 'Atribuir corretor', color: '#3d3d3d' },
+  { type: 'ai_decide', label: 'Decisão por IA', color: '#b8941f' },
 ]
 
 export default function AutomacaoEditor() {

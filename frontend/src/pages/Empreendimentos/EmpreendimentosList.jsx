@@ -5,6 +5,7 @@ import api from '../../services/api'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
+import AppIcon from '../../components/ui/AppIcon'
 import './EmpreendimentosList.css'
 
 export default function EmpreendimentosList() {
@@ -90,14 +91,14 @@ export default function EmpreendimentosList() {
       {/* Stats Cards */}
       <div className="stats-grid">
         <div className="stat-card stat-card-primary">
-          <div className="stat-icon">🏘️</div>
+          <div className="stat-icon"><AppIcon name="building" /></div>
           <div className="stat-content">
             <div className="stat-value">{empreendimentos.length}</div>
             <div className="stat-label">Empreendimentos</div>
           </div>
         </div>
         <div className="stat-card stat-card-success">
-          <div className="stat-icon">✅</div>
+          <div className="stat-icon"><AppIcon name="check" /></div>
           <div className="stat-content">
             <div className="stat-value">
               {empreendimentos.filter(e => e.status === 'pronto').length}
@@ -106,7 +107,7 @@ export default function EmpreendimentosList() {
           </div>
         </div>
         <div className="stat-card stat-card-warning">
-          <div className="stat-icon">🚧</div>
+          <div className="stat-icon"><AppIcon name="clock" /></div>
           <div className="stat-content">
             <div className="stat-value">
               {empreendimentos.filter(e => e.status === 'construcao').length}
@@ -115,7 +116,7 @@ export default function EmpreendimentosList() {
           </div>
         </div>
         <div className="stat-card stat-card-info">
-          <div className="stat-icon">📋</div>
+          <div className="stat-icon"><AppIcon name="document" /></div>
           <div className="stat-content">
             <div className="stat-value">
               {empreendimentos.filter(e => e.status === 'planejamento').length}
@@ -134,7 +135,7 @@ export default function EmpreendimentosList() {
       ) : filteredEmpreendimentos.length === 0 ? (
         <Card>
           <div className="empty-state">
-            <div className="empty-icon">🏘️</div>
+            <div className="empty-icon"><AppIcon name="building" size={32} /></div>
             <h3>Nenhum empreendimento encontrado</h3>
             <p>Crie seu primeiro empreendimento para começar</p>
             <Link to="/dashboard/empreendimentos/novo">
@@ -151,7 +152,7 @@ export default function EmpreendimentosList() {
                   <img src={emp.imagemUrl} alt={emp.nome} />
                 ) : (
                   <div className="placeholder-image">
-                    <span>🏘️</span>
+                    <AppIcon name="building" size={36} />
                   </div>
                 )}
                 <span 
@@ -167,7 +168,7 @@ export default function EmpreendimentosList() {
                 <p className="empreendimento-tipo">{emp.tipo}</p>
                 
                 <div className="empreendimento-location">
-                  <span className="location-icon">📍</span>
+                  <span className="location-icon"><AppIcon name="pin" size={14} /></span>
                   {emp.cidade} - {emp.estado}
                 </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import './SearchGlobal.css'
+import AppIcon from '../ui/AppIcon'
 
 export default function SearchGlobal({ isOpen, onClose }) {
   const [query, setQuery] = useState('')
@@ -77,7 +78,7 @@ export default function SearchGlobal({ isOpen, onClose }) {
     <div className="search-overlay" onClick={onClose}>
       <div className="search-modal" onClick={e => e.stopPropagation()}>
         <div className="search-input-wrapper">
-          <span className="search-input-icon">🔍</span>
+          <span className="search-input-icon"><AppIcon name="search" size={18} /></span>
           <input
             ref={inputRef}
             className="search-input"
@@ -99,7 +100,7 @@ export default function SearchGlobal({ isOpen, onClose }) {
 
             {results.leads?.length > 0 && (
               <div className="search-section">
-                <span className="search-section-label">👤 Leads</span>
+                <span className="search-section-label"><AppIcon name="users" size={15} /> Leads</span>
                 {results.leads.map(item => (
                   <button key={item.id} className="search-item" onClick={() => handleSelect('lead', item)}>
                     <span className="search-item-name">{item.nome}</span>
@@ -111,7 +112,7 @@ export default function SearchGlobal({ isOpen, onClose }) {
 
             {results.empreendimentos?.length > 0 && (
               <div className="search-section">
-                <span className="search-section-label">🏗️ Empreendimentos</span>
+                <span className="search-section-label"><AppIcon name="building" size={15} /> Empreendimentos</span>
                 {results.empreendimentos.map(item => (
                   <button key={item.id} className="search-item" onClick={() => handleSelect('empreendimento', item)}>
                     <span className="search-item-name">{item.nome}</span>
@@ -123,7 +124,7 @@ export default function SearchGlobal({ isOpen, onClose }) {
 
             {results.imoveis?.length > 0 && (
               <div className="search-section">
-                <span className="search-section-label">🏠 Imóveis</span>
+                <span className="search-section-label"><AppIcon name="home" size={15} /> Imóveis</span>
                 {results.imoveis.map(item => (
                   <button key={item.id} className="search-item" onClick={() => handleSelect('imovel', item)}>
                     <span className="search-item-name">{item.titulo}</span>
@@ -135,7 +136,7 @@ export default function SearchGlobal({ isOpen, onClose }) {
 
             {results.propostas?.length > 0 && (
               <div className="search-section">
-                <span className="search-section-label">📄 Propostas</span>
+                <span className="search-section-label"><AppIcon name="document" size={15} /> Propostas</span>
                 {results.propostas.map(item => (
                   <button key={item.id} className="search-item" onClick={() => handleSelect('proposta', item)}>
                     <span className="search-item-name">{item.clienteNome} {item.clienteSobrenome}</span>

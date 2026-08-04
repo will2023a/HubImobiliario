@@ -210,8 +210,8 @@
 
 /* Header */
 .header {
-  background: linear-gradient(135deg, var(--white) 0%, var(--gray-50) 100%);
-  padding: 1.25rem 2rem;
+  background: var(--white);
+  padding: 0.8rem 1.25rem;
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -244,10 +244,7 @@
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
-  background: var(--gradient-gold);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 .header-right {
@@ -317,7 +314,7 @@
 
 .btn-logout {
   padding: 0.5rem 1rem;
-  background: var(--gradient-gold);
+  background: var(--gold);
   color: var(--dark);
   border: none;
   border-radius: var(--radius);
@@ -327,6 +324,20 @@
   transition: all 0.2s;
   box-shadow: var(--shadow-sm);
 }
+
+.hamburger-lines,
+.hamburger-lines::before,
+.hamburger-lines::after {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  content: '';
+}
+
+.hamburger-lines { position: relative; }
+.hamburger-lines::before { position: absolute; top: -6px; }
+.hamburger-lines::after { position: absolute; top: 6px; }
 
 .btn-logout:hover {
   background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 100%);
@@ -385,6 +396,23 @@
   .sidebar-closed {
     transform: translateX(-100%);
   }
+
+  .header {
+    min-height: 58px;
+    padding: 0.65rem 0.75rem;
+  }
+
+  .header .page-title {
+    max-width: 48vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.25rem !important;
+  }
+
+  .header-right { gap: 0.4rem; }
+  .user-menu { gap: 0.4rem; padding: 0.25rem 0.35rem; }
+  .btn-logout { padding: 0.4rem 0.55rem; }
 
   .sidebar-overlay {
     display: block;

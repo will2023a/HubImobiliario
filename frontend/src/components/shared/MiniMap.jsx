@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import './MiniMap.css'
+import AppIcon from '../ui/AppIcon'
 
 // Using Leaflet via CDN-style import in the component
 // This avoids bundler issues with marker icons
@@ -46,7 +47,7 @@ export default function MiniMap({ latitude, longitude, endereco, height = '300px
   if (!latitude || !longitude) {
     return (
       <div className="minimap-placeholder" style={{ height }}>
-        <span className="minimap-placeholder-icon">📍</span>
+        <span className="minimap-placeholder-icon"><AppIcon name="pin" size={26} /></span>
         <span>Localização não cadastrada</span>
         <span className="minimap-placeholder-hint">Adicione latitude e longitude no cadastro do empreendimento</span>
       </div>

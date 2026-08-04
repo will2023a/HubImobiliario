@@ -5,8 +5,8 @@ import Button from '../../components/ui/Button'
 import { getSocket } from '../../services/socket'
 import './Inbox.css'
 
-const canalIcons = { whatsapp: '💬', instagram: '📸', facebook: '👤', email: '✉️', chat: '🌐' }
-const canalColors = { whatsapp: '#25d366', instagram: '#e4405f', facebook: '#1877f2', email: '#6366f1', chat: '#10b981' }
+const canalIcons = { whatsapp: 'WA', instagram: 'IG', facebook: 'FB', email: 'EM', chat: 'CH' }
+const canalColors = { whatsapp: '#1a1a1a', instagram: '#3d3d3d', facebook: '#666666', email: '#b8941f', chat: '#808080' }
 
 export default function Inbox() {
   const [conversations, setConversations] = useState([])
@@ -107,7 +107,7 @@ export default function Inbox() {
                 onClick={() => selectConversation(conv)}
               >
                 <div className="inbox-conv-avatar" style={{ background: canalColors[conv.canal] || '#666' }}>
-                  {canalIcons[conv.canal] || '💬'}
+                  {canalIcons[conv.canal] || 'CH'}
                 </div>
                 <div className="inbox-conv-info">
                   <span className="inbox-conv-name">{conv.contactName}</span>
@@ -154,7 +154,7 @@ export default function Inbox() {
                         <span className="inbox-msg-time">
                           {msg.senderName && <span className="inbox-msg-sender">{msg.senderName} • </span>}
                           {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                          {msg.isAI && ' 🤖'}
+                          {msg.isAI && ' · IA'}
                         </span>
                       </div>
                     </div>

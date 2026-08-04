@@ -1,5 +1,5 @@
 .equipe-container {
-  padding: 2rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -45,11 +45,11 @@
 }
 
 .user-card.gerente {
-  border-left-color: #3b82f6;
+  border-left-color: #1a1a1a;
 }
 
 .user-card.corretor {
-  border-left-color: #10b981;
+  border-left-color: #808080;
 }
 
 .user-header {
@@ -62,7 +62,8 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: var(--gradient-gold);
+  background: var(--dark);
+  color: var(--gold);
   display: flex;
   align-items: center;
   justify-content: center;

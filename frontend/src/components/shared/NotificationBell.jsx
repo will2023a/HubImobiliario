@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../../contexts/NotificationContext'
 import './NotificationBell.css'
+import AppIcon from '../ui/AppIcon'
 
 export default function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications()
@@ -38,7 +39,7 @@ export default function NotificationBell() {
   return (
     <div className="notif-bell-wrapper" ref={ref}>
       <button className="notif-bell-btn" onClick={() => setOpen(!open)} aria-label="Notificações">
-        🔔
+        <AppIcon name="bell" size={19} />
         {unreadCount > 0 && <span className="notif-bell-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
       </button>
 

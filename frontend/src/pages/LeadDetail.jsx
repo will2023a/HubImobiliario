@@ -70,8 +70,8 @@ export default function LeadDetail() {
               <div>
                 <h2 className="lead-name">{lead.nome}</h2>
                 <div className="lead-contact">
-                  {lead.telefone && <span>📱 {lead.telefone}</span>}
-                  {lead.email && <span>✉️ {lead.email}</span>}
+                  {lead.telefone && <span>Telefone: {lead.telefone}</span>}
+                  {lead.email && <span>E-mail: {lead.email}</span>}
                 </div>
               </div>
               <Badge variant={statusColors[lead.status] || 'default'} size="lg">

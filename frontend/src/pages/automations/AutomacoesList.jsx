@@ -66,7 +66,7 @@ export default function AutomacoesList() {
         <Button size="sm" variant={row.status === 'ativo' ? 'warning' : 'success'} onClick={(e) => { e.stopPropagation(); handleToggle(val) }}>
           {row.status === 'ativo' ? 'Pausar' : 'Ativar'}
         </Button>
-        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(val) }}>🗑️</Button>
+        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(val) }}>Excluir</Button>
       </div>
     )}
   ]

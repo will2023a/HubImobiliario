@@ -5,6 +5,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
 import './Equipe.css'
+import AppIcon from '../../components/ui/AppIcon'
 
 export default function Equipe() {
   const [users, setUsers] = useState([])
@@ -36,9 +37,9 @@ export default function Equipe() {
   })
 
   const roleConfig = {
-    diretor: { label: 'Diretor', color: '#d4af37', icon: '👔' },
-    gerente: { label: 'Gerente', color: '#3b82f6', icon: '📊' },
-    corretor: { label: 'Corretor', color: '#10b981', icon: '🤝' }
+    diretor: { label: 'Diretor', color: '#d4af37' },
+    gerente: { label: 'Gerente', color: '#1a1a1a' },
+    corretor: { label: 'Corretor', color: '#666666' }
   }
 
   const organizeHierarchy = (users) => {
@@ -75,28 +76,28 @@ export default function Equipe() {
 
       <div className="stats-grid">
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #1a1a1a, #2d2d2d)' }}>👥</div>
+          <div className="stat-icon"><AppIcon name="users" /></div>
           <div className="stat-content">
             <div className="stat-label">Total</div>
             <div className="stat-value">{stats.total}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #d4af37, #c9a227)' }}>👔</div>
+          <div className="stat-icon"><AppIcon name="users" /></div>
           <div className="stat-content">
             <div className="stat-label">Diretores</div>
             <div className="stat-value">{stats.diretores}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>📊</div>
+          <div className="stat-icon"><AppIcon name="users" /></div>
           <div className="stat-content">
             <div className="stat-label">Gerentes</div>
             <div className="stat-value">{stats.gerentes}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>🤝</div>
+          <div className="stat-icon"><AppIcon name="users" /></div>
           <div className="stat-content">
             <div className="stat-label">Corretores</div>
             <div className="stat-value">{stats.corretores}</div>
@@ -130,7 +131,7 @@ export default function Equipe() {
               <div key={diretor.id} className="hierarchy-level">
                 <Card className="user-card diretor">
                   <div className="user-header">
-                    <div className="user-avatar">{roleConfig.diretor.icon}</div>
+                    <div className="user-avatar"><AppIcon name="users" /></div>
                     <div className="user-info">
                       <h3>{diretor.name}</h3>
                       <p>{diretor.email}</p>
@@ -147,7 +148,7 @@ export default function Equipe() {
                       <div key={gerente.id} className="hierarchy-branch">
                         <Card className="user-card gerente">
                           <div className="user-header">
-                            <div className="user-avatar">{roleConfig.gerente.icon}</div>
+                            <div className="user-avatar"><AppIcon name="users" /></div>
                             <div className="user-info">
                               <h3>{gerente.name}</h3>
                               <p>{gerente.email}</p>
@@ -163,7 +164,7 @@ export default function Equipe() {
                             {gerente.corretores.map(corretor => (
                               <Card key={corretor.id} className="user-card corretor">
                                 <div className="user-header">
-                                  <div className="user-avatar">{roleConfig.corretor.icon}</div>
+                                  <div className="user-avatar"><AppIcon name="users" /></div>
                                   <div className="user-info">
                                     <h3>{corretor.name}</h3>
                                     <p>{corretor.email}</p>

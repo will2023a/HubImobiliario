@@ -63,7 +63,7 @@ export default function Webhooks() {
     { key: 'id', label: 'Ações', render: (val, row) => (
       <div style={{ display: 'flex', gap: '0.25rem' }}>
         <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleToggle(val, row.ativo) }}>{row.ativo ? '⏸' : '▶'}</Button>
-        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(val) }}>🗑️</Button>
+        <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(val) }}>Excluir</Button>
       </div>
     )}
   ]

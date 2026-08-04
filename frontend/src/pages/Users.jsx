@@ -87,7 +87,7 @@ export default function Users() {
 
       {filtered.length === 0 ? (
         <EmptyState
-          icon="👥"
+          icon="users"
           title="Nenhum usuário encontrado"
           description="Adicione membros à sua equipe."
           action={<Button onClick={() => navigate('/dashboard/users/novo')}>Adicionar Membro</Button>}

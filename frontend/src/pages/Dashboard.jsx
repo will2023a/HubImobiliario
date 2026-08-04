@@ -39,6 +39,7 @@ import Auditoria from './admin/Auditoria'
 import Webhooks from './admin/Webhooks'
 import PageAccess from '../components/PageAccess'
 import './Dashboard.css'
+import AppIcon from '../components/ui/AppIcon'
 
 export default function Dashboard(){
   const allowed = (page, element, edit = false) => <PageAccess page={page} edit={edit}>{element}</PageAccess>
@@ -150,32 +151,32 @@ function DashboardHome() {
   return (
     <div className="dashboard-home">
       <div className="dashboard-greeting">
-        <h2>Olá, {user?.name?.split(' ')[0]} 👋</h2>
+        <h2>Olá, {user?.name?.split(' ')[0]}</h2>
         <p>Aqui está o resumo do seu dia.</p>
       </div>
 
       <div className="dashboard-kpis">
         <KPICard
-          icon="👤"
+          icon="users"
           title="Leads"
           value={stats?.totalLeads || 0}
           subtitle="Total cadastrados"
         />
         <KPICard
-          icon="📄"
+          icon="document"
           title="Propostas Pendentes"
           value={stats?.propostasPendentes || 0}
           subtitle="Aguardando aprovação"
           variant={stats?.propostasPendentes > 0 ? 'warning' : 'default'}
         />
         <KPICard
-          icon="✅"
+          icon="check"
           title="Vendas Fechadas"
           value={stats?.vendasFechadas || 0}
           subtitle="Propostas aprovadas"
         />
         <KPICard
-          icon="🏗️"
+          icon="building"
           title="Empreendimentos"
           value={stats?.empreendimentos || 0}
           subtitle="Ativos no sistema"
@@ -188,7 +189,7 @@ function DashboardHome() {
           <div className="dashboard-activity-list">
             {recentActivity.map(proposta => (
               <div key={proposta.id} className="dashboard-activity-item">
-                <span className="activity-icon">📄</span>
+                <span className="activity-icon"><AppIcon name="document" size={18} /></span>
                 <div className="activity-info">
                   <span className="activity-title">
                     Proposta para {proposta.clienteNome} {proposta.clienteSobrenome}
