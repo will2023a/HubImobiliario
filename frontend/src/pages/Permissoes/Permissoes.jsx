@@ -1,173 +1,106 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import api from '../../services/api'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
+import { Select } from '../../components/ui/Input'
 import './Permissoes.css'
 
+const pages = [
+  ['dashboard', 'Dashboard'], ['pipeline', 'Pipeline'], ['leads', 'Leads'],
+  ['tasks', 'Tarefas'], ['empreendimentos', 'Empreendimentos'], ['imoveis', 'Imóveis'],
+  ['propostas', 'Propostas'], ['visitas', 'Visitas'], ['inbox', 'Inbox'],
+  ['templates', 'Templates'], ['marketing', 'Marketing'], ['agenda', 'Agenda'],
+  ['analytics', 'Analytics'], ['automations', 'Automações'], ['comissoes', 'Comissões'],
+  ['users', 'Equipe'], ['permissions', 'Acessos'], ['settings', 'Configurações'],
+  ['audit', 'Auditoria'], ['webhooks', 'Webhooks']
+]
+
 export default function Permissoes() {
-  const [permissoes, setPermissoes] = useState([])
+  const [users, setUsers] = useState([])
+  const [userId, setUserId] = useState('')
+  const [access, setAccess] = useState([])
   const [loading, setLoading] = useState(true)
-  const [hasChanges, setHasChanges] = useState(false)
-
-  const roles = [
-    { id: 'admin_imobiliaria', label: 'Admin Imobiliária', icon: '⚙️' },
-    { id: 'diretor', label: 'Diretor', icon: '👔' },
-    { id: 'gerente', label: 'Gerente', icon: '📊' },
-    { id: 'corretor', label: 'Corretor', icon: '🤝' }
-  ]
-
-  const recursos = [
-    { id: 'empreendimentos', label: 'Empreendimentos', icon: '🏢' },
-    { id: 'unidades', label: 'Unidades', icon: '🏠' },
-    { id: 'propostas', label: 'Propostas', icon: '📄' },
-    { id: 'leads', label: 'Leads', icon: '👤' },
-    { id: 'imoveis', label: 'Imóveis', icon: '🏘️' },
-    { id: 'users', label: 'Usuários', icon: '👥' },
-    { id: 'permissoes', label: 'Permissões', icon: '🔐' }
-  ]
-
-  const acoes = ['criar', 'ler', 'atualizar', 'deletar']
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    loadPermissoes()
+    api.get('/users').then(({ data }) => {
+      const configurable = data.filter(user => user.role !== 'super_admin')
+      setUsers(configurable)
+      if (configurable[0]) setUserId(String(configurable[0].id))
+    }).finally(() => setLoading(false))
   }, [])
 
-  const loadPermissoes = async () => {
-    try {
-      setLoading(true)
-      const response = await api.get('/permissoes')
-      setPermissoes(response.data)
-    } catch (error) {
-      console.error('Erro ao carregar permissões:', error)
-      // Inicializar com estrutura vazia se não existir
-      const initialPermissoes = []
-      roles.forEach(role => {
-        recursos.forEach(recurso => {
-          acoes.forEach(acao => {
-            initialPermissoes.push({
-              role: role.id,
-              recurso: recurso.id,
-              acao,
-              permitido: false
-            })
-          })
-        })
-      })
-      setPermissoes(initialPermissoes)
-    } finally {
-      setLoading(false)
-    }
-  }
+  useEffect(() => {
+    if (!userId) return
+    setLoading(true)
+    api.get(`/users/${userId}/access`)
+      .then(({ data }) => setAccess(data))
+      .finally(() => setLoading(false))
+  }, [userId])
 
-  const togglePermissao = (role, recurso, acao) => {
-    setPermissoes(prev => {
-      const index = prev.findIndex(p => 
-        p.role === role && p.recurso === recurso && p.acao === acao
-      )
-      
-      if (index >= 0) {
-        const newPermissoes = [...prev]
-        newPermissoes[index] = { ...newPermissoes[index], permitido: !newPermissoes[index].permitido }
-        setHasChanges(true)
-        return newPermissoes
+  function toggle(page, field) {
+    setAccess(current => current.map(rule => {
+      if (rule.page !== page) return rule
+      if (field === 'canView') {
+        const canView = !rule.canView
+        return { ...rule, canView, canEdit: canView ? rule.canEdit : false }
       }
-      return prev
-    })
+      return { ...rule, canEdit: !rule.canEdit, canView: !rule.canEdit ? true : rule.canView }
+    }))
   }
 
-  const isPermitido = (role, recurso, acao) => {
-    const perm = permissoes.find(p => 
-      p.role === role && p.recurso === recurso && p.acao === acao
-    )
-    return perm?.permitido || false
-  }
-
-  const handleSave = async () => {
+  async function save() {
+    setSaving(true)
     try {
-      setLoading(true)
-      await api.post('/permissoes/bulk', { permissoes })
-      alert('Permissões atualizadas com sucesso!')
-      setHasChanges(false)
+      const { data } = await api.put(`/users/${userId}/access`, { access })
+      setAccess(data)
+      alert('Acessos do usuário atualizados.')
     } catch (error) {
-      console.error('Erro ao salvar permissões:', error)
-      alert('Erro ao salvar permissões')
+      alert(error.response?.data?.error || 'Não foi possível salvar os acessos.')
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
-  const acaoLabels = {
-    criar: 'Criar',
-    ler: 'Ler',
-    atualizar: 'Editar',
-    deletar: 'Excluir'
-  }
+  const selected = users.find(user => String(user.id) === userId)
+  const ruleFor = page => access.find(rule => rule.page === page) || {}
 
   return (
     <div className="permissoes-container">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Gestão de Permissões</h1>
-          <p className="page-subtitle">Configure o que cada cargo pode fazer no sistema</p>
+          <h1 className="page-title">Acessos por usuário</h1>
+          <p className="page-subtitle">Escolha quais páginas o usuário vê e se pode apenas consultar ou também editar.</p>
         </div>
-        {hasChanges && (
-          <Button variant="primary" onClick={handleSave} disabled={loading}>
-            Salvar Alterações
-          </Button>
-        )}
+        <Button variant="primary" onClick={save} disabled={!userId || loading || saving}>
+          {saving ? 'Salvando...' : 'Salvar acessos'}
+        </Button>
       </div>
 
-      {loading && !hasChanges ? (
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Carregando permissões...</p>
-        </div>
-      ) : (
-        <div className="permissoes-grid">
-          {recursos.map(recurso => (
-            <Card key={recurso.id} padding="lg" className="recurso-card">
-              <div className="recurso-header">
-                <span className="recurso-icon">{recurso.icon}</span>
-                <h3 className="recurso-title">{recurso.label}</h3>
-              </div>
+      <Card padding="lg">
+        <Select label="Usuário" value={userId} onChange={event => setUserId(event.target.value)} fullWidth>
+          {users.map(user => <option key={user.id} value={user.id}>{user.name} — {user.role}</option>)}
+        </Select>
+        {selected && <p className="page-subtitle">Configurando: {selected.email}</p>}
 
-              <div className="permissoes-matrix">
-                <div className="matrix-header">
-                  <div className="matrix-cell header-cell">Ação</div>
-                  {roles.map(role => (
-                    <div key={role.id} className="matrix-cell header-cell">
-                      <div className="role-header">
-                        <span>{role.icon}</span>
-                        <span>{role.label}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {acoes.map(acao => (
-                  <div key={acao} className="matrix-row">
-                    <div className="matrix-cell action-cell">
-                      {acaoLabels[acao]}
-                    </div>
-                    {roles.map(role => (
-                      <div key={role.id} className="matrix-cell">
-                        <label className="checkbox-container">
-                          <input
-                            type="checkbox"
-                            checked={isPermitido(role.id, recurso.id, acao)}
-                            onChange={() => togglePermissao(role.id, recurso.id, acao)}
-                          />
-                          <span className="checkbox-custom"></span>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                ))}
+        {loading ? <div className="loading-state"><div className="spinner"/><p>Carregando...</p></div> : (
+          <div className="permissoes-matrix">
+            <div className="matrix-header">
+              <div className="matrix-cell header-cell">Página</div>
+              <div className="matrix-cell header-cell">Pode visualizar</div>
+              <div className="matrix-cell header-cell">Pode editar</div>
+            </div>
+            {pages.map(([page, label]) => {
+              const rule = ruleFor(page)
+              return <div className="matrix-row" key={page}>
+                <div className="matrix-cell action-cell">{label}</div>
+                <div className="matrix-cell"><input aria-label={`Visualizar ${label}`} type="checkbox" checked={Boolean(rule.canView)} onChange={() => toggle(page, 'canView')}/></div>
+                <div className="matrix-cell"><input aria-label={`Editar ${label}`} type="checkbox" checked={Boolean(rule.canEdit)} disabled={!rule.canView} onChange={() => toggle(page, 'canEdit')}/></div>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+            })}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

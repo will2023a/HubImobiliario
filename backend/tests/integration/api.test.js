@@ -1,4 +1,5 @@
 const request = require('supertest');
+process.env.EVOLUTION_WEBHOOK_SECRET = 'test-webhook-secret';
 const app = require('../../src/app');
 
 describe('API Endpoints', () => {
@@ -95,13 +96,26 @@ describe('API Endpoints', () => {
     });
   });
 
-  describe('POST /webhooks/evolution (no auth required)', () => {
-    it('should accept webhook and return 200', async () => {
+  describe('POST /webhooks/evolution', () => {
+    it('should reject webhook without secret', async () => {
+      const res = await request(app).post('/webhooks/evolution').send({ event: 'messages.upsert', data: {} });
+      expect(res.statusCode).toBe(401);
+    });
+
+    it('should accept webhook with valid secret', async () => {
       const res = await request(app)
         .post('/webhooks/evolution')
+        .set('x-webhook-secret', 'test-webhook-secret')
         .send({ event: 'messages.upsert', data: {} });
       expect(res.statusCode).toBe(200);
       expect(res.body.received).toBe(true);
     });
+  });
+
+  it('should block public user registration', async () => {
+    const res = await request(app).post('/auth/register').send({
+      name: 'Attacker', email: 'attacker@test.com', password: '123456', role: 'super_admin'
+    });
+    expect(res.statusCode).toBe(403);
   });
 });

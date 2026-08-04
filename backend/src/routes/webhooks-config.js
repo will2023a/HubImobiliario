@@ -4,6 +4,13 @@ const authenticate = require('../middlewares/auth');
 const prisma = require('../prisma/client');
 const crypto = require('crypto');
 
+async function allowedWebhook(req, id) {
+  const webhook = await prisma.webhook.findUnique({ where: { id } });
+  if (!webhook) return null;
+  if (req.user.role !== 'super_admin' && webhook.imobiliariaId !== req.user.imobiliariaId) return false;
+  return webhook;
+}
+
 // GET /webhooks-config - Listar webhooks configurados
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -43,9 +50,12 @@ router.post('/', authenticate, async (req, res) => {
 // PUT /webhooks-config/:id - Atualizar
 router.put('/:id', authenticate, async (req, res) => {
   try {
+    const id = parseInt(req.params.id);
+    const existing = await allowedWebhook(req, id);
+    if (!existing) return res.status(existing === false ? 403 : 404).json({ error: existing === false ? 'Forbidden' : 'Not found' });
     const { url, eventos, ativo } = req.body;
     const webhook = await prisma.webhook.update({
-      where: { id: parseInt(req.params.id) },
+      where: { id },
       data: {
         ...(url && { url }),
         ...(eventos && { eventos }),
@@ -61,7 +71,10 @@ router.put('/:id', authenticate, async (req, res) => {
 // DELETE /webhooks-config/:id
 router.delete('/:id', authenticate, async (req, res) => {
   try {
-    await prisma.webhook.delete({ where: { id: parseInt(req.params.id) } });
+    const id = parseInt(req.params.id);
+    const existing = await allowedWebhook(req, id);
+    if (!existing) return res.status(existing === false ? 403 : 404).json({ error: existing === false ? 'Forbidden' : 'Not found' });
+    await prisma.webhook.delete({ where: { id } });
     res.json({ message: 'Webhook removido' });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao remover' });
@@ -71,8 +84,11 @@ router.delete('/:id', authenticate, async (req, res) => {
 // GET /webhooks-config/:id/deliveries - Log de entregas
 router.get('/:id/deliveries', authenticate, async (req, res) => {
   try {
+    const id = parseInt(req.params.id);
+    const existing = await allowedWebhook(req, id);
+    if (!existing) return res.status(existing === false ? 403 : 404).json({ error: existing === false ? 'Forbidden' : 'Not found' });
     const deliveries = await prisma.webhookDelivery.findMany({
-      where: { webhookId: parseInt(req.params.id) },
+      where: { webhookId: id },
       orderBy: { createdAt: 'desc' },
       take: 50
     });

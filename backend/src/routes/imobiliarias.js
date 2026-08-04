@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../prisma/client');
 const auth = require('../middlewares/auth');
+const { ensureRole, ensureSameImobiliaria } = require('../middlewares/roles');
 
 const router = express.Router();
 
@@ -18,19 +19,19 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/', auth, async (req, res) => {
+router.get('/', auth, ensureRole('super_admin'), async (req, res) => {
   const list = await prisma.imobiliaria.findMany();
   res.json(list);
 });
 
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', auth, ensureSameImobiliaria, async (req, res) => {
   const { id } = req.params;
   const imob = await prisma.imobiliaria.findUnique({ where: { id: Number(id) } });
   if(!imob) return res.status(404).json({ error: 'Not found' });
   res.json(imob);
 });
 
-router.patch('/:id', auth, async (req, res) => {
+router.patch('/:id', auth, ensureRole('super_admin'), async (req, res) => {
   const { id } = req.params;
   try{
     const updated = await prisma.imobiliaria.update({ where: { id: Number(id) }, data: req.body });
@@ -40,7 +41,7 @@ router.patch('/:id', auth, async (req, res) => {
   }
 });
 
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', auth, ensureRole('super_admin'), async (req, res) => {
   const { id } = req.params;
   try{
     await prisma.imobiliaria.delete({ where: { id: Number(id) } });

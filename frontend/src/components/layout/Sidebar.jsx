@@ -13,80 +13,79 @@ const menuSections = [
   {
     label: 'Principal',
     items: [
-      { label: 'Dashboard', path: '/dashboard', icon: <IconDashboard/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
-      { label: 'Pipeline', path: '/dashboard/pipeline', icon: <IconPipeline/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
+      { label: 'Dashboard', path: '/dashboard', icon: <IconDashboard/>, page: 'dashboard' },
+      { label: 'Pipeline', path: '/dashboard/pipeline', icon: <IconPipeline/>, page: 'pipeline' },
     ]
   },
   {
     label: 'CRM',
     items: [
-      { label: 'Leads', path: '/dashboard/leads', icon: <IconLeads/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
-      { label: 'Tarefas', path: '/dashboard/tarefas', icon: <IconTasks/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
+      { label: 'Leads', path: '/dashboard/leads', icon: <IconLeads/>, page: 'leads' },
+      { label: 'Tarefas', path: '/dashboard/tarefas', icon: <IconTasks/>, page: 'tasks' },
     ]
   },
   {
     label: 'Imóveis',
     items: [
-      { label: 'Empreendimentos', path: '/dashboard/empreendimentos', icon: <IconBuilding/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
-      { label: 'Propostas', path: '/dashboard/propostas', icon: <IconDocument/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
-      { label: 'Visitas', path: '/dashboard/visitas', icon: <IconMapPin/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
+      { label: 'Empreendimentos', path: '/dashboard/empreendimentos', icon: <IconBuilding/>, page: 'empreendimentos' },
+      { label: 'Propostas', path: '/dashboard/propostas', icon: <IconDocument/>, page: 'propostas' },
+      { label: 'Visitas', path: '/dashboard/visitas', icon: <IconMapPin/>, page: 'visitas' },
     ]
   },
   {
     label: 'Atendimento',
     items: [
-      { label: 'Inbox', path: '/dashboard/inbox', icon: <IconInbox/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
+      { label: 'Inbox', path: '/dashboard/inbox', icon: <IconInbox/>, page: 'inbox' },
     ]
   },
   {
     label: 'Marketing',
     items: [
-      { label: 'Materiais', path: '/dashboard/marketing', icon: <IconMegaphone/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente'] },
-      { label: 'Campanhas', path: '/dashboard/marketing/campanhas', icon: <IconTarget/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente'] },
+      { label: 'Materiais', path: '/dashboard/marketing', icon: <IconMegaphone/>, page: 'marketing' },
     ]
   },
   {
     label: 'Agenda',
     items: [
-      { label: 'Calendário', path: '/dashboard/agenda', icon: <IconCalendar/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
+      { label: 'Calendário', path: '/dashboard/agenda', icon: <IconCalendar/>, page: 'agenda' },
     ]
   },
   {
     label: 'Analytics',
     items: [
-      { label: 'Dashboard BI', path: '/dashboard/analytics', icon: <IconChart/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente'] },
+      { label: 'Dashboard BI', path: '/dashboard/analytics', icon: <IconChart/>, page: 'analytics' },
     ]
   },
   {
     label: 'Automações',
     items: [
-      { label: 'Fluxos', path: '/dashboard/automacoes', icon: <IconBolt/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor'] },
+      { label: 'Fluxos', path: '/dashboard/automacoes', icon: <IconBolt/>, page: 'automations' },
     ]
   },
   {
     label: 'Financeiro',
     items: [
-      { label: 'Comissões', path: '/dashboard/financeiro/comissoes', icon: <IconDollar/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente', 'corretor'] },
+      { label: 'Comissões', path: '/dashboard/financeiro/comissoes', icon: <IconDollar/>, page: 'comissoes' },
     ]
   },
   {
     label: 'Administração',
     items: [
-      { label: 'Equipe', path: '/dashboard/equipe', icon: <IconUsers/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente'] },
-      { label: 'Permissões', path: '/dashboard/permissoes', icon: <IconLock/>, roles: ['super_admin', 'admin_imobiliaria'] },
-      { label: 'Configurações', path: '/dashboard/configuracoes', icon: <IconSettings/>, roles: ['super_admin', 'admin_imobiliaria'] },
+      { label: 'Equipe', path: '/dashboard/equipe', icon: <IconUsers/>, page: 'users' },
+      { label: 'Acessos por usuário', path: '/dashboard/permissoes', icon: <IconLock/>, page: 'permissions' },
+      { label: 'Configurações', path: '/dashboard/configuracoes', icon: <IconSettings/>, page: 'settings' },
     ]
   },
   {
     label: 'Super Admin',
     items: [
-      { label: 'Imobiliárias', path: '/super/imobiliarias', icon: <IconOffice/>, roles: ['super_admin'] },
+      { label: 'Imobiliárias', path: '/super/imobiliarias', icon: <IconOffice/>, page: 'super', roles: ['super_admin'] },
     ]
   },
 ]
 
 export default function Sidebar({ isOpen, onToggle }) {
-  const { user } = useContext(AuthContext)
+  const { user, can } = useContext(AuthContext)
   const location = useLocation()
   const [collapsedSections, setCollapsedSections] = useState({})
 
@@ -102,7 +101,7 @@ export default function Sidebar({ isOpen, onToggle }) {
   const visibleSections = menuSections
     .map(section => ({
       ...section,
-      items: section.items.filter(item => user && item.roles.includes(user.role))
+      items: section.items.filter(item => user && (item.roles ? item.roles.includes(user.role) : can(item.page)))
     }))
     .filter(section => section.items.length > 0)
 

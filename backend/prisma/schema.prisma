@@ -8,59 +8,60 @@ datasource db {
 }
 
 model User {
-  id              Int           @id @default(autoincrement())
+  id              Int                   @id @default(autoincrement())
   name            String
-  email           String        @unique
+  email           String                @unique
   password        String
   role            String // super_admin, admin_imobiliaria, diretor, gerente, corretor
   imobiliariaId   Int?
-  imobiliaria     Imobiliaria?  @relation(fields: [imobiliariaId], references: [id])
+  imobiliaria     Imobiliaria?          @relation(fields: [imobiliariaId], references: [id])
   diretorId       Int? // Se for gerente, aponta para o diretor
-  diretor         User?         @relation("DiretorGerentes", fields: [diretorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  gerentes        User[]        @relation("DiretorGerentes")
+  diretor         User?                 @relation("DiretorGerentes", fields: [diretorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gerentes        User[]                @relation("DiretorGerentes")
   gerenteId       Int? // Se for corretor, aponta para o gerente
-  gerente         User?         @relation("GerenteCorretores", fields: [gerenteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  corretores      User[]        @relation("GerenteCorretores")
-  leadsAsCorretor Lead[]        @relation("LeadCorretor")
+  gerente         User?                 @relation("GerenteCorretores", fields: [gerenteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  corretores      User[]                @relation("GerenteCorretores")
+  leadsAsCorretor Lead[]                @relation("LeadCorretor")
   atendimentos    Atendimento[]
   propostas       Proposta[]
-  visitas         Visita[]       @relation("AtendenteVisitas")
+  visitas         Visita[]              @relation("AtendenteVisitas")
   dispensacoes    DispensacaoMaterial[] @relation("DispensadoPor")
-  tasks           Task[]         @relation("UserTasks")
-  notifications   Notification[] @relation("UserNotifications")
-  conversations   Conversation[] @relation("ConversationAssigned")
-  comissoes       Comissao[]     @relation("UserComissoes")
-  auditLogs       AuditLog[]     @relation("UserAuditLogs")
-  createdAt       DateTime      @default(now())
+  tasks           Task[]                @relation("UserTasks")
+  notifications   Notification[]        @relation("UserNotifications")
+  conversations   Conversation[]        @relation("ConversationAssigned")
+  comissoes       Comissao[]            @relation("UserComissoes")
+  auditLogs       AuditLog[]            @relation("UserAuditLogs")
+  accessRules     UserAccess[]
+  createdAt       DateTime              @default(now())
 }
 
 model Imobiliaria {
-  id              Int              @id @default(autoincrement())
-  nome            String
-  cnpj            String
-  email           String
-  telefone        String
-  status          String // ativa, inativa, aguardando_aprovacao
-  plan            String // basic, pro, enterprise
-  comissaoPercent Float            @default(5.0) // % de comissão padrão desta imobiliária
-  usuarios        User[]
-  imoveis         Imovel[]
-  leads           Lead[]
-  empreendimentos Empreendimento[]
-  propostas       Proposta[]        @relation("ImobiliariaPropostas")
-  visitas         Visita[]
-  pipelineStages  PipelineStage[]
-  tasks           Task[]
-  notifications   Notification[]
-  config          ConfigImobiliaria?
+  id                        Int                    @id @default(autoincrement())
+  nome                      String
+  cnpj                      String
+  email                     String
+  telefone                  String
+  status                    String // ativa, inativa, aguardando_aprovacao
+  plan                      String // basic, pro, enterprise
+  comissaoPercent           Float                  @default(5.0) // % de comissão padrão desta imobiliária
+  usuarios                  User[]
+  imoveis                   Imovel[]
+  leads                     Lead[]
+  empreendimentos           Empreendimento[]
+  propostas                 Proposta[]             @relation("ImobiliariaPropostas")
+  visitas                   Visita[]
+  pipelineStages            PipelineStage[]
+  tasks                     Task[]
+  notifications             Notification[]
+  config                    ConfigImobiliaria?
   empreendimentosVinculados EmpreendimentoEquipe[]
-  conversations   Conversation[]
-  templates       MessageTemplate[]
-  comissoes       Comissao[]
-  automations     Automation[]
-  auditLogs       AuditLog[]
-  webhooks        Webhook[]
-  createdAt       DateTime         @default(now())
+  conversations             Conversation[]
+  templates                 MessageTemplate[]
+  comissoes                 Comissao[]
+  automations               Automation[]
+  auditLogs                 AuditLog[]
+  webhooks                  Webhook[]
+  createdAt                 DateTime               @default(now())
 }
 
 model Permissao {
@@ -73,6 +74,20 @@ model Permissao {
   createdAt     DateTime @default(now())
 
   @@unique([role, recurso, acao, imobiliariaId])
+}
+
+// Acesso individual configurado no perfil do usuário. A regra individual
+// prevalece sobre as permissões padrão do cargo.
+model UserAccess {
+  id      Int     @id @default(autoincrement())
+  userId  Int
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page    String
+  canView Boolean @default(false)
+  canEdit Boolean @default(false)
+
+  @@unique([userId, page])
+  @@index([userId])
 }
 
 model Imovel {
@@ -90,22 +105,22 @@ model Imovel {
 }
 
 model Lead {
-  id            Int           @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   nome          String
   email         String?
   telefone      String
   status        String
   origem        String
-  temperatura   String?       @default("morno") // quente, morno, frio
+  temperatura   String?        @default("morno") // quente, morno, frio
   corretorId    Int?
-  corretor      User?         @relation("LeadCorretor", fields: [corretorId], references: [id])
+  corretor      User?          @relation("LeadCorretor", fields: [corretorId], references: [id])
   imobiliariaId Int
-  imobiliaria   Imobiliaria   @relation(fields: [imobiliariaId], references: [id])
+  imobiliaria   Imobiliaria    @relation(fields: [imobiliariaId], references: [id])
   atendimentos  Atendimento[]
   pipeline      LeadPipeline?
-  tasks         Task[]        @relation("LeadTasks")
+  tasks         Task[]         @relation("LeadTasks")
   conversations Conversation[]
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime       @default(now())
 }
 
 model Atendimento {
@@ -119,23 +134,23 @@ model Atendimento {
 }
 
 model Empreendimento {
-  id                     Int         @id @default(autoincrement())
+  id                     Int                    @id @default(autoincrement())
   nome                   String
   tipoUnidade            String // lote, casa, apartamento
   quantidadeUnidades     Int
-  imagemUrl              String?     @db.LongText
+  imagemUrl              String?                @db.LongText
   blocosCount            Int?
   andaresPorBloco        Int?
   apartamentosPorAndar   Int?
   bairro                 String
   cidade                 String
   estado                 String
-  endereco               String?     // Endereço completo (rua, número)
-  latitude               Float?      // Geolocalização
-  longitude              Float?      // Geolocalização
+  endereco               String? // Endereço completo (rua, número)
+  latitude               Float? // Geolocalização
+  longitude              Float? // Geolocalização
   dataLancamento         DateTime?
   dataPrevisaoConstrucao DateTime?
-  descricao              String?     @db.Text
+  descricao              String?                @db.Text
   contatoGerente1        String?
   nomeGerente1           String?
   contatoGerente2        String?
@@ -147,7 +162,7 @@ model Empreendimento {
   contatoGerente5        String?
   nomeGerente5           String?
   imobiliariaId          Int
-  imobiliaria            Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  imobiliaria            Imobiliaria            @relation(fields: [imobiliariaId], references: [id])
   unidades               Unidade[]
   propostas              Proposta[]
   visitas                Visita[]
@@ -155,7 +170,7 @@ model Empreendimento {
   galeria                GaleriaImagem[]
   equipes                EmpreendimentoEquipe[]
   tabelasPreco           TabelaPreco[]
-  createdAt              DateTime    @default(now())
+  createdAt              DateTime               @default(now())
 }
 
 model Unidade {
@@ -203,67 +218,67 @@ model Proposta {
   valorUnico      Float?
   saldoFinanciar  Float?
 
-  status      String   @default("pendente") // pendente, aprovada, rejeitada
-  observacoes String?  @db.Text
+  status      String     @default("pendente") // pendente, aprovada, rejeitada
+  observacoes String?    @db.Text
   comissoes   Comissao[]
-  createdAt   DateTime @default(now())
+  createdAt   DateTime   @default(now())
 }
 
 model Visita {
-  id                 Int            @id @default(autoincrement())
-  nomeVisitante      String
-  telefoneVisitante  String
-  emailVisitante     String?
-  tipo               String // agendada, espontanea
-  dataVisita         DateTime       @default(now())
-  empreendimentoId   Int
-  empreendimento     Empreendimento @relation(fields: [empreendimentoId], references: [id])
-  unidadeId          Int?
-  unidade            Unidade?       @relation(fields: [unidadeId], references: [id])
-  imobiliariaId      Int?
-  imobiliaria        Imobiliaria?   @relation(fields: [imobiliariaId], references: [id])
-  atendenteId        Int
-  atendente          User           @relation("AtendenteVisitas", fields: [atendenteId], references: [id])
-  observacoes        String?        @db.Text
-  createdAt          DateTime       @default(now())
+  id                Int            @id @default(autoincrement())
+  nomeVisitante     String
+  telefoneVisitante String
+  emailVisitante    String?
+  tipo              String // agendada, espontanea
+  dataVisita        DateTime       @default(now())
+  empreendimentoId  Int
+  empreendimento    Empreendimento @relation(fields: [empreendimentoId], references: [id])
+  unidadeId         Int?
+  unidade           Unidade?       @relation(fields: [unidadeId], references: [id])
+  imobiliariaId     Int?
+  imobiliaria       Imobiliaria?   @relation(fields: [imobiliariaId], references: [id])
+  atendenteId       Int
+  atendente         User           @relation("AtendenteVisitas", fields: [atendenteId], references: [id])
+  observacoes       String?        @db.Text
+  createdAt         DateTime       @default(now())
 }
 
 model MaterialMarketing {
-  id                 Int                   @id @default(autoincrement())
-  tipo               String // banner, folder
-  empreendimentoId   Int
-  empreendimento     Empreendimento        @relation(fields: [empreendimentoId], references: [id])
-  quantidadeInicial  Int
-  quantidadeEstoque  Int
-  descricao          String?               @db.Text
-  dispensacoes       DispensacaoMaterial[]
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
+  id                Int                   @id @default(autoincrement())
+  tipo              String // banner, folder
+  empreendimentoId  Int
+  empreendimento    Empreendimento        @relation(fields: [empreendimentoId], references: [id])
+  quantidadeInicial Int
+  quantidadeEstoque Int
+  descricao         String?               @db.Text
+  dispensacoes      DispensacaoMaterial[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 }
 
 model DispensacaoMaterial {
-  id               Int               @id @default(autoincrement())
-  materialId       Int
-  material         MaterialMarketing @relation(fields: [materialId], references: [id], onDelete: Cascade)
-  quantidade       Int
-  dispensadoPara   String
-  dispensadoPor    Int
-  dispensadoPorUser User             @relation("DispensadoPor", fields: [dispensadoPor], references: [id])
-  dataDispensacao  DateTime          @default(now())
-  observacoes      String?           @db.Text
+  id                Int               @id @default(autoincrement())
+  materialId        Int
+  material          MaterialMarketing @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  quantidade        Int
+  dispensadoPara    String
+  dispensadoPor     Int
+  dispensadoPorUser User              @relation("DispensadoPor", fields: [dispensadoPor], references: [id])
+  dataDispensacao   DateTime          @default(now())
+  observacoes       String?           @db.Text
 }
 
 // ===== PIPELINE CRM =====
 
 model PipelineStage {
-  id            Int           @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   nome          String
   ordem         Int
-  cor           String        @default("#3b82f6")
+  cor           String         @default("#3b82f6")
   imobiliariaId Int
-  imobiliaria   Imobiliaria   @relation(fields: [imobiliariaId], references: [id])
+  imobiliaria   Imobiliaria    @relation(fields: [imobiliariaId], references: [id])
   leads         LeadPipeline[]
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime       @default(now())
 
   @@unique([imobiliariaId, ordem])
 }
@@ -286,7 +301,7 @@ model Task {
   id            Int         @id @default(autoincrement())
   titulo        String
   descricao     String?     @db.Text
-  tipo          String      // follow_up, ligacao, visita, documentacao, outro
+  tipo          String // follow_up, ligacao, visita, documentacao, outro
   prioridade    String      @default("media") // baixa, media, alta
   status        String      @default("pendente") // pendente, concluida, atrasada
   prazo         DateTime
@@ -306,11 +321,11 @@ model Notification {
   id            Int         @id @default(autoincrement())
   userId        Int
   user          User        @relation("UserNotifications", fields: [userId], references: [id])
-  tipo          String      // nova_mensagem, nova_proposta, proposta_aprovada, lead_atribuido, lembrete_tarefa
+  tipo          String // nova_mensagem, nova_proposta, proposta_aprovada, lead_atribuido, lembrete_tarefa
   titulo        String
   mensagem      String
   lida          Boolean     @default(false)
-  link          String?     // URL de destino ao clicar
+  link          String? // URL de destino ao clicar
   imobiliariaId Int
   imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
   createdAt     DateTime    @default(now())
@@ -321,20 +336,20 @@ model Notification {
 // ===== CONFIGURAÇÕES DA IMOBILIÁRIA =====
 
 model ConfigImobiliaria {
-  id                 Int         @id @default(autoincrement())
-  imobiliariaId      Int         @unique
-  imobiliaria        Imobiliaria @relation(fields: [imobiliariaId], references: [id])
-  logoUrl            String?
-  corPrimaria        String      @default("#6366f1")
-  corSecundaria      String      @default("#8b5cf6")
-  tema               String      @default("dark") // dark, light
-  horarioInicio      String      @default("08:00")
-  horarioFim         String      @default("18:00")
-  comissaoCorretor   Float       @default(3.0)
-  comissaoGerente    Float       @default(1.0)
-  comissaoDiretor    Float       @default(0.5)
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  id               Int         @id @default(autoincrement())
+  imobiliariaId    Int         @unique
+  imobiliaria      Imobiliaria @relation(fields: [imobiliariaId], references: [id])
+  logoUrl          String?
+  corPrimaria      String      @default("#6366f1")
+  corSecundaria    String      @default("#8b5cf6")
+  tema             String      @default("dark") // dark, light
+  horarioInicio    String      @default("08:00")
+  horarioFim       String      @default("18:00")
+  comissaoCorretor Float       @default(3.0)
+  comissaoGerente  Float       @default(1.0)
+  comissaoDiretor  Float       @default(0.5)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 }
 
 // ===== GALERIA DE IMAGENS DO EMPREENDIMENTO =====
@@ -344,7 +359,7 @@ model GaleriaImagem {
   empreendimentoId Int
   empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
   url              String         @db.LongText
-  categoria        String         // fachada, areas_comuns, decorados, plantas, outros
+  categoria        String // fachada, areas_comuns, decorados, plantas, outros
   titulo           String?
   isCapa           Boolean        @default(false)
   ordem            Int            @default(0)
@@ -369,72 +384,72 @@ model EmpreendimentoEquipe {
 // ===== TABELA DE PREÇOS (NCC) =====
 
 model TabelaPreco {
-  id               Int            @id @default(autoincrement())
+  id               Int               @id @default(autoincrement())
   empreendimentoId Int
-  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
-  nome             String         // Ex: "Tabela Padrão", "Tabela Promocional", "NCC Julho 2026"
-  grupo            String         @default("padrao") // padrao, promocional, especial
-  modelo           String         @default("modelo_1") // modelo_1 a modelo_5, flex_01, flex_02
-  ativa            Boolean        @default(true)
-  incluirDesconto  Boolean        @default(false)
-  incluirJuros     Boolean        @default(false)
+  empreendimento   Empreendimento    @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  nome             String // Ex: "Tabela Padrão", "Tabela Promocional", "NCC Julho 2026"
+  grupo            String            @default("padrao") // padrao, promocional, especial
+  modelo           String            @default("modelo_1") // modelo_1 a modelo_5, flex_01, flex_02
+  ativa            Boolean           @default(true)
+  incluirDesconto  Boolean           @default(false)
+  incluirJuros     Boolean           @default(false)
   itens            TabelaPrecoItem[]
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 }
 
 model TabelaPrecoItem {
-  id             Int         @id @default(autoincrement())
-  tabelaId       Int
-  tabela         TabelaPreco @relation(fields: [tabelaId], references: [id], onDelete: Cascade)
-  unidadeId      Int?        // Se vinculado a uma unidade específica (null = item genérico)
-  descricao      String      // Ex: "Entrada", "Parcelas mensais", "Saldo financiamento"
-  valor          Float
-  parcelas       Int?        // Número de parcelas (null = à vista)
-  valorParcela   Float?      // Valor de cada parcela
-  desconto       Float?      // % de desconto
-  juros          Float?      // % de juros
-  observacao     String?     @db.Text
-  ordem          Int         @default(0)
-  createdAt      DateTime    @default(now())
+  id           Int         @id @default(autoincrement())
+  tabelaId     Int
+  tabela       TabelaPreco @relation(fields: [tabelaId], references: [id], onDelete: Cascade)
+  unidadeId    Int? // Se vinculado a uma unidade específica (null = item genérico)
+  descricao    String // Ex: "Entrada", "Parcelas mensais", "Saldo financiamento"
+  valor        Float
+  parcelas     Int? // Número de parcelas (null = à vista)
+  valorParcela Float? // Valor de cada parcela
+  desconto     Float? // % de desconto
+  juros        Float? // % de juros
+  observacao   String?     @db.Text
+  ordem        Int         @default(0)
+  createdAt    DateTime    @default(now())
 }
 
 // ===== INBOX / CONVERSAS =====
 
 model Conversation {
-  id            Int           @id @default(autoincrement())
-  canal         String        // whatsapp, instagram, facebook, email, chat
-  status        String        @default("aberta") // aberta, pendente, resolvida
-  externalId    String?       // ID externo (WhatsApp message ID, etc)
+  id            Int         @id @default(autoincrement())
+  canal         String // whatsapp, instagram, facebook, email, chat
+  status        String      @default("aberta") // aberta, pendente, resolvida
+  externalId    String? // ID externo (WhatsApp message ID, etc)
   contactName   String
   contactPhone  String?
   contactEmail  String?
   leadId        Int?
-  lead          Lead?         @relation(fields: [leadId], references: [id])
+  lead          Lead?       @relation(fields: [leadId], references: [id])
   assignedToId  Int?
-  assignedTo    User?         @relation("ConversationAssigned", fields: [assignedToId], references: [id])
+  assignedTo    User?       @relation("ConversationAssigned", fields: [assignedToId], references: [id])
   imobiliariaId Int
-  imobiliaria   Imobiliaria   @relation(fields: [imobiliariaId], references: [id])
+  imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id])
   messages      Message[]
-  lastMessageAt DateTime      @default(now())
-  createdAt     DateTime      @default(now())
+  lastMessageAt DateTime    @default(now())
+  createdAt     DateTime    @default(now())
 
   @@index([imobiliariaId, status])
   @@index([imobiliariaId, canal])
 }
 
 model Message {
-  id              Int          @id @default(autoincrement())
-  conversationId  Int
-  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  direction       String       // inbound, outbound
-  content         String       @db.Text
-  contentType     String       @default("text") // text, image, audio, document
-  mediaUrl        String?
-  status          String       @default("sent") // sent, delivered, read, failed
-  senderName      String?
-  isAI            Boolean      @default(false)
-  createdAt       DateTime     @default(now())
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      String // inbound, outbound
+  content        String       @db.Text
+  contentType    String       @default("text") // text, image, audio, document
+  mediaUrl       String?
+  status         String       @default("sent") // sent, delivered, read, failed
+  senderName     String?
+  isAI           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
 }
 
 // ===== TEMPLATES DE MENSAGENS =====
@@ -442,7 +457,7 @@ model Message {
 model MessageTemplate {
   id            Int         @id @default(autoincrement())
   nome          String
-  categoria     String      // boas_vindas, follow_up, agendamento, proposta, documentacao
+  categoria     String // boas_vindas, follow_up, agendamento, proposta, documentacao
   conteudo      String      @db.Text // Com variáveis {{nome_lead}}, {{empreendimento}}, etc
   canal         String      @default("todos") // whatsapp, email, todos
   imobiliariaId Int
@@ -459,10 +474,10 @@ model Comissao {
   proposta      Proposta    @relation(fields: [propostaId], references: [id])
   userId        Int
   user          User        @relation("UserComissoes", fields: [userId], references: [id])
-  role          String      // role do usuário no momento do cálculo
-  percentual    Float       // % da comissão
-  valorVenda    Float       // valor total da venda
-  valorComissao Float       // valor calculado
+  role          String // role do usuário no momento do cálculo
+  percentual    Float // % da comissão
+  valorVenda    Float // valor total da venda
+  valorComissao Float // valor calculado
   status        String      @default("pendente") // pendente, paga
   dataPagamento DateTime?
   imobiliariaId Int
@@ -477,9 +492,9 @@ model Automation {
   nome          String
   descricao     String?
   status        String           @default("rascunho") // rascunho, ativo, inativo
-  gatilho       String           // novo_lead, lead_mudou_estagio, mensagem_recebida, tempo, proposta_criada
-  nodes         Json             // Array de nós do fluxo
-  edges         Json             // Array de conexões entre nós
+  gatilho       String // novo_lead, lead_mudou_estagio, mensagem_recebida, tempo, proposta_criada
+  nodes         Json // Array de nós do fluxo
+  edges         Json // Array de conexões entre nós
   imobiliariaId Int
   imobiliaria   Imobiliaria      @relation(fields: [imobiliariaId], references: [id])
   executions    AutomationExec[]
@@ -489,30 +504,30 @@ model Automation {
 }
 
 model AutomationExec {
-  id            Int        @id @default(autoincrement())
-  automationId  Int
-  automation    Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
-  leadId        Int?
-  status        String     // running, success, failed
-  logs          Json?
-  startedAt     DateTime   @default(now())
-  completedAt   DateTime?
+  id           Int        @id @default(autoincrement())
+  automationId Int
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  leadId       Int?
+  status       String // running, success, failed
+  logs         Json?
+  startedAt    DateTime   @default(now())
+  completedAt  DateTime?
 }
 
 // ===== AUDITORIA =====
 
 model AuditLog {
-  id            Int         @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   userId        Int
-  user          User        @relation("UserAuditLogs", fields: [userId], references: [id])
-  acao          String      // login, criar, editar, deletar, aprovar, rejeitar
-  recurso       String      // lead, proposta, empreendimento, usuario, permissao, unidade
+  user          User         @relation("UserAuditLogs", fields: [userId], references: [id])
+  acao          String // login, criar, editar, deletar, aprovar, rejeitar
+  recurso       String // lead, proposta, empreendimento, usuario, permissao, unidade
   recursoId     Int?
   detalhes      Json?
   ip            String?
   imobiliariaId Int?
   imobiliaria   Imobiliaria? @relation(fields: [imobiliariaId], references: [id])
-  createdAt     DateTime    @default(now())
+  createdAt     DateTime     @default(now())
 
   @@index([imobiliariaId, createdAt])
   @@index([userId, createdAt])
@@ -521,15 +536,15 @@ model AuditLog {
 // ===== WEBHOOKS CONFIGURÁVEIS =====
 
 model Webhook {
-  id            Int              @id @default(autoincrement())
+  id            Int               @id @default(autoincrement())
   url           String
-  eventos       Json             // Array de eventos assinados
+  eventos       Json // Array de eventos assinados
   secretKey     String
-  ativo         Boolean          @default(true)
+  ativo         Boolean           @default(true)
   imobiliariaId Int
-  imobiliaria   Imobiliaria      @relation(fields: [imobiliariaId], references: [id])
+  imobiliaria   Imobiliaria       @relation(fields: [imobiliariaId], references: [id])
   deliveries    WebhookDelivery[]
-  createdAt     DateTime         @default(now())
+  createdAt     DateTime          @default(now())
 }
 
 model WebhookDelivery {
@@ -545,45 +560,3 @@ model WebhookDelivery {
 }
 
 // ===== AUDITORIA =====
-
-model AuditLog {
-  id            Int         @id @default(autoincrement())
-  userId        Int
-  user          User        @relation("UserAuditLogs", fields: [userId], references: [id])
-  acao          String      // login, criar, editar, deletar, aprovar, rejeitar
-  recurso       String      // lead, proposta, empreendimento, usuario, permissao, unidade
-  recursoId     Int?
-  detalhes      Json?
-  ip            String?
-  imobiliariaId Int?
-  imobiliaria   Imobiliaria? @relation(fields: [imobiliariaId], references: [id])
-  createdAt     DateTime    @default(now())
-
-  @@index([imobiliariaId, createdAt])
-  @@index([userId, createdAt])
-}
-
-// ===== WEBHOOKS CONFIGURÁVEIS =====
-
-model Webhook {
-  id            Int              @id @default(autoincrement())
-  url           String
-  eventos       Json             // Array de eventos assinados
-  secretKey     String
-  ativo         Boolean          @default(true)
-  imobiliariaId Int
-  imobiliaria   Imobiliaria      @relation(fields: [imobiliariaId], references: [id])
-  deliveries    WebhookDelivery[]
-  createdAt     DateTime         @default(now())
-}
-
-model WebhookDelivery {
-  id         Int      @id @default(autoincrement())
-  webhookId  Int
-  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
-  evento     String
-  payload    Json
-  statusCode Int?
-  sucesso    Boolean
-  createdAt  DateTime @default(now())
-}

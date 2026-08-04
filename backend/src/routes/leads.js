@@ -9,7 +9,7 @@ router.use(auth);
 router.use(multitenant);
 
 router.post('/', async (req, res) => {
-  const data = { ...req.body, imobiliariaId: req.body.imobiliariaId || req.imobiliariaId };
+  const data = { ...req.body, imobiliariaId: req.user.role === 'super_admin' ? req.body.imobiliariaId : req.imobiliariaId };
   try{
     const lead = await prisma.lead.create({ data });
     res.json(lead);
@@ -36,7 +36,12 @@ router.get('/:id', async (req, res) => {
 
 router.patch('/:id', async (req, res) => {
   try{
-    const updated = await prisma.lead.update({ where: { id: Number(req.params.id) }, data: req.body });
+    const id = Number(req.params.id);
+    const existing = await prisma.lead.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+    if (req.user.role !== 'super_admin' && existing.imobiliariaId !== req.imobiliariaId) return res.status(403).json({ error: 'Forbidden' });
+    const { imobiliariaId, ...safeData } = req.body;
+    const updated = await prisma.lead.update({ where: { id }, data: safeData });
     res.json(updated);
   }catch(err){
     res.status(400).json({ error: 'Update failed', details: err.message });
@@ -45,7 +50,11 @@ router.patch('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try{
-    await prisma.lead.delete({ where: { id: Number(req.params.id) } });
+    const id = Number(req.params.id);
+    const existing = await prisma.lead.findUnique({ where: { id } });
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+    if (req.user.role !== 'super_admin' && existing.imobiliariaId !== req.imobiliariaId) return res.status(403).json({ error: 'Forbidden' });
+    await prisma.lead.delete({ where: { id } });
     res.json({ ok: true });
   }catch(err){
     res.status(400).json({ error: 'Delete failed', details: err.message });

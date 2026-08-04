@@ -208,3 +208,17 @@ O sistema é **mobile-first** com layout adaptativo:
 ## 📄 Licença
 
 Proprietário — Gestor Pro 360 © 2026
+# Acessos demonstrativos
+
+Depois de aplicar as migrações e executar `npm run seed` dentro de `backend`, use:
+
+| Perfil | E-mail | Senha | Acesso demonstrado |
+|---|---|---|---|
+| Super admin | `super@gestorpro.local` | `Super@123` | Acesso global |
+| Admin da imobiliária | `admin@prime.local` | `Admin@123` | Configura usuários e acessos |
+| Diretor | `diretor@prime.local` | `Diretor@123` | Gestão ampla |
+| Gerente | `gerente@prime.local` | `Gerente@123` | Gestão operacional |
+| Corretor | `corretor@prime.local` | `Corretor@123` | Operação comercial |
+| Somente leitura | `leitor@prime.local` | `Leitor@123` | Páginas selecionadas sem edição |
+
+O seed é idempotente e popula todos os módulos persistidos: imobiliária, configuração visual, equipe e hierarquia, permissões, acessos individuais, imóveis, empreendimentos, galeria, unidades, equipe vinculada, tabela de preços, leads, pipeline, atendimentos, tarefas em diferentes estados, propostas, visitas, materiais de marketing, dispensações, inbox, mensagens, templates, notificações, comissões, automações, execuções, auditoria, webhooks e entregas. Troque todas as senhas em qualquer ambiente compartilhado.

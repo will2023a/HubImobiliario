@@ -37,50 +37,52 @@ import AutomacoesList from './automations/AutomacoesList'
 import AutomacaoEditor from './automations/AutomacaoEditor'
 import Auditoria from './admin/Auditoria'
 import Webhooks from './admin/Webhooks'
+import PageAccess from '../components/PageAccess'
 import './Dashboard.css'
 
 export default function Dashboard(){
+  const allowed = (page, element, edit = false) => <PageAccess page={page} edit={edit}>{element}</PageAccess>
   return (
     <RequireAuth>
       <Layout>
         <Routes>
           <Route path="/" element={<DashboardHome/>} />
-          <Route path="pipeline" element={<Pipeline/>} />
-          <Route path="tarefas" element={<Tarefas/>} />
-          <Route path="empreendimentos" element={<EmpreendimentosList/>} />
-          <Route path="empreendimentos/novo" element={<EmpreendimentoForm/>} />
-          <Route path="empreendimentos/:id" element={<EmpreendimentoDashboard/>} />
-          <Route path="empreendimentos/:id/editar" element={<EmpreendimentoForm/>} />
+          <Route path="pipeline" element={allowed('pipeline', <Pipeline/>)} />
+          <Route path="tarefas" element={allowed('tasks', <Tarefas/>)} />
+          <Route path="empreendimentos" element={allowed('empreendimentos', <EmpreendimentosList/>)} />
+          <Route path="empreendimentos/novo" element={allowed('empreendimentos', <EmpreendimentoForm/>, true)} />
+          <Route path="empreendimentos/:id" element={allowed('empreendimentos', <EmpreendimentoDashboard/>)} />
+          <Route path="empreendimentos/:id/editar" element={allowed('empreendimentos', <EmpreendimentoForm/>, true)} />
           <Route path="empreendimentos/:id/visitas/nova" element={<VisitaForm/>} />
           <Route path="empreendimentos/:id/marketing/novo" element={<MarketingForm/>} />
-          <Route path="propostas" element={<PropostasList/>} />
-          <Route path="propostas/nova" element={<PropostaForm/>} />
-          <Route path="visitas" element={<VisitasList/>} />
-          <Route path="visitas/nova" element={<VisitaForm/>} />
-          <Route path="marketing" element={<MarketingList/>} />
-          <Route path="marketing/novo" element={<MarketingForm/>} />
+          <Route path="propostas" element={allowed('propostas', <PropostasList/>)} />
+          <Route path="propostas/nova" element={allowed('propostas', <PropostaForm/>, true)} />
+          <Route path="visitas" element={allowed('visitas', <VisitasList/>)} />
+          <Route path="visitas/nova" element={allowed('visitas', <VisitaForm/>, true)} />
+          <Route path="marketing" element={allowed('marketing', <MarketingList/>)} />
+          <Route path="marketing/novo" element={allowed('marketing', <MarketingForm/>, true)} />
           <Route path="marketing/:id/dispensar" element={<DispensarMaterial/>} />
-          <Route path="equipe" element={<Equipe/>} />
-          <Route path="permissoes" element={<Permissoes/>} />
-          <Route path="leads" element={<Leads/>} />
-          <Route path="leads/:id" element={<LeadDetail/>} />
-          <Route path="imoveis" element={<Imoveis/>} />
-          <Route path="users" element={<Users/>} />
+          <Route path="equipe" element={allowed('users', <Equipe/>)} />
+          <Route path="permissoes" element={allowed('permissions', <Permissoes/>)} />
+          <Route path="leads" element={allowed('leads', <Leads/>)} />
+          <Route path="leads/:id" element={allowed('leads', <LeadDetail/>)} />
+          <Route path="imoveis" element={allowed('imoveis', <Imoveis/>)} />
+          <Route path="users" element={allowed('users', <Users/>)} />
           <Route path="users/novo" element={<CreateUser/>} />
           <Route path="create/lead" element={<CreateLead/>} />
           <Route path="create/imovel" element={<CreateImovel/>} />
           <Route path="create/user" element={<CreateUser/>} />
           <Route path="perfil" element={<Perfil/>} />
-          <Route path="configuracoes" element={<Configuracoes/>} />
-          <Route path="inbox" element={<Inbox/>} />
-          <Route path="templates" element={<Templates/>} />
-          <Route path="agenda" element={<Agenda/>} />
-          <Route path="analytics" element={<Analytics/>} />
-          <Route path="financeiro/comissoes" element={<Comissoes/>} />
-          <Route path="automacoes" element={<AutomacoesList/>} />
+          <Route path="configuracoes" element={allowed('settings', <Configuracoes/>)} />
+          <Route path="inbox" element={allowed('inbox', <Inbox/>)} />
+          <Route path="templates" element={allowed('templates', <Templates/>)} />
+          <Route path="agenda" element={allowed('agenda', <Agenda/>)} />
+          <Route path="analytics" element={allowed('analytics', <Analytics/>)} />
+          <Route path="financeiro/comissoes" element={allowed('comissoes', <Comissoes/>)} />
+          <Route path="automacoes" element={allowed('automations', <AutomacoesList/>)} />
           <Route path="automacoes/editor/:id" element={<AutomacaoEditor/>} />
-          <Route path="auditoria" element={<Auditoria/>} />
-          <Route path="webhooks" element={<Webhooks/>} />
+          <Route path="auditoria" element={allowed('audit', <Auditoria/>)} />
+          <Route path="webhooks" element={allowed('webhooks', <Webhooks/>)} />
         </Routes>
       </Layout>
     </RequireAuth>

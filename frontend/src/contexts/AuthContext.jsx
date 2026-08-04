@@ -30,6 +30,12 @@ export function AuthProvider({ children }){
     window.location.href = '/login'
   }
 
+  function can(page, action = 'view') {
+    if (user?.role === 'super_admin') return true
+    const rule = user?.access?.find(item => item.page === page)
+    return action === 'edit' ? Boolean(rule?.canEdit) : Boolean(rule?.canView)
+  }
+
   // Não renderizar até verificar se há sessão
   if (loading) {
     return (
@@ -58,7 +64,7 @@ export function AuthProvider({ children }){
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout }}>
+    <AuthContext.Provider value={{ user, setUser, logout, can }}>
       {children}
     </AuthContext.Provider>
   )

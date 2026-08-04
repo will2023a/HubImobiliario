@@ -71,6 +71,8 @@ services:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3000
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:1234}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:1234}
+      EVOLUTION_WEBHOOK_SECRET: ${EVOLUTION_WEBHOOK_SECRET:-change-this-in-production}
       REDIS_URL: redis://redis:6379
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000

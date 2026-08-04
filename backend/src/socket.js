@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
-const jwt = require('jsonwebtoken');
+const { verify } = require('./utils/jwt');
+const prisma = require('./prisma/client');
 
 let io;
 
@@ -13,14 +14,19 @@ function initSocket(httpServer) {
   });
 
   // Auth middleware — validate JWT on connection
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) {
       return next(new Error('Token não fornecido'));
     }
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      socket.user = decoded;
+      const decoded = verify(token);
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, name: true, role: true, imobiliariaId: true }
+      });
+      if (!user) return next(new Error('Usuário inválido'));
+      socket.user = user;
       next();
     } catch (err) {
       next(new Error('Token inválido'));
@@ -40,8 +46,11 @@ function initSocket(httpServer) {
     }
 
     // Handle conversation room joins
-    socket.on('conversation:join', (conversationId) => {
-      socket.join(`conversation:${conversationId}`);
+    socket.on('conversation:join', async (conversationId, acknowledge) => {
+      const conversation = await prisma.conversation.findUnique({ where: { id: Number(conversationId) } });
+      const allowed = conversation && (user.role === 'super_admin' || conversation.imobiliariaId === user.imobiliariaId);
+      if (allowed) socket.join(`conversation:${conversationId}`);
+      if (typeof acknowledge === 'function') acknowledge({ ok: Boolean(allowed) });
     });
 
     socket.on('conversation:leave', (conversationId) => {
@@ -49,7 +58,9 @@ function initSocket(httpServer) {
     });
 
     socket.on('conversation:typing', (data) => {
-      socket.to(`conversation:${data.conversationId}`).emit('conversation:typing', {
+      const room = `conversation:${Number(data?.conversationId)}`;
+      if (!socket.rooms.has(room)) return;
+      socket.to(room).emit('conversation:typing', {
         userId: user.id,
         userName: user.name
       });
