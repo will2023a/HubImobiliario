@@ -6,6 +6,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
 import './MarketingList.css'
+import AppIcon from '../../components/ui/AppIcon'
 
 export default function MarketingList({ empreendimentoId }) {
   const { user } = useContext(AuthContext)
@@ -43,8 +44,8 @@ export default function MarketingList({ empreendimentoId }) {
   })
 
   const tipoConfig = {
-    banner: { label: 'Banner', color: '#d4af37', icon: '▣' },
-    folder: { label: 'Folder', color: '#3b82f6', icon: '▤' }
+    banner: { label: 'Banner', icon: 'chart' },
+    folder: { label: 'Folder', icon: 'document' }
   }
 
   const getEstoqueStatus = (quantidade) => {
@@ -76,28 +77,28 @@ export default function MarketingList({ empreendimentoId }) {
 
       <div className="stats-grid">
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #1a1a1a, #2d2d2d)' }}>◘</div>
+          <div className="stat-icon"><AppIcon name="building" /></div>
           <div className="stat-content">
             <div className="stat-label">Total em Estoque</div>
             <div className="stat-value">{stats.total}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #d4af37, #c9a227)' }}>▣</div>
+          <div className="stat-icon"><AppIcon name="chart" /></div>
           <div className="stat-content">
             <div className="stat-label">Banners</div>
             <div className="stat-value">{stats.banners}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>▤</div>
+          <div className="stat-icon"><AppIcon name="document" /></div>
           <div className="stat-content">
             <div className="stat-label">Folders</div>
             <div className="stat-value">{stats.folders}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>◆</div>
+          <div className="stat-icon"><AppIcon name="check" /></div>
           <div className="stat-content">
             <div className="stat-label">Dispensados</div>
             <div className="stat-value">{stats.dispensados}</div>
@@ -126,7 +127,7 @@ export default function MarketingList({ empreendimentoId }) {
           </div>
         ) : filteredMateriais.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">◘</div>
+            <div className="empty-icon"><AppIcon name="document" size={30} /></div>
             <h3>Nenhum material cadastrado</h3>
             <p>Adicione o primeiro item ao estoque</p>
           </div>
@@ -137,10 +138,8 @@ export default function MarketingList({ empreendimentoId }) {
               return (
                 <Card key={material.id} hover className="material-card">
                   <div className="material-header">
-                    <div className="material-tipo" style={{ 
-                      background: tipoConfig[material.tipo]?.color 
-                    }}>
-                      {tipoConfig[material.tipo]?.icon}
+                    <div className="material-tipo">
+                      <AppIcon name={tipoConfig[material.tipo]?.icon || 'document'} />
                     </div>
                     <div className="material-info">
                       <h3>{tipoConfig[material.tipo]?.label}</h3>

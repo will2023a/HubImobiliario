@@ -2,7 +2,7 @@ const prisma = require('../prisma/client');
 const { defaultAccess, PAGES } = require('../constants/access');
 
 async function getUserAccess(user) {
-  if (user.role === 'super_admin') {
+  if (user.role === 'super_admin' || user.role === 'admin_imobiliaria') {
     return PAGES.map(page => ({ page, canView: true, canEdit: true }));
   }
   const defaults = defaultAccess(user.role);
@@ -17,7 +17,7 @@ async function getUserAccess(user) {
 function requirePageAccess(page) {
   return async (req, res, next) => {
     try {
-      if (req.user.role === 'super_admin') return next();
+      if (req.user.role === 'super_admin' || req.user.role === 'admin_imobiliaria') return next();
       const access = await getUserAccess(req.user);
       const rule = access.find(item => item.page === page);
       const needsEdit = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);

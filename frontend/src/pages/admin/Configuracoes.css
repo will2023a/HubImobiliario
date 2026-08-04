@@ -1,4 +1,4 @@
-.configuracoes-page { animation: fadeIn 0.3s ease-out; max-width: 800px; }
+.configuracoes-page { animation: fadeIn 0.3s ease-out; max-width: 1050px; }
 
 .configuracoes-header {
   display: flex;
@@ -8,6 +8,7 @@
 }
 
 .configuracoes-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+.configuracoes-header p { margin: 0.2rem 0 0; color: var(--text-secondary); font-size: 0.85rem; }
 
 .config-message {
   padding: 0.75rem 1rem;
@@ -22,7 +23,39 @@
 .config-section {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.75rem;
+}
+
+.config-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.config-summary span,
+.config-note {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-left: 2px solid var(--gold);
+  border-radius: 6px;
+  background: var(--gray-50);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.config-summary strong { display: block; color: var(--text-primary); margin-top: 0.15rem; text-transform: capitalize; }
+
+.admin-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.admin-link-card { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; color: var(--text-primary); text-decoration: none; border: 1px solid var(--border-color); border-radius: 7px; background: var(--white); }
+.admin-link-card:hover { border-color: var(--gold); }
+.admin-link-card svg { color: var(--gold-dark); flex: 0 0 auto; }
+.admin-link-card span { display: flex; flex-direction: column; }
+.admin-link-card small { color: var(--text-secondary); margin-top: 0.15rem; }
+
+@media (max-width: 700px) {
+  .configuracoes-header { align-items: flex-start; gap: 0.75rem; }
+  .config-row, .config-summary, .admin-links-grid { grid-template-columns: 1fr; }
 }
 
 .config-hint {

@@ -7,13 +7,15 @@ const prisma = require('../prisma/client');
 router.get('/', authenticate, async (req, res) => {
   try {
     let config = await prisma.configImobiliaria.findUnique({
-      where: { imobiliariaId: req.user.imobiliariaId }
+      where: { imobiliariaId: req.user.imobiliariaId },
+      include: { imobiliaria: true }
     });
 
     // Se não existe, cria com defaults
     if (!config) {
       config = await prisma.configImobiliaria.create({
-        data: { imobiliariaId: req.user.imobiliariaId }
+        data: { imobiliariaId: req.user.imobiliariaId },
+        include: { imobiliaria: true }
       });
     }
 
@@ -32,7 +34,7 @@ router.put('/', authenticate, async (req, res) => {
     }
 
     const {
-      logoUrl, corPrimaria, corSecundaria, tema,
+      logoUrl, tema, imobiliaria,
       horarioInicio, horarioFim,
       comissaoCorretor, comissaoGerente, comissaoDiretor
     } = req.body;
@@ -41,8 +43,8 @@ router.put('/', authenticate, async (req, res) => {
       where: { imobiliariaId: req.user.imobiliariaId },
       update: {
         ...(logoUrl !== undefined && { logoUrl }),
-        ...(corPrimaria && { corPrimaria }),
-        ...(corSecundaria && { corSecundaria }),
+        corPrimaria: '#d4af37',
+        corSecundaria: '#1a1a1a',
         ...(tema && { tema }),
         ...(horarioInicio && { horarioInicio }),
         ...(horarioFim && { horarioFim }),
@@ -53,15 +55,29 @@ router.put('/', authenticate, async (req, res) => {
       create: {
         imobiliariaId: req.user.imobiliariaId,
         ...(logoUrl && { logoUrl }),
-        ...(corPrimaria && { corPrimaria }),
-        ...(corSecundaria && { corSecundaria }),
+        corPrimaria: '#d4af37',
+        corSecundaria: '#1a1a1a',
         ...(tema && { tema }),
         ...(horarioInicio && { horarioInicio }),
         ...(horarioFim && { horarioFim }),
       }
     });
 
-    res.json(config);
+    if (imobiliaria && req.user.imobiliariaId) {
+      const organizationData = {};
+      if (typeof imobiliaria.nome === 'string' && imobiliaria.nome.trim()) organizationData.nome = imobiliaria.nome.trim();
+      if (typeof imobiliaria.email === 'string' && imobiliaria.email.trim()) organizationData.email = imobiliaria.email.trim().toLowerCase();
+      if (typeof imobiliaria.telefone === 'string') organizationData.telefone = imobiliaria.telefone.trim();
+      if (Object.keys(organizationData).length) {
+        await prisma.imobiliaria.update({ where: { id: req.user.imobiliariaId }, data: organizationData });
+      }
+    }
+
+    const result = await prisma.configImobiliaria.findUnique({
+      where: { imobiliariaId: req.user.imobiliariaId },
+      include: { imobiliaria: true }
+    });
+    res.json(result);
   } catch (error) {
     console.error('Erro config:', error);
     res.status(500).json({ error: 'Erro ao atualizar configurações' });

@@ -31,7 +31,7 @@ export function AuthProvider({ children }){
   }
 
   function can(page, action = 'view') {
-    if (user?.role === 'super_admin') return true
+    if (user?.role === 'super_admin' || user?.role === 'admin_imobiliaria') return true
     const rule = user?.access?.find(item => item.page === page)
     return action === 'edit' ? Boolean(rule?.canEdit) : Boolean(rule?.canView)
   }

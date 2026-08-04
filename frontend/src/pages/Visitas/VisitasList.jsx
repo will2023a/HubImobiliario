@@ -5,6 +5,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Input'
 import './VisitasList.css'
+import AppIcon from '../../components/ui/AppIcon'
 
 export default function VisitasList({ empreendimentoId }) {
   const [searchParams] = useSearchParams()
@@ -40,8 +41,8 @@ export default function VisitasList({ empreendimentoId }) {
   })
 
   const tipoConfig = {
-    agendada: { label: 'Agendada', color: '#3b82f6', icon: '◐' },
-    espontanea: { label: 'Espontânea', color: '#10b981', icon: '◈' }
+    agendada: { label: 'Agendada' },
+    espontanea: { label: 'Espontânea' }
   }
 
   const formatDate = (dateString) => {
@@ -110,28 +111,28 @@ export default function VisitasList({ empreendimentoId }) {
 
       <div className="stats-grid">
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #1a1a1a, #2d2d2d)' }}>▣</div>
+          <div className="stat-icon"><AppIcon name="users" /></div>
           <div className="stat-content">
             <div className="stat-label">Total</div>
             <div className="stat-value">{stats.total}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #d4af37, #c9a227)' }}>◐</div>
+          <div className="stat-icon"><AppIcon name="calendar" /></div>
           <div className="stat-content">
             <div className="stat-label">Hoje</div>
             <div className="stat-value">{stats.hoje}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)' }}>◐</div>
+          <div className="stat-icon"><AppIcon name="clock" /></div>
           <div className="stat-content">
             <div className="stat-label">Agendadas</div>
             <div className="stat-value">{stats.agendadas}</div>
           </div>
         </Card>
         <Card className="stat-card">
-          <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>◈</div>
+          <div className="stat-icon"><AppIcon name="pin" /></div>
           <div className="stat-content">
             <div className="stat-label">Espontâneas</div>
             <div className="stat-value">{stats.espontaneas}</div>
@@ -160,7 +161,7 @@ export default function VisitasList({ empreendimentoId }) {
           </div>
         ) : filteredVisitas.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">▣</div>
+            <div className="empty-icon"><AppIcon name="calendar" size={30} /></div>
             <h3>Nenhuma visita registrada</h3>
             <p>Registre a primeira visita ao stand</p>
           </div>
@@ -192,10 +193,8 @@ export default function VisitasList({ empreendimentoId }) {
                     <td>{visita.imobiliaria?.nome || 'N/A'}</td>
                     <td>{visita.atendente?.name || 'N/A'}</td>
                     <td>
-                      <span className="tipo-badge" style={{ 
-                        background: tipoConfig[visita.tipo]?.color 
-                      }}>
-                        {tipoConfig[visita.tipo]?.icon} {tipoConfig[visita.tipo]?.label}
+                      <span className="tipo-badge">
+                        {tipoConfig[visita.tipo]?.label}
                       </span>
                     </td>
                     <td>{formatDate(visita.dataVisita)}</td>
