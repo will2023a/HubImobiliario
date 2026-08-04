@@ -30,6 +30,7 @@ model User {
   notifications   Notification[] @relation("UserNotifications")
   conversations   Conversation[] @relation("ConversationAssigned")
   comissoes       Comissao[]     @relation("UserComissoes")
+  auditLogs       AuditLog[]     @relation("UserAuditLogs")
   createdAt       DateTime      @default(now())
 }
 
@@ -57,6 +58,8 @@ model Imobiliaria {
   templates       MessageTemplate[]
   comissoes       Comissao[]
   automations     Automation[]
+  auditLogs       AuditLog[]
+  webhooks        Webhook[]
   createdAt       DateTime         @default(now())
 }
 
@@ -494,4 +497,93 @@ model AutomationExec {
   logs          Json?
   startedAt     DateTime   @default(now())
   completedAt   DateTime?
+}
+
+// ===== AUDITORIA =====
+
+model AuditLog {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation("UserAuditLogs", fields: [userId], references: [id])
+  acao          String      // login, criar, editar, deletar, aprovar, rejeitar
+  recurso       String      // lead, proposta, empreendimento, usuario, permissao, unidade
+  recursoId     Int?
+  detalhes      Json?
+  ip            String?
+  imobiliariaId Int?
+  imobiliaria   Imobiliaria? @relation(fields: [imobiliariaId], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@index([imobiliariaId, createdAt])
+  @@index([userId, createdAt])
+}
+
+// ===== WEBHOOKS CONFIGURÁVEIS =====
+
+model Webhook {
+  id            Int              @id @default(autoincrement())
+  url           String
+  eventos       Json             // Array de eventos assinados
+  secretKey     String
+  ativo         Boolean          @default(true)
+  imobiliariaId Int
+  imobiliaria   Imobiliaria      @relation(fields: [imobiliariaId], references: [id])
+  deliveries    WebhookDelivery[]
+  createdAt     DateTime         @default(now())
+}
+
+model WebhookDelivery {
+  id         Int      @id @default(autoincrement())
+  webhookId  Int
+  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  evento     String
+  payload    Json
+  statusCode Int?
+  response   String?  @db.Text
+  sucesso    Boolean
+  createdAt  DateTime @default(now())
+}
+
+// ===== AUDITORIA =====
+
+model AuditLog {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation("UserAuditLogs", fields: [userId], references: [id])
+  acao          String      // login, criar, editar, deletar, aprovar, rejeitar
+  recurso       String      // lead, proposta, empreendimento, usuario, permissao, unidade
+  recursoId     Int?
+  detalhes      Json?
+  ip            String?
+  imobiliariaId Int?
+  imobiliaria   Imobiliaria? @relation(fields: [imobiliariaId], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@index([imobiliariaId, createdAt])
+  @@index([userId, createdAt])
+}
+
+// ===== WEBHOOKS CONFIGURÁVEIS =====
+
+model Webhook {
+  id            Int              @id @default(autoincrement())
+  url           String
+  eventos       Json             // Array de eventos assinados
+  secretKey     String
+  ativo         Boolean          @default(true)
+  imobiliariaId Int
+  imobiliaria   Imobiliaria      @relation(fields: [imobiliariaId], references: [id])
+  deliveries    WebhookDelivery[]
+  createdAt     DateTime         @default(now())
+}
+
+model WebhookDelivery {
+  id         Int      @id @default(autoincrement())
+  webhookId  Int
+  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  evento     String
+  payload    Json
+  statusCode Int?
+  sucesso    Boolean
+  createdAt  DateTime @default(now())
 }

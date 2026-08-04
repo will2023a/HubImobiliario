@@ -35,6 +35,8 @@ import Analytics from './analytics/Analytics'
 import Comissoes from './financeiro/Comissoes'
 import AutomacoesList from './automations/AutomacoesList'
 import AutomacaoEditor from './automations/AutomacaoEditor'
+import Auditoria from './admin/Auditoria'
+import Webhooks from './admin/Webhooks'
 import './Dashboard.css'
 
 export default function Dashboard(){
@@ -77,6 +79,8 @@ export default function Dashboard(){
           <Route path="financeiro/comissoes" element={<Comissoes/>} />
           <Route path="automacoes" element={<AutomacoesList/>} />
           <Route path="automacoes/editor/:id" element={<AutomacaoEditor/>} />
+          <Route path="auditoria" element={<Auditoria/>} />
+          <Route path="webhooks" element={<Webhooks/>} />
         </Routes>
       </Layout>
     </RequireAuth>
