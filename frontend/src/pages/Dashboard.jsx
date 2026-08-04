@@ -33,6 +33,8 @@ import Templates from './inbox/Templates'
 import Agenda from './agenda/Agenda'
 import Analytics from './analytics/Analytics'
 import Comissoes from './financeiro/Comissoes'
+import AutomacoesList from './automations/AutomacoesList'
+import AutomacaoEditor from './automations/AutomacaoEditor'
 import './Dashboard.css'
 
 export default function Dashboard(){
@@ -73,6 +75,8 @@ export default function Dashboard(){
           <Route path="agenda" element={<Agenda/>} />
           <Route path="analytics" element={<Analytics/>} />
           <Route path="financeiro/comissoes" element={<Comissoes/>} />
+          <Route path="automacoes" element={<AutomacoesList/>} />
+          <Route path="automacoes/editor/:id" element={<AutomacaoEditor/>} />
         </Routes>
       </Layout>
     </RequireAuth>

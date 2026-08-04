@@ -108,3 +108,9 @@ export const IconChart = () => (
     <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
   </svg>
 )
+
+export const IconBolt = () => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 10 10-12h-9l1-10z"/>
+  </svg>
+)

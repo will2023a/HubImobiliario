@@ -6,7 +6,7 @@ import {
   IconDashboard, IconPipeline, IconLeads, IconTasks,
   IconBuilding, IconDocument, IconMapPin, IconInbox,
   IconMegaphone, IconTarget, IconDollar, IconUsers,
-  IconLock, IconSettings, IconOffice, IconCalendar, IconChart
+  IconLock, IconSettings, IconOffice, IconCalendar, IconChart, IconBolt
 } from './icons'
 
 const menuSections = [
@@ -55,6 +55,12 @@ const menuSections = [
     label: 'Analytics',
     items: [
       { label: 'Dashboard BI', path: '/dashboard/analytics', icon: <IconChart/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor', 'gerente'] },
+    ]
+  },
+  {
+    label: 'Automações',
+    items: [
+      { label: 'Fluxos', path: '/dashboard/automacoes', icon: <IconBolt/>, roles: ['super_admin', 'admin_imobiliaria', 'diretor'] },
     ]
   },
   {

@@ -30,6 +30,7 @@ const aiRoutes = require('./routes/ai');
 const agendaRoutes = require('./routes/agenda');
 const analyticsRoutes = require('./routes/analytics');
 const comissoesRoutes = require('./routes/comissoes');
+const automationsRoutes = require('./routes/automations');
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use('/ai', aiRoutes);
 app.use('/agenda', agendaRoutes);
 app.use('/analytics', analyticsRoutes);
 app.use('/comissoes', comissoesRoutes);
+app.use('/automations', automationsRoutes);
 
 app.get('/', (req, res) => res.json({ ok: true, message: 'Gestor Pro 360 API' }));
 
