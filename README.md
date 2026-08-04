@@ -1,181 +1,210 @@
-# CRM Imobiliário - Sistema Completo com Hierarquia
+# Gestor Pro 360
 
-Sistema CRM completo para imobiliárias com gestão hierárquica de usuários, empreendimentos, unidades e propostas.
+**Plataforma SaaS de Gestão Imobiliária** — CRM completo com Pipeline de Vendas, Inbox Unificado, IA, Automações e Analytics.
+
+---
 
 ## 🏗️ Arquitetura
 
-### Backend
-- **Node.js** + **Express** 4.18.2
-- **Prisma ORM** 5.22.0 com MySQL
-- **JWT** para autenticação
-- **bcryptjs** para hash de senhas
-- Arquitetura MVC com middlewares
-
-### Frontend
-- **React** 18.2.0
-- **React Router DOM** 6.14.1
-- **Axios** 1.4.0
-- **Parcel** 2.9.3 (bundler)
-- Design system moderno com CSS custom properties
-
-## 🎯 Funcionalidades Principais
-
-### 1. Hierarquia de Usuários
-- **Super Admin**: Acesso total ao sistema, gerencia todas imobiliárias
-- **Admin Imobiliária**: Gerencia sua imobiliária
-- **Diretor**: Gerencia gerentes e corretores
-- **Gerente**: Gerencia equipe de corretores
-- **Corretor**: Trabalha com leads e propostas
-
-### 2. Gestão de Empreendimentos
-- CRUD completo de empreendimentos (loteamentos, condomínios, edifícios)
-- Dashboard com estatísticas em tempo real
-- Gestão de unidades (lotes, casas, apartamentos)
-- Controle financeiro (valor base + juros = valor total)
-- Status: planejamento, construção, pronto, concluído
-
-### 3. Sistema de Unidades
-- Identificação única por unidade
-- Tipos: lote, casa, apartamento
-- Valores: base, juros, total (calculado automaticamente)
-- Status: disponível, reservado, vendido
-- Área em m²
-
-### 4. Sistema de Propostas
-- Dados completos do cliente (nome, email, telefone, CPF, endereço)
-- Múltiplas formas de pagamento:
-  - À vista
-  - Parcelado: 30/60/90 dias
-  - Recorrente: mensal, semestral, anual
-  - Financiamento bancário
-- Aprovação hierárquica (gerente/diretor)
-- Filtros por status, corretor, empreendimento
-
-## 🚀 Como Executar
-
-### 1. Configurar Backend
-
-```bash
-cd backend
-
-# Instalar dependências
-npm install
-
-# Configurar .env
-cat > .env << EOF
-DATABASE_URL="mysql://user:password@localhost:3306/crm_imobiliario"
-JWT_SECRET="sua_chave_secreta_muito_segura_aqui"
-NODE_ENV="development"
-EOF
-
-# Executar migrations
-npx prisma migrate dev --name init
-
-# Popular banco com dados de teste
-npm run seed
-
-# Iniciar servidor
-npm run dev
 ```
-
-### 2. Configurar Frontend
-
-```bash
-cd frontend
-
-# Instalar dependências
-npm install
-
-# Iniciar aplicação
-npm start
-```
-
-### 3. Acessar Sistema
-
-- Frontend: http://localhost:1234
-- Backend API: http://localhost:3000
-
-**Credenciais de teste** (após seed):
-- Super Admin: `super@admin.com` / `123456`
-- Admin Imobiliária: `admin@imob1.com` / `123456`
-- Diretor: `diretor@imob1.com` / `123456`
-- Gerente 1: `gerente1@imob1.com` / `123456`
-- Corretor 1: `corretor1@imob1.com` / `123456`
-
-## ✅ Progresso do Desenvolvimento
-
-### Backend (Completo)
-- ✅ Estrutura MVC
-- ✅ Autenticação JWT
-- ✅ Middlewares (auth, roles, permissions, multitenant)
-- ✅ CRUD Empreendimentos
-- ✅ CRUD Unidades (com cálculo automático)
-- ✅ CRUD Propostas (com filtro hierárquico)
-- ✅ Sistema de Permissões
-- ✅ Seed com dados hierárquicos
-- ✅ Validações
-
-### Frontend (Em Progresso)
-- ✅ Design System (global.css)
-- ✅ Componentes UI (Button, Card, Input)
-- ✅ Layout com Sidebar
-- ✅ Lista de Empreendimentos
-- ✅ Dashboard de Empreendimento
-- ⏳ Formulário de Empreendimento
-- ⏳ Formulário de Unidade
-- ⏳ Sistema de Propostas
-- ⏳ Painel de Permissões
-- ⏳ Gestão de Hierarquia
-
-## 🎨 Design System
-
-### Cores Principais
-- Primary: `#6366f1` (Indigo)
-- Success: `#10b981` (Green)
-- Warning: `#f59e0b` (Amber)
-- Error: `#ef4444` (Red)
-
-### Componentes Criados
-- **Button**: 7 variantes (primary, secondary, outline, ghost, success, warning, error)
-- **Card**: Container com hover effects
-- **Input**: Input, Select, Textarea com validação
-- **Layout**: Sidebar colapsável + Header
-
-## 📡 Rotas da API
-
-### Empreendimentos
-- `GET /empreendimentos` - Listar
-- `GET /empreendimentos/:id` - Dashboard
-- `POST /empreendimentos` - Criar
-- `PUT /empreendimentos/:id` - Atualizar
-- `DELETE /empreendimentos/:id` - Deletar
-
-### Unidades
-- `GET /unidades` - Listar
-- `POST /unidades` - Criar
-- `PATCH /unidades/:id` - Atualizar
-- `DELETE /unidades/:id` - Deletar
-
-### Propostas
-- `GET /propostas` - Listar (filtro hierárquico)
-- `POST /propostas` - Criar
-- `PATCH /propostas/:id/aprovar` - Aprovar
-- `PATCH /propostas/:id/rejeitar` - Rejeitar
-
-## 📝 Comandos Úteis
-
-```bash
-# Backend
-npm run dev              # Inicia servidor (nodemon)
-npx prisma studio        # Interface visual do banco
-npx prisma migrate dev   # Cria migration
-npm run seed             # Popula banco
-
-# Frontend
-npm start                # Dev server (porta 1234)
-npm run build            # Build de produção
+┌─────────────────┐     ┌──────────────────────┐     ┌─────────────┐
+│   Frontend      │     │      Backend          │     │  Database   │
+│  React 18       │────▶│  Express + Socket.io  │────▶│  MySQL 8    │
+│  Parcel         │◀────│  Prisma ORM           │     │             │
+│  Port: 1234     │     │  Port: 3000 (→2000)   │     │  Port: 3308 │
+└─────────────────┘     └──────────────────────┘     └─────────────┘
+                               │         │
+                        ┌──────┘         └──────┐
+                        ▼                       ▼
+                 ┌─────────────┐        ┌─────────────┐
+                 │    Redis    │        │    MinIO     │
+                 │  Cache/WS   │        │  Arquivos   │
+                 │  Port: 6379 │        │  Port: 9000 │
+                 └─────────────┘        └─────────────┘
 ```
 
 ---
 
-**Desenvolvido com ❤️ para revolucionar a gestão imobiliária no Brasil**
+## 📋 Módulos do Sistema
+
+| Módulo | Descrição | Status |
+|--------|-----------|--------|
+| **Core** | Auth JWT, Multi-tenant, Roles, Permissões | ✅ |
+| **CRM** | Pipeline Kanban, Leads, Tarefas, Follow-ups | ✅ |
+| **Imóveis** | Empreendimentos, Unidades (10 status), Propostas, Visitas | ✅ |
+| **Inbox** | Chat unificado (WhatsApp, Instagram, Email), WebSocket real-time | ✅ |
+| **IA** | Sugestões de resposta, Qualificação de leads, Resumos, Busca NLP | ✅ |
+| **Agenda** | Calendário (dia/semana/mês), Eventos, Visitas, Lembretes | ✅ |
+| **Marketing** | Materiais físicos, Campanhas, Tabela de Preços (NCC) | ✅ |
+| **Financeiro** | Comissões automáticas por role, Pagamentos | ✅ |
+| **Analytics** | Dashboard BI, Funil, Ranking corretores, Leads por origem | ✅ |
+| **Mapa** | Mapa de Disponibilidade visual + Geolocalização (Leaflet) | ✅ |
+| **Galeria** | Fotos por empreendimento com categorias | ✅ |
+| **Notificações** | Real-time via WebSocket, Sino no header | ✅ |
+| **Busca Global** | Ctrl+K, resultados agrupados, debounce | ✅ |
+| **Automações** | Editor visual de fluxos (planejado) | 🔜 |
+
+---
+
+## 🔄 Fluxo Principal do Sistema
+
+```
+1. CADASTRO
+   Imobiliária se cadastra → Aguarda aprovação → Super Admin aprova
+
+2. HIERARQUIA
+   Super Admin → Admin Imobiliária → Diretor → Gerente → Corretor
+
+3. EMPREENDIMENTOS
+   Admin cadastra empreendimento → Define unidades → Cria tabela de preços
+   → Vincula equipes (imobiliárias parceiras) → Define comissões
+
+4. CAPTAÇÃO DE LEADS
+   Lead entra (WhatsApp/Site/Instagram/Manual) → Inbox recebe mensagem
+   → IA sugere resposta → Corretor atende → Lead entra no Pipeline
+
+5. PIPELINE DE VENDAS
+   Novo → Contato → Qualificado → Visita → Proposta → Fechado
+   (arrastar cards entre colunas)
+
+6. PROPOSTA DE VENDA (PV)
+   Corretor cria proposta → Unidade fica RESERVADA
+   → Gerente/Diretor aprova → Unidade fica VENDIDA (vermelho)
+   → Sistema gera comissões automaticamente
+
+7. ACOMPANHAMENTO
+   Dashboard com KPIs → Analytics com funil → Ranking corretores
+   → Tarefas automáticas → Notificações real-time
+```
+
+---
+
+## 🚀 Como Rodar
+
+### Docker Compose (recomendado)
+
+```bash
+git clone <repo>
+cd gestor-pro-360
+docker compose up -d --build
+docker compose exec backend npx prisma migrate deploy
+docker compose exec backend node prisma/seed.js
+```
+
+### Acesso
+
+| URL | Serviço |
+|-----|---------|
+| http://localhost:1234 | Frontend |
+| http://localhost:2000 | Backend API |
+| http://localhost:9001 | MinIO Console |
+
+### Credenciais de Teste
+
+| Role | Email | Senha |
+|------|-------|-------|
+| Super Admin | super@crm.com | super123 |
+| Admin Imobiliária | admin@imob1.com | 123456 |
+
+---
+
+## 🧪 Testes
+
+```bash
+# Backend - testes unitários
+cd backend
+npm test
+
+# Backend - testes de integração
+npm run test:integration
+
+# Frontend - (em breve)
+cd frontend
+npm test
+```
+
+---
+
+## 📁 Estrutura de Pastas
+
+```
+├── backend/
+│   ├── prisma/            # Schema + migrations
+│   ├── src/
+│   │   ├── middlewares/   # auth, multitenant, permissions, roles
+│   │   ├── routes/        # 20+ rotas REST
+│   │   ├── services/      # ai, whatsapp, notification
+│   │   ├── utils/         # jwt, validators
+│   │   ├── app.js         # Express config
+│   │   ├── server.js      # HTTP + Socket.io
+│   │   └── socket.js      # WebSocket setup
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── layout/    # Sidebar, Header, Layout
+│   │   │   ├── shared/    # KPICard, MiniMap, Gallery, Search, Notifications
+│   │   │   └── ui/        # 14 componentes (Modal, Table, Badge, Toast, etc)
+│   │   ├── contexts/      # Auth, Socket, Notification
+│   │   ├── pages/         # Organizado por módulo
+│   │   ├── services/      # api.js, socket.js
+│   │   ├── styles/        # global.css, responsive.css
+│   │   └── utils/         # masks.js
+│   └── Dockerfile
+├── docker-compose.yml
+├── .env
+└── README.md
+```
+
+---
+
+## 🔌 APIs Backend (Resumo)
+
+| Rota | Descrição |
+|------|-----------|
+| `POST /auth/login` | Login JWT |
+| `GET /leads` | Listar leads (filtrado por role) |
+| `GET /pipeline/stages` | Estágios do Kanban |
+| `PUT /pipeline/leads/:id/stage` | Mover lead no pipeline |
+| `GET /conversations` | Listar conversas (inbox) |
+| `POST /conversations/:id/messages` | Enviar mensagem |
+| `GET /tasks` | Listar tarefas |
+| `POST /ai/suggest` | Sugestões IA para inbox |
+| `POST /ai/qualify` | Qualificar lead com IA |
+| `GET /analytics/dashboard` | KPIs do BI |
+| `GET /analytics/ranking` | Ranking de corretores |
+| `GET /comissoes` | Listar comissões |
+| `GET /tabela-preco/:empId` | Tabelas de preço (NCC) |
+| `GET /agenda/events` | Eventos do calendário |
+| `GET /notifications` | Notificações |
+| `GET /search?q=` | Busca global |
+| `GET /config` | Configurações da imobiliária |
+
+---
+
+## 🛠️ Tecnologias
+
+**Backend:** Node.js, Express, Prisma, MySQL, Socket.io, JWT, Axios
+
+**Frontend:** React 18, React Router 6, Parcel, Axios, Leaflet, Socket.io Client
+
+**Infra:** Docker, Redis, MinIO, Evolution API (WhatsApp)
+
+**IA:** OpenAI GPT-4 (configurável)
+
+---
+
+## 📱 Responsividade
+
+O sistema é **mobile-first** com layout adaptativo:
+- Sidebar vira drawer no mobile (hamburger menu)
+- Grids ajustam colunas automaticamente
+- Touch-friendly (áreas de toque maiores)
+- Tabelas com scroll horizontal
+- Pipeline com scroll horizontal
+
+---
+
+## 📄 Licença
+
+Proprietário — Gestor Pro 360 © 2026
