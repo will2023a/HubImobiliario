@@ -47,6 +47,7 @@ router.post('/', ensureRole('super_admin', 'admin_imobiliaria'), ensureSameImobi
 router.get('/', async (req, res) => {
   const where = {};
   if(req.user.role !== 'super_admin') where.imobiliariaId = req.imobiliariaId;
+  if(req.user.role === 'super_admin' && req.query.imobiliariaId) where.imobiliariaId = Number(req.query.imobiliariaId);
   const users = await prisma.user.findMany({ where, select: publicUserSelect });
   res.json(users);
 });

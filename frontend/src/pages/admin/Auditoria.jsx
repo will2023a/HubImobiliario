@@ -5,7 +5,7 @@ import DateRangeFilter from '../../components/shared/DateRangeFilter'
 
 const acaoColors = { login: 'info', criar: 'success', editar: 'warning', deletar: 'error', aprovar: 'success', rejeitar: 'error' }
 
-export default function Auditoria() {
+export default function Auditoria({ imobiliariaId }) {
   const [data, setData] = useState({ logs: [], total: 0 })
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -13,12 +13,13 @@ export default function Auditoria() {
   const [filterRecurso, setFilterRecurso] = useState('')
   const limit = 20
 
-  useEffect(() => { load() }, [page, filterAcao, filterRecurso])
+  useEffect(() => { load() }, [page, filterAcao, filterRecurso, imobiliariaId])
 
   async function load() {
     setLoading(true)
     try {
       let params = `?page=${page}&limit=${limit}`
+      if (imobiliariaId) params += `&imobiliariaId=${imobiliariaId}`
       if (filterAcao) params += `&acao=${filterAcao}`
       if (filterRecurso) params += `&recurso=${filterRecurso}`
       const res = await api.get(`/audit${params}`)

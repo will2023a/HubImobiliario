@@ -7,18 +7,18 @@ import { Input } from '../../components/ui/Input'
 
 const eventOptions = ['lead.criado', 'lead.atualizado', 'proposta.criada', 'proposta.aprovada', 'proposta.rejeitada', 'unidade.vendida', 'mensagem.recebida']
 
-export default function Webhooks() {
+export default function Webhooks({ imobiliariaId }) {
   const [webhooks, setWebhooks] = useState([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState({ url: '', eventos: [] })
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [imobiliariaId])
 
   async function load() {
     try {
-      const res = await api.get('/webhooks-config')
+      const res = await api.get('/webhooks-config', { params: { imobiliariaId } })
       setWebhooks(res.data)
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
@@ -29,7 +29,7 @@ export default function Webhooks() {
     if (!form.url || form.eventos.length === 0) return
     setSaving(true)
     try {
-      await api.post('/webhooks-config', form)
+      await api.post('/webhooks-config', { ...form, imobiliariaId: Number(imobiliariaId) })
       setShowModal(false)
       setForm({ url: '', eventos: [] })
       load()

@@ -7,7 +7,7 @@ import { Input, Select } from '../../components/ui/Input'
 import './Equipe.css'
 import AppIcon from '../../components/ui/AppIcon'
 
-export default function Equipe() {
+export default function Equipe({ imobiliariaId }) {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterRole, setFilterRole] = useState('todos')
@@ -15,12 +15,12 @@ export default function Equipe() {
 
   useEffect(() => {
     loadUsers()
-  }, [])
+  }, [imobiliariaId])
 
   const loadUsers = async () => {
     try {
       setLoading(true)
-      const response = await api.get('/users')
+      const response = await api.get('/users', { params: { imobiliariaId } })
       setUsers(response.data)
     } catch (error) {
       console.error('Erro ao carregar equipe:', error)

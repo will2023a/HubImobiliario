@@ -11,12 +11,18 @@ async function allowedWebhook(req, id) {
   return webhook;
 }
 
+function targetImobiliariaId(req) {
+  if (req.user.role === 'super_admin') return Number(req.query.imobiliariaId || req.body?.imobiliariaId) || null;
+  return req.user.imobiliariaId;
+}
+
 // GET /webhooks-config - Listar webhooks configurados
 router.get('/', authenticate, async (req, res) => {
   try {
-    if (!req.user.imobiliariaId) return res.json([]);
+    const imobiliariaId = targetImobiliariaId(req);
+    if (!imobiliariaId) return res.json([]);
     const webhooks = await prisma.webhook.findMany({
-      where: { imobiliariaId: req.user.imobiliariaId },
+      where: { imobiliariaId },
       include: { _count: { select: { deliveries: true } } },
       orderBy: { createdAt: 'desc' }
     });
@@ -29,7 +35,8 @@ router.get('/', authenticate, async (req, res) => {
 // POST /webhooks-config - Criar webhook
 router.post('/', authenticate, async (req, res) => {
   try {
-    if (!req.user.imobiliariaId) return res.status(400).json({ error: 'Imobiliária necessária' });
+    const imobiliariaId = targetImobiliariaId(req);
+    if (!imobiliariaId) return res.status(400).json({ error: 'Imobiliária necessária' });
     const { url, eventos } = req.body;
     if (!url || !eventos) return res.status(400).json({ error: 'URL e eventos são obrigatórios' });
 
@@ -38,7 +45,7 @@ router.post('/', authenticate, async (req, res) => {
         url,
         eventos: eventos,
         secretKey: crypto.randomBytes(32).toString('hex'),
-        imobiliariaId: req.user.imobiliariaId
+        imobiliariaId
       }
     });
     res.status(201).json(webhook);

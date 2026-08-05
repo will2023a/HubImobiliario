@@ -1,24 +1,43 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useContext, useEffect, useState } from 'react'
 import api from '../../services/api'
 import { Input } from '../../components/ui/Input'
 import Button from '../../components/ui/Button'
-import Card from '../../components/ui/Card'
 import { Tabs, Spinner } from '../../components/ui'
 import './Configuracoes.css'
-import AppIcon from '../../components/ui/AppIcon'
+import Equipe from '../Equipe/Equipe'
+import Permissoes from '../Permissoes/Permissoes'
+import Auditoria from './Auditoria'
+import Webhooks from './Webhooks'
+import { AuthContext } from '../../contexts/AuthContext'
 
 export default function Configuracoes() {
+  const { user } = useContext(AuthContext)
   const [config, setConfig] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [activeTab, setActiveTab] = useState('empresa')
+  const [imobiliarias, setImobiliarias] = useState([])
+  const [selectedImobiliariaId, setSelectedImobiliariaId] = useState(user?.imobiliariaId ? String(user.imobiliariaId) : '')
 
-  useEffect(() => { loadConfig() }, [])
+  useEffect(() => {
+    if (user?.role === 'super_admin') {
+      api.get('/imobiliarias').then(({ data }) => {
+        setImobiliarias(data)
+        if (data[0]) setSelectedImobiliariaId(String(data[0].id))
+        else setLoading(false)
+      }).catch(() => setLoading(false))
+    }
+  }, [user?.role])
 
-  async function loadConfig() {
+  useEffect(() => {
+    if (selectedImobiliariaId) loadConfig(selectedImobiliariaId)
+  }, [selectedImobiliariaId])
+
+  async function loadConfig(imobiliariaId) {
+    setLoading(true)
     try {
-      const res = await api.get('/config')
+      const res = await api.get('/config', { params: { imobiliariaId } })
       setConfig(res.data)
     } catch (err) {
       console.error(err)
@@ -31,7 +50,7 @@ export default function Configuracoes() {
     setSaving(true)
     setMessage('')
     try {
-      const response = await api.put('/config', config)
+      const response = await api.put('/config', { ...config, imobiliariaId: Number(selectedImobiliariaId) })
       setConfig(response.data)
       setMessage('Configurações salvas com sucesso!')
       setTimeout(() => setMessage(''), 3000)
@@ -53,7 +72,7 @@ export default function Configuracoes() {
     }))
   }
 
-  if (loading) return <Spinner fullPage label="Carregando configurações..." />
+  if (loading && !config) return <Spinner fullPage label="Carregando configurações..." />
 
   const tabs = [
     {
@@ -93,18 +112,6 @@ export default function Configuracoes() {
       )
     },
     {
-      key: 'administracao',
-      label: 'Administração',
-      content: (
-        <div className="admin-links-grid">
-          <Link to="/dashboard/permissoes" className="admin-link-card"><AppIcon name="users"/><span><strong>Acessos dos usuários</strong><small>Defina páginas e níveis de edição.</small></span></Link>
-          <Link to="/dashboard/equipe" className="admin-link-card"><AppIcon name="users"/><span><strong>Equipe</strong><small>Cadastre e organize os colaboradores.</small></span></Link>
-          <Link to="/dashboard/auditoria" className="admin-link-card"><AppIcon name="document"/><span><strong>Auditoria</strong><small>Consulte alterações e ações administrativas.</small></span></Link>
-          <Link to="/dashboard/webhooks" className="admin-link-card"><AppIcon name="bolt"/><span><strong>Integrações</strong><small>Configure webhooks e eventos externos.</small></span></Link>
-        </div>
-      )
-    },
-    {
       key: 'comissoes',
       label: 'Comissões',
       content: (
@@ -116,14 +123,29 @@ export default function Configuracoes() {
         </div>
       )
     },
+    { key: 'equipe', label: 'Equipe', content: <Equipe embedded imobiliariaId={selectedImobiliariaId} /> },
+    { key: 'acessos', label: 'Acessos', content: <Permissoes embedded imobiliariaId={selectedImobiliariaId} /> },
+    { key: 'auditoria', label: 'Auditoria', content: <Auditoria embedded imobiliariaId={selectedImobiliariaId} /> },
+    { key: 'integracoes', label: 'Integrações', content: <Webhooks embedded imobiliariaId={selectedImobiliariaId} /> },
   ]
 
   return (
     <div className="configuracoes-page">
       <div className="configuracoes-header">
         <div><h2>Configurações administrativas</h2><p>Gerencie a imobiliária, operação, comissões e acessos.</p></div>
-        <Button onClick={handleSave} loading={saving}>Salvar Alterações</Button>
+        {['empresa', 'operacao', 'comissoes'].includes(activeTab) && (
+          <Button onClick={handleSave} loading={saving}>Salvar alterações</Button>
+        )}
       </div>
+
+      {user?.role === 'super_admin' && (
+        <div className="config-tenant-selector">
+          <label htmlFor="config-imobiliaria">Imobiliária administrada</label>
+          <select id="config-imobiliaria" value={selectedImobiliariaId} onChange={event => { setConfig(null); setSelectedImobiliariaId(event.target.value) }}>
+            {imobiliarias.map(item => <option key={item.id} value={item.id}>{item.nome}</option>)}
+          </select>
+        </div>
+      )}
 
       {message && (
         <p className={`config-message ${message.includes('sucesso') ? 'msg-success' : 'msg-error'}`}>
@@ -131,9 +153,9 @@ export default function Configuracoes() {
         </p>
       )}
 
-      <Card>
-        <Tabs tabs={tabs} defaultTab="empresa" />
-      </Card>
+      {config && <div className="config-tabs-shell">
+        <Tabs tabs={tabs} defaultTab="empresa" onChange={setActiveTab} />
+      </div>}
     </div>
   )
 }

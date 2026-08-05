@@ -15,7 +15,7 @@ const pages = [
   ['audit', 'Auditoria'], ['webhooks', 'Webhooks']
 ]
 
-export default function Permissoes() {
+export default function Permissoes({ imobiliariaId }) {
   const [users, setUsers] = useState([])
   const [userId, setUserId] = useState('')
   const [access, setAccess] = useState([])
@@ -23,12 +23,12 @@ export default function Permissoes() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    api.get('/users').then(({ data }) => {
+    api.get('/users', { params: { imobiliariaId } }).then(({ data }) => {
       const configurable = data.filter(user => user.role !== 'super_admin')
       setUsers(configurable)
       if (configurable[0]) setUserId(String(configurable[0].id))
     }).finally(() => setLoading(false))
-  }, [])
+  }, [imobiliariaId])
 
   useEffect(() => {
     if (!userId) return

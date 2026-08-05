@@ -16,6 +16,9 @@ router.get('/', authenticate, async (req, res) => {
     if (req.user.role === 'admin_imobiliaria') {
       where.imobiliariaId = req.user.imobiliariaId;
     }
+    if (req.user.role === 'super_admin' && req.query.imobiliariaId) {
+      where.imobiliariaId = parseInt(req.query.imobiliariaId);
+    }
     if (userId) where.userId = parseInt(userId);
     if (acao) where.acao = acao;
     if (recurso) where.recurso = recurso;
