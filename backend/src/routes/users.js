@@ -12,7 +12,7 @@ const { validateEmail, validatePassword } = require('../utils/validators');
 const { PAGES, defaultAccess } = require('../constants/access');
 const { getUserAccess } = require('../middlewares/access');
 
-const publicUserSelect = { id: true, name: true, email: true, role: true, imobiliariaId: true, diretorId: true, gerenteId: true, createdAt: true };
+const publicUserSelect = { id: true, name: true, email: true, role: true, imobiliariaId: true, diretorId: true, gerenteId: true, isApproved: true, approvedAt: true, lastSeenAt: true, createdAt: true };
 
 function canManageUsers(req) {
   return ['super_admin', 'admin_imobiliaria'].includes(req.user.role);
@@ -37,9 +37,24 @@ router.post('/', ensureRole('super_admin', 'admin_imobiliaria'), ensureSameImobi
   try{
     const bcrypt = require('bcryptjs');
     const hashed = await bcrypt.hash(password, 12);
-    const user = await prisma.user.create({ data: { name, email, password: hashed, role, imobiliariaId: imobiliariaId || req.imobiliariaId } });
+    const targetImobiliariaId = Number(imobiliariaId || req.imobiliariaId);
+    if (!targetImobiliariaId) return res.status(400).json({ error: 'Selecione uma imobiliária' });
+    const user = await prisma.$transaction(async tx => {
+      const imobiliaria = await tx.imobiliaria.findUnique({ where: { id: targetImobiliariaId }, include: { plano: true } });
+      if (!imobiliaria || imobiliaria.status !== 'ativa') {
+        const error = new Error('Imobiliária não encontrada ou inativa'); error.code = 'AGENCY_INACTIVE'; throw error;
+      }
+      const currentUsers = await tx.user.count({ where: { imobiliariaId: targetImobiliariaId } });
+      const limit = imobiliaria.plano?.maxUsers || 10;
+      if (currentUsers >= limit) {
+        const error = new Error(`O plano permite até ${limit} usuários`); error.code = 'PLAN_USER_LIMIT'; error.currentUsers = currentUsers; error.limit = limit; throw error;
+      }
+      return tx.user.create({ data: { name: name.trim(), email: email.toLowerCase(), password: hashed, role, imobiliariaId: targetImobiliariaId, isApproved: true, approvedAt: new Date(), approvedById: req.user.id } });
+    });
     res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role, imobiliariaId: user.imobiliariaId });
   }catch(err){
+    if (err.code === 'PLAN_USER_LIMIT') return res.status(409).json({ error: err.message, code: err.code, currentUsers: err.currentUsers, limit: err.limit });
+    if (err.code === 'AGENCY_INACTIVE') return res.status(400).json({ error: err.message, code: err.code });
     res.status(400).json({ error: 'Create user failed', details: err.message });
   }
 });

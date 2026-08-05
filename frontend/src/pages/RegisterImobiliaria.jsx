@@ -10,6 +10,7 @@ import { unmask } from '../utils/masks'
 import './Login.css'
 
 export default function RegisterImobiliaria() {
+  const [mode, setMode] = useState('agency')
   const [form, setForm] = useState({ nome: '', cnpj: '', email: '', telefone: '', nomeAdmin: '', emailAdmin: '', senha: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -24,7 +25,11 @@ export default function RegisterImobiliaria() {
     e.preventDefault()
     setError('')
 
-    if (!form.nome || !form.cnpj || !form.email || !form.telefone) {
+    if (!form.nomeAdmin || !form.emailAdmin || !form.senha || !form.cnpj) {
+      setError('Preencha os dados do responsável e o CNPJ')
+      return
+    }
+    if (mode === 'agency' && (!form.nome || !form.email || !form.telefone)) {
       setError('Todos os campos da empresa são obrigatórios')
       return
     }
@@ -34,19 +39,24 @@ export default function RegisterImobiliaria() {
       return
     }
 
-    if (unmask(form.telefone).length < 10) {
+    if (mode === 'agency' && unmask(form.telefone).length < 10) {
       setError('Telefone deve ter pelo menos 10 dígitos')
       return
     }
 
     setLoading(true)
     try {
-      await api.post('/imobiliarias', {
-        nome: form.nome,
-        cnpj: unmask(form.cnpj),
-        email: form.email,
-        telefone: unmask(form.telefone),
-      })
+      if (mode === 'agency') {
+        await api.post('/imobiliarias', {
+          nome: form.nome, cnpj: unmask(form.cnpj), email: form.email,
+          telefone: unmask(form.telefone), nomeAdmin: form.nomeAdmin,
+          emailAdmin: form.emailAdmin, senha: form.senha
+        })
+      } else {
+        await api.post('/auth/register-request', {
+          name: form.nomeAdmin, email: form.emailAdmin, password: form.senha, cnpj: unmask(form.cnpj)
+        })
+      }
       setSuccess(true)
       setTimeout(() => navigate('/aguardando-aprovacao'), 2000)
     } catch (err) {
@@ -73,18 +83,26 @@ export default function RegisterImobiliaria() {
       <div className="login-container">
         <div className="login-header">
           <Logo size={56} />
-          <h1 className="login-title" style={{ fontSize: '1.4rem', marginTop: '1rem' }}>Cadastrar Imobiliária</h1>
-          <p className="login-subtitle">Registre sua empresa no Gestor Pro 360</p>
+          <h1 className="login-title" style={{ fontSize: '1.4rem', marginTop: '1rem' }}>Solicitar cadastro</h1>
+          <p className="login-subtitle">O acesso será liberado após aprovação</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 18 }}>
+          <Button type="button" variant={mode === 'agency' ? 'primary' : 'secondary'} onClick={() => setMode('agency')}>Sou uma imobiliária</Button>
+          <Button type="button" variant={mode === 'user' ? 'primary' : 'secondary'} onClick={() => setMode('user')}>Quero entrar em uma</Button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <Input
+          {mode === 'agency' && <><Input
             label="Nome da Empresa *"
             placeholder="Nome da imobiliária"
             value={form.nome}
             onChange={e => handleChange('nome', e.target.value)}
             fullWidth
           />
+          <Input label="E-mail comercial *" type="email" value={form.email} onChange={e => handleChange('email', e.target.value)} fullWidth />
+          <MaskedInput mask="phone" label="Telefone *" value={form.telefone} onChange={e => handleChange('telefone', e.target.value)} fullWidth />
+          </>}
           <MaskedInput
             mask="cnpj"
             label="CNPJ *"
@@ -92,26 +110,14 @@ export default function RegisterImobiliaria() {
             onChange={e => handleChange('cnpj', e.target.value)}
             fullWidth
           />
-          <Input
-            label="E-mail *"
-            type="email"
-            placeholder="contato@imobiliaria.com"
-            value={form.email}
-            onChange={e => handleChange('email', e.target.value)}
-            fullWidth
-          />
-          <MaskedInput
-            mask="phone"
-            label="Telefone *"
-            value={form.telefone}
-            onChange={e => handleChange('telefone', e.target.value)}
-            fullWidth
-          />
+          <Input label="Nome completo do responsável *" value={form.nomeAdmin} onChange={e => handleChange('nomeAdmin', e.target.value)} fullWidth />
+          <Input label="E-mail de acesso *" type="email" value={form.emailAdmin} onChange={e => handleChange('emailAdmin', e.target.value)} fullWidth />
+          <Input label="Senha *" type="password" value={form.senha} onChange={e => handleChange('senha', e.target.value)} fullWidth />
 
           {error && <p style={{ color: 'var(--error)', fontSize: '0.875rem', margin: '0.5rem 0' }}>{error}</p>}
 
           <Button type="submit" fullWidth loading={loading} style={{ marginTop: '0.5rem' }}>
-            Registrar Imobiliária
+            Enviar solicitação
           </Button>
         </form>
 

@@ -80,6 +80,7 @@ const menuSections = [
     label: 'Super Admin',
     items: [
       { label: 'Imobiliárias', path: '/super/imobiliarias', icon: <IconOffice/>, page: 'super', roles: ['super_admin'] },
+      { label: 'Usuários globais', path: '/super/usuarios', icon: <IconUsers/>, page: 'super', roles: ['super_admin'] },
     ]
   },
 ]

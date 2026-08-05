@@ -41,6 +41,7 @@ export default function Login() {
       const response = await api.post('/auth/login', { email, password })
       sessionStorage.setItem('token', response.data.token)
       sessionStorage.setItem('user', JSON.stringify(response.data.user))
+      if (response.data.user.imobiliariaId) sessionStorage.setItem('activeImobiliariaId', String(response.data.user.imobiliariaId))
       setUser(response.data.user)
 
       if (response.data.user.role === 'super_admin') {

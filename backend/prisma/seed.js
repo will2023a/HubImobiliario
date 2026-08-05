@@ -8,8 +8,8 @@ const password = value => bcrypt.hash(value, 12)
 async function upsertDemoUser(data) {
   return prisma.user.upsert({
     where: { email: data.email },
-    update: { name: data.name, role: data.role, imobiliariaId: data.imobiliariaId },
-    create: { ...data, password: await password(data.password) }
+    update: { name: data.name, role: data.role, imobiliariaId: data.imobiliariaId, isApproved: true, approvedAt: new Date() },
+    create: { ...data, password: await password(data.password), isApproved: true, approvedAt: new Date() }
   })
 }
 
@@ -22,10 +22,19 @@ async function setAccess(user, customize = rule => rule) {
 async function main() {
   console.log('🌱 Criando ambiente demonstrativo...')
 
+  const plans = []
+  for (const limit of [10, 20, 30, 40, 50]) {
+    plans.push(await prisma.plan.upsert({
+      where: { code: `users_${limit}` },
+      update: { name: `Plano ${limit}`, maxUsers: limit, maxImobiliarias: Math.max(1, Math.ceil(limit / 20)), active: true },
+      create: { code: `users_${limit}`, name: `Plano ${limit}`, maxUsers: limit, maxImobiliarias: Math.max(1, Math.ceil(limit / 20)) }
+    }))
+  }
+
   await prisma.user.upsert({
     where: { email: 'super@gestorpro.local' },
     update: {},
-    create: { name: 'Super Admin', email: 'super@gestorpro.local', password: await password('Super@123'), role: 'super_admin' }
+    create: { name: 'Super Admin', email: 'super@gestorpro.local', password: await password('Super@123'), role: 'super_admin', isApproved: true, approvedAt: new Date() }
   })
 
   let imobiliaria = await prisma.imobiliaria.findFirst({ where: { email: 'contato@prime.local' } })
@@ -40,6 +49,12 @@ async function main() {
   const gerente = await upsertDemoUser({ name: 'Gabriela Gerente', email: 'gerente@prime.local', password: 'Gerente@123', role: 'gerente', imobiliariaId: imobiliaria.id })
   const corretor = await upsertDemoUser({ name: 'Carlos Corretor', email: 'corretor@prime.local', password: 'Corretor@123', role: 'corretor', imobiliariaId: imobiliaria.id })
   const leitor = await upsertDemoUser({ name: 'Laura Somente Leitura', email: 'leitor@prime.local', password: 'Leitor@123', role: 'corretor', imobiliariaId: imobiliaria.id })
+
+  await prisma.imobiliaria.update({ where: { id: imobiliaria.id }, data: { ownerId: admin.id, planId: plans[2].id, plan: plans[2].code } })
+  await prisma.imobiliariaAdmin.upsert({
+    where: { userId_imobiliariaId: { userId: admin.id, imobiliariaId: imobiliaria.id } },
+    update: { active: true }, create: { userId: admin.id, imobiliariaId: imobiliaria.id }
+  })
 
   await prisma.user.update({ where: { id: gerente.id }, data: { diretorId: diretor.id } })
   await prisma.user.update({ where: { id: corretor.id }, data: { gerenteId: gerente.id } })

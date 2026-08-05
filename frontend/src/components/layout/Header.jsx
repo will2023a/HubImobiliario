@@ -7,7 +7,7 @@ import SearchGlobal from '../shared/SearchGlobal'
 import AppIcon from '../ui/AppIcon'
 
 export default function Header({ title, onMenuClick, isMobile }) {
-  const { user, logout } = useContext(AuthContext)
+  const { user, logout, switchImobiliaria } = useContext(AuthContext)
   const navigate = useNavigate()
   const [searchOpen, setSearchOpen] = useState(false)
 
@@ -23,6 +23,18 @@ export default function Header({ title, onMenuClick, isMobile }) {
       </div>
 
       <div className="header-right">
+        {user?.imobiliarias?.length > 1 && (
+          <select
+            aria-label="Imobiliária ativa"
+            value={user.imobiliariaId || ''}
+            onChange={event => switchImobiliaria(event.target.value)}
+            className="header-agency-select"
+          >
+            {user.imobiliarias.filter(item => item.status === 'ativa').map(item => (
+              <option key={item.id} value={item.id}>{item.nome}</option>
+            ))}
+          </select>
+        )}
         <div className="header-search-placeholder">
           <button
             className="header-search-btn"

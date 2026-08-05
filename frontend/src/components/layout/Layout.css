@@ -513,3 +513,17 @@
     display: flex;
   }
 }
+.header-agency-select {
+  max-width: 220px;
+  height: 38px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--border-color, #dedede);
+  border-radius: 7px;
+  background: #fff;
+  color: #171717;
+  font: inherit;
+}
+
+@media (max-width: 768px) {
+  .header-agency-select { max-width: 120px; }
+}

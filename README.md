@@ -222,3 +222,25 @@ Depois de aplicar as migrações e executar `npm run seed` dentro de `backend`, 
 | Somente leitura | `leitor@prime.local` | `Leitor@123` | Páginas selecionadas sem edição |
 
 O seed é idempotente e popula todos os módulos persistidos: imobiliária, configuração visual, equipe e hierarquia, permissões, acessos individuais, imóveis, empreendimentos, galeria, unidades, equipe vinculada, tabela de preços, leads, pipeline, atendimentos, tarefas em diferentes estados, propostas, visitas, materiais de marketing, dispensações, inbox, mensagens, templates, notificações, comissões, automações, execuções, auditoria, webhooks e entregas. Troque todas as senhas em qualquer ambiente compartilhado.
+# Aprovação, planos e múltiplas imobiliárias
+
+Novos cadastros não recebem acesso imediato. Uma imobiliária nova e seu responsável ficam com status pendente até a aprovação do `super_admin`. Uma pessoa também pode solicitar entrada em uma imobiliária ativa informando o CNPJ; a conta nasce com `isApproved = false`.
+
+Os planos iniciais limitam usuários em 10, 20, 30, 40 ou 50 e permitem administrar, respectivamente, 1, 1, 2, 2 ou 3 imobiliárias. Os valores comerciais ainda não fazem parte do modelo. Os limites são verificados no backend, inclusive em chamadas diretas à API.
+
+O administrador geral usa **Super Admin > Usuários globais** para visualizar contas pendentes e presença recente, e **Super Admin > Imobiliárias** para aprovar, suspender e acompanhar o consumo do plano. O administrador de imobiliária só acessa dados das imobiliárias às quais está vinculado; quando administra mais de uma, seleciona o contexto no cabeçalho.
+
+Depois de atualizar o projeto no servidor Docker, execute:
+
+```bash
+docker compose build backend frontend
+docker compose run --rm backend npx prisma migrate deploy
+docker compose run --rm backend npx prisma db seed
+docker compose up -d
+```
+
+Confira o estado com:
+
+```bash
+docker compose run --rm backend npx prisma migrate status
+```

@@ -26,8 +26,15 @@ export function AuthProvider({ children }){
   function logout(){
     sessionStorage.removeItem('token')
     sessionStorage.removeItem('user')
+    sessionStorage.removeItem('activeImobiliariaId')
     setUser(null)
     window.location.href = '/login'
+  }
+
+  function switchImobiliaria(imobiliariaId) {
+    sessionStorage.setItem('activeImobiliariaId', String(imobiliariaId))
+    setUser(current => ({ ...current, imobiliariaId: Number(imobiliariaId) }))
+    window.location.reload()
   }
 
   function can(page, action = 'view') {
@@ -64,7 +71,7 @@ export function AuthProvider({ children }){
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, logout, can }}>
+    <AuthContext.Provider value={{ user, setUser, logout, can, switchImobiliaria }}>
       {children}
     </AuthContext.Provider>
   )

@@ -19,6 +19,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    const activeImobiliariaId = sessionStorage.getItem('activeImobiliariaId')
+    if (activeImobiliariaId) config.headers['X-Imobiliaria-Id'] = activeImobiliariaId
     return config
   },
   (error) => {

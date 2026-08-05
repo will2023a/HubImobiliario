@@ -24,6 +24,7 @@ const pageTitles = {
   '/dashboard/agenda': 'Agenda',
   '/dashboard/perfil': 'Perfil',
   '/super/imobiliarias': 'Imobiliárias',
+  '/super/usuarios': 'Usuários globais',
 }
 
 function getPageTitle(pathname) {

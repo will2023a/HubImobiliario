@@ -9,6 +9,7 @@ import AppIcon from '../../components/ui/AppIcon'
 
 export default function Imobiliarias() {
   const [imobiliarias, setImobiliarias] = useState([])
+  const [plans, setPlans] = useState([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState('todos')
   const [searchTerm, setSearchTerm] = useState('')
@@ -24,6 +25,7 @@ export default function Imobiliarias() {
 
   useEffect(() => {
     loadImobiliarias()
+    api.get('/imobiliarias/public/plans').then(response => setPlans(response.data)).catch(() => {})
   }, [])
 
   const loadImobiliarias = async () => {
@@ -40,12 +42,22 @@ export default function Imobiliarias() {
 
   const handleStatusChange = async (id, novoStatus) => {
     try {
-      await api.patch(`/imobiliarias/${id}`, { status: novoStatus })
+      if (novoStatus === 'ativa') await api.patch(`/super/imobiliarias/${id}/aprovar`, {})
+      else await api.patch(`/super/imobiliarias/${id}/status`, { status: novoStatus })
       loadImobiliarias()
       alert('Status atualizado com sucesso!')
     } catch (error) {
       console.error('Erro ao atualizar status:', error)
       alert('Erro ao atualizar status')
+    }
+  }
+
+  const handlePlanChange = async (id, planId) => {
+    try {
+      await api.patch(`/imobiliarias/${id}`, { planId: Number(planId) })
+      await loadImobiliarias()
+    } catch (error) {
+      alert(error.response?.data?.error || 'Não foi possível alterar o plano')
     }
   }
 
@@ -119,9 +131,6 @@ export default function Imobiliarias() {
           <h1 className="page-title">Gestão de Imobiliárias</h1>
           <p className="page-subtitle">Administração global de todas as imobiliárias</p>
         </div>
-        <Button icon="+" onClick={() => setShowCreateModal(true)}>
-          Criar Imobiliária
-        </Button>
       </div>
 
       <div className="stats-grid">
@@ -187,8 +196,9 @@ export default function Imobiliarias() {
                 <tr>
                   <th>Imobiliária</th>
                   <th>CNPJ</th>
-                  <th>Cidade/Estado</th>
+                  <th>Plano</th>
                   <th>Admin</th>
+                  <th>Usuários</th>
                   <th>Status</th>
                   <th>Ações</th>
                 </tr>
@@ -203,8 +213,14 @@ export default function Imobiliarias() {
                       </div>
                     </td>
                     <td>{imob.cnpj}</td>
-                    <td>{imob.cidade}/{imob.estado}</td>
-                    <td>{imob.admin?.name || 'N/A'}</td>
+                    <td>
+                      <Select value={imob.planId || ''} onChange={event => handlePlanChange(imob.id, event.target.value)}>
+                        <option value="" disabled>Selecione</option>
+                        {plans.map(plan => <option key={plan.id} value={plan.id}>{plan.maxUsers} usuários / {plan.maxImobiliarias} imobiliária(s)</option>)}
+                      </Select>
+                    </td>
+                    <td>{imob.owner?.name || 'Não informado'}</td>
+                    <td>{imob._count?.usuarios || 0}/{imob.plano?.maxUsers || 10}</td>
                     <td>
                       <span className="status-badge" style={{ 
                         background: statusConfig[imob.status]?.color 

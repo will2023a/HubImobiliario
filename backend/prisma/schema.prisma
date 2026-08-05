@@ -8,31 +8,37 @@ datasource db {
 }
 
 model User {
-  id              Int                   @id @default(autoincrement())
-  name            String
-  email           String                @unique
-  password        String
-  role            String // super_admin, admin_imobiliaria, diretor, gerente, corretor
-  imobiliariaId   Int?
-  imobiliaria     Imobiliaria?          @relation(fields: [imobiliariaId], references: [id])
-  diretorId       Int? // Se for gerente, aponta para o diretor
-  diretor         User?                 @relation("DiretorGerentes", fields: [diretorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  gerentes        User[]                @relation("DiretorGerentes")
-  gerenteId       Int? // Se for corretor, aponta para o gerente
-  gerente         User?                 @relation("GerenteCorretores", fields: [gerenteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  corretores      User[]                @relation("GerenteCorretores")
-  leadsAsCorretor Lead[]                @relation("LeadCorretor")
-  atendimentos    Atendimento[]
-  propostas       Proposta[]
-  visitas         Visita[]              @relation("AtendenteVisitas")
-  dispensacoes    DispensacaoMaterial[] @relation("DispensadoPor")
-  tasks           Task[]                @relation("UserTasks")
-  notifications   Notification[]        @relation("UserNotifications")
-  conversations   Conversation[]        @relation("ConversationAssigned")
-  comissoes       Comissao[]            @relation("UserComissoes")
-  auditLogs       AuditLog[]            @relation("UserAuditLogs")
-  accessRules     UserAccess[]
-  createdAt       DateTime              @default(now())
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  email               String                @unique
+  password            String
+  role                String // super_admin, admin_imobiliaria, diretor, gerente, corretor
+  imobiliariaId       Int?
+  imobiliaria         Imobiliaria?          @relation("ImobiliariaUsers", fields: [imobiliariaId], references: [id])
+  diretorId           Int? // Se for gerente, aponta para o diretor
+  diretor             User?                 @relation("DiretorGerentes", fields: [diretorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gerentes            User[]                @relation("DiretorGerentes")
+  gerenteId           Int? // Se for corretor, aponta para o gerente
+  gerente             User?                 @relation("GerenteCorretores", fields: [gerenteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  corretores          User[]                @relation("GerenteCorretores")
+  leadsAsCorretor     Lead[]                @relation("LeadCorretor")
+  atendimentos        Atendimento[]
+  propostas           Proposta[]
+  visitas             Visita[]              @relation("AtendenteVisitas")
+  dispensacoes        DispensacaoMaterial[] @relation("DispensadoPor")
+  tasks               Task[]                @relation("UserTasks")
+  notifications       Notification[]        @relation("UserNotifications")
+  conversations       Conversation[]        @relation("ConversationAssigned")
+  comissoes           Comissao[]            @relation("UserComissoes")
+  auditLogs           AuditLog[]            @relation("UserAuditLogs")
+  accessRules         UserAccess[]
+  isApproved          Boolean               @default(false)
+  approvedAt          DateTime?
+  approvedById        Int?
+  lastSeenAt          DateTime?
+  managedImobiliarias ImobiliariaAdmin[]
+  ownedImobiliarias   Imobiliaria[]         @relation("ImobiliariaOwner")
+  createdAt           DateTime              @default(now())
 }
 
 model Imobiliaria {
@@ -44,7 +50,7 @@ model Imobiliaria {
   status                    String // ativa, inativa, aguardando_aprovacao
   plan                      String // basic, pro, enterprise
   comissaoPercent           Float                  @default(5.0) // % de comissão padrão desta imobiliária
-  usuarios                  User[]
+  usuarios                  User[]                 @relation("ImobiliariaUsers")
   imoveis                   Imovel[]
   leads                     Lead[]
   empreendimentos           Empreendimento[]
@@ -61,7 +67,37 @@ model Imobiliaria {
   automations               Automation[]
   auditLogs                 AuditLog[]
   webhooks                  Webhook[]
+  ownerId                   Int?
+  owner                     User?                  @relation("ImobiliariaOwner", fields: [ownerId], references: [id])
+  admins                    ImobiliariaAdmin[]
+  planId                    Int?
+  plano                     Plan?                  @relation(fields: [planId], references: [id])
   createdAt                 DateTime               @default(now())
+}
+
+model Plan {
+  id              Int           @id @default(autoincrement())
+  code            String        @unique
+  name            String
+  maxUsers        Int
+  maxImobiliarias Int           @default(1)
+  active          Boolean       @default(true)
+  imobiliarias    Imobiliaria[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model ImobiliariaAdmin {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imobiliariaId Int
+  imobiliaria   Imobiliaria @relation(fields: [imobiliariaId], references: [id], onDelete: Cascade)
+  active        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+
+  @@unique([userId, imobiliariaId])
+  @@index([imobiliariaId])
 }
 
 model Permissao {
