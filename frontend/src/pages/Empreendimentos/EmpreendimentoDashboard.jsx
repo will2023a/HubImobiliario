@@ -10,6 +10,9 @@ import MiniMap from '../../components/shared/MiniMap'
 import ImageGallery from '../../components/shared/ImageGallery'
 import TabelaPrecos from './TabelaPrecos'
 import AppIcon from '../../components/ui/AppIcon'
+import EmpreendimentoComercial from './EmpreendimentoComercial'
+import Modal from '../../components/ui/Modal'
+import { Input } from '../../components/ui/Input'
 import './EmpreendimentoDashboard.css'
 
 export default function EmpreendimentoDashboard() {
@@ -18,6 +21,9 @@ export default function EmpreendimentoDashboard() {
   const [empreendimento, setEmpreendimento] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('visao-geral')
+  const [reservaUnidade, setReservaUnidade] = useState(null)
+  const [reserva, setReserva] = useState({ clienteNome: '', clienteCpf: '', horas: 48 })
+  const [reservaError, setReservaError] = useState('')
 
   useEffect(() => {
     loadEmpreendimento()
@@ -53,7 +59,7 @@ export default function EmpreendimentoDashboard() {
   const stats = {
     totalUnidades: unidades.length,
     disponiveis: unidades.filter(u => u.status === 'disponivel').length,
-    reservadas: unidades.filter(u => u.status === 'reservado').length,
+    reservadas: unidades.filter(u => u.status === 'reservada' || u.status === 'reservado').length,
     vendidas: unidades.filter(u => u.status === 'vendido').length,
     valorTotal: unidades.reduce((sum, u) => sum + (u.valorTotal || 0), 0),
     propostasAbertas: propostas.filter(p => p.status === 'aberta').length,
@@ -70,6 +76,12 @@ export default function EmpreendimentoDashboard() {
       style: 'currency',
       currency: 'BRL'
     }).format(value)
+  }
+
+  const criarReserva = async event => {
+    event.preventDefault(); setReservaError('')
+    try { await api.post(`/unidades/${reservaUnidade.id}/reservas`, reserva); setReservaUnidade(null); setReserva({ clienteNome: '', clienteCpf: '', horas: 48 }); await loadEmpreendimento() }
+    catch (error) { setReservaError(error.response?.data?.error || 'Não foi possível reservar a unidade') }
   }
 
   return (
@@ -159,6 +171,12 @@ export default function EmpreendimentoDashboard() {
 
       {/* Tabs */}
       <div className="tabs-container">
+        <button
+          className={`tab ${activeTab === 'comercial' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('comercial')}
+        >
+          Compartilhar e documentos
+        </button>
         <button
           className={`tab ${activeTab === 'visao-geral' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('visao-geral')}
@@ -267,6 +285,8 @@ export default function EmpreendimentoDashboard() {
         <VisitasList empreendimentoId={id} />
       )}
 
+      {activeTab === 'comercial' && <EmpreendimentoComercial empreendimento={empreendimento} onReload={loadEmpreendimento} />}
+
       {activeTab === 'marketing' && (
         <MarketingList empreendimentoId={id} />
       )}
@@ -339,6 +359,7 @@ export default function EmpreendimentoDashboard() {
                       </span>
                     </td>
                     <td>
+                      {unidade.status === 'disponivel' && <Button variant="primary" size="sm" onClick={() => setReservaUnidade(unidade)}>Reservar</Button>}
                       <Link to={`/dashboard/empreendimentos/${id}/unidades/${unidade.id}/editar`}>
                         <Button variant="ghost" size="sm">Editar</Button>
                       </Link>
@@ -418,6 +439,15 @@ export default function EmpreendimentoDashboard() {
           empreendimentoNome={empreendimento.nome}
         />
       )}
+      <Modal isOpen={Boolean(reservaUnidade)} onClose={() => setReservaUnidade(null)} title={`Reservar ${reservaUnidade?.identificacao || reservaUnidade?.numero || ''}`}>
+        <form onSubmit={criarReserva} style={{ display: 'grid', gap: 12 }}>
+          <Input label="Nome do cliente" value={reserva.clienteNome} onChange={e => setReserva(r => ({ ...r, clienteNome: e.target.value }))} required />
+          <Input label="CPF do cliente" value={reserva.clienteCpf} onChange={e => setReserva(r => ({ ...r, clienteCpf: e.target.value }))} />
+          <Input label="Validade em horas" type="number" min="1" max="720" value={reserva.horas} onChange={e => setReserva(r => ({ ...r, horas: e.target.value }))} required />
+          {reservaError && <p style={{ color: '#b42318' }}>{reservaError}</p>}
+          <Button type="submit">Confirmar reserva</Button>
+        </form>
+      </Modal>
     </div>
   )
 }

@@ -11,6 +11,7 @@ import LeadDetail from './LeadDetail'
 import EmpreendimentosList from './Empreendimentos/EmpreendimentosList'
 import EmpreendimentoDashboard from './Empreendimentos/EmpreendimentoDashboard'
 import EmpreendimentoForm from './Empreendimentos/EmpreendimentoForm'
+import UnidadeForm from './Empreendimentos/UnidadeForm'
 import PropostasList from './Propostas/PropostasList'
 import PropostaForm from './Propostas/PropostaForm'
 import Equipe from './Equipe/Equipe'
@@ -54,6 +55,8 @@ export default function Dashboard(){
           <Route path="empreendimentos/novo" element={allowed('empreendimentos', <EmpreendimentoForm/>, true)} />
           <Route path="empreendimentos/:id" element={allowed('empreendimentos', <EmpreendimentoDashboard/>)} />
           <Route path="empreendimentos/:id/editar" element={allowed('empreendimentos', <EmpreendimentoForm/>, true)} />
+          <Route path="empreendimentos/:id/unidades/nova" element={allowed('empreendimentos', <UnidadeForm/>, true)} />
+          <Route path="empreendimentos/:id/unidades/:unidadeId/editar" element={allowed('empreendimentos', <UnidadeForm/>, true)} />
           <Route path="empreendimentos/:id/visitas/nova" element={<VisitaForm/>} />
           <Route path="empreendimentos/:id/marketing/novo" element={<MarketingForm/>} />
           <Route path="propostas" element={allowed('propostas', <PropostasList/>)} />

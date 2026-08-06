@@ -3,6 +3,8 @@ const prisma = require('../prisma/client');
 const auth = require('../middlewares/auth');
 const multitenant = require('../middlewares/multitenant');
 const { requirePermission } = require('../middlewares/permissions');
+const crypto = require('crypto');
+const { empreendimentoScope, getAccessibleEmpreendimento, getManageableEmpreendimento } = require('../utils/empreendimento-access');
 
 const router = express.Router();
 
@@ -63,6 +65,12 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
       dataLancamento: req.body.dataLancamento ? new Date(req.body.dataLancamento) : undefined,
       dataPrevisaoConstrucao: req.body.dataPrevisaoConstrucao ? new Date(req.body.dataPrevisaoConstrucao) : undefined
     };
+    for (const field of ['quartosMin', 'quartosMax', 'suitesMin', 'suitesMax', 'vagasMin', 'vagasMax']) {
+      if (data[field] !== undefined) data[field] = parseInt(data[field]);
+    }
+    for (const field of ['areaMin', 'areaMax', 'latitude', 'longitude']) {
+      if (data[field] !== undefined) data[field] = parseFloat(data[field]);
+    }
 
     if (data.tipoUnidade === 'apartamento' && configuracaoApartamento) {
       const blocos = parseInt(configuracaoApartamento.blocosCount || 0);
@@ -137,6 +145,9 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
               unidades.push({
                 empreendimentoId: created.id,
                 numero,
+                identificacao: numero,
+                tipo: 'apartamento',
+                andar,
                 bloco: `Bloco ${bloco}`,
                 valorBase: valorBasePadrao,
                 juros: jurosPadrao,
@@ -192,21 +203,33 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
 
 // Listar empreendimentos
 router.get('/', requirePermission('empreendimentos', 'ler'), async (req, res) => {
-  const where = {};
-  if (req.user.role !== 'super_admin') {
-    where.imobiliariaId = req.imobiliariaId;
-  }
+  const where = { ...empreendimentoScope(req.user) };
+  const q = String(req.query.q || '').trim();
+  if (q) where.AND = [{ OR: [{ nome: { contains: q } }, { cidade: { contains: q } }, { bairro: { contains: q } }] }];
+  if (req.query.estado) where.estado = String(req.query.estado);
+  if (req.query.cidade) where.cidade = String(req.query.cidade);
+  if (req.query.bairro) where.bairro = String(req.query.bairro);
+  if (req.query.status) where.status = String(req.query.status);
+  if (req.query.destaque === 'true') where.destaque = true;
+  if (req.query.entregaAte) where.dataPrevisaoConstrucao = { lte: new Date(req.query.entregaAte) };
+  if (req.query.somenteDisponiveis === 'true') where.unidades = { some: { status: 'disponivel' } };
   
   const list = await prisma.empreendimento.findMany({ 
     where,
     include: {
-      _count: {
-        select: { unidades: true, propostas: true }
-      }
+      unidades: { select: { status: true, valorTotal: true } },
+      _count: { select: { unidades: true, propostas: true } }
     },
     orderBy: { createdAt: 'desc' }
   });
-  res.json(list);
+  res.json(list.map(item => {
+    const disponibilidade = item.unidades.reduce((acc, unidade) => {
+      acc[unidade.status] = (acc[unidade.status] || 0) + 1;
+      return acc;
+    }, {});
+    const { unidades, ...empreendimento } = item;
+    return { ...empreendimento, disponibilidade };
+  }));
 });
 
 // Buscar empreendimento por ID (dashboard)
@@ -218,12 +241,13 @@ router.get('/:id', requirePermission('empreendimentos', 'ler'), async (req, res)
       return res.status(400).json({ error: 'ID inválido' });
     }
     
-    const empreendimento = await prisma.empreendimento.findUnique({ 
-      where: { id },
+    const empreendimento = await getAccessibleEmpreendimento(req.user, id, {
       include: {
         galeria: {
           orderBy: { ordem: 'asc' }
         },
+        documentos: { orderBy: { createdAt: 'desc' } },
+        compartilhamentos: { where: { ativo: true }, orderBy: { createdAt: 'desc' } },
         equipes: {
           include: {
             imobiliaria: { select: { id: true, nome: true, status: true } }
@@ -253,11 +277,9 @@ router.get('/:id', requirePermission('empreendimentos', 'ler'), async (req, res)
       return res.status(404).json({ error: 'Empreendimento não encontrado' });
     }
     
-    // Verificar se pertence à mesma imobiliária
-    if (req.user.role !== 'super_admin' && empreendimento.imobiliariaId !== req.imobiliariaId) {
-      return res.status(403).json({ error: 'Acesso negado' });
+    if (req.user.role !== 'super_admin' && empreendimento.imobiliariaId !== req.user.imobiliariaId) {
+      empreendimento.compartilhamentos = empreendimento.compartilhamentos.filter(item => item.createdById === req.user.id);
     }
-    
     res.json(empreendimento);
   } catch (err) {
     console.error('Erro ao buscar empreendimento:', err);
@@ -274,9 +296,16 @@ router.patch('/:id', requirePermission('empreendimentos', 'atualizar'), async (r
       return res.status(400).json({ error: 'ID inválido' });
     }
     
+    if (!await getManageableEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado ou não gerenciável' });
+    const allowed = ['nome', 'tipoUnidade', 'quantidadeUnidades', 'imagemUrl', 'bairro', 'cidade', 'estado', 'endereco', 'latitude', 'longitude', 'dataLancamento', 'dataPrevisaoConstrucao', 'descricao', 'status', 'destaque', 'videoUrl', 'quartosMin', 'quartosMax', 'suitesMin', 'suitesMax', 'vagasMin', 'vagasMax', 'areaMin', 'areaMax'];
+    const data = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
+    for (const field of ['quantidadeUnidades', 'quartosMin', 'quartosMax', 'suitesMin', 'suitesMax', 'vagasMin', 'vagasMax']) if (data[field] !== undefined) data[field] = data[field] === '' ? null : parseInt(data[field]);
+    for (const field of ['areaMin', 'areaMax', 'latitude', 'longitude']) if (data[field] !== undefined) data[field] = data[field] === '' ? null : parseFloat(data[field]);
+    if (data.dataLancamento) data.dataLancamento = new Date(data.dataLancamento);
+    if (data.dataPrevisaoConstrucao) data.dataPrevisaoConstrucao = new Date(data.dataPrevisaoConstrucao);
     const updated = await prisma.empreendimento.update({ 
       where: { id }, 
-      data: req.body 
+      data
     });
     res.json(updated);
   } catch (err) {
@@ -294,12 +323,51 @@ router.delete('/:id', requirePermission('empreendimentos', 'deletar'), async (re
       return res.status(400).json({ error: 'ID inválido' });
     }
     
+    if (!await getManageableEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado ou não gerenciável' });
     await prisma.empreendimento.delete({ where: { id } });
     res.json({ ok: true });
   } catch (err) {
     console.error('Erro ao deletar empreendimento:', err);
     res.status(400).json({ error: 'Erro ao deletar', details: err.message });
   }
+});
+
+router.post('/:id/documentos', requirePermission('empreendimentos', 'atualizar'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!await getManageableEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
+  const { nome, tipo = 'outro', url, publico = false } = req.body;
+  if (!nome?.trim() || !/^https?:\/\//i.test(url || '')) return res.status(400).json({ error: 'Informe nome e URL válida do documento' });
+  res.status(201).json(await prisma.documentoEmpreendimento.create({ data: { empreendimentoId: id, nome: nome.trim(), tipo, url, publico: Boolean(publico) } }));
+});
+
+router.delete('/:id/documentos/:documentoId', requirePermission('empreendimentos', 'atualizar'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!await getManageableEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
+  const result = await prisma.documentoEmpreendimento.deleteMany({ where: { id: Number(req.params.documentoId), empreendimentoId: id } });
+  if (!result.count) return res.status(404).json({ error: 'Documento não encontrado' });
+  res.json({ ok: true });
+});
+
+router.post('/:id/compartilhamentos', requirePermission('empreendimentos', 'ler'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!await getAccessibleEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
+  const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) return res.status(400).json({ error: 'Validade inválida' });
+  const share = await prisma.compartilhamentoEmpreendimento.create({ data: {
+    token: crypto.randomBytes(24).toString('hex'), empreendimentoId: id, createdById: req.user.id,
+    clienteNome: req.body.clienteNome?.trim() || null, clienteEmail: req.body.clienteEmail?.trim().toLowerCase() || null,
+    permitirPrecos: Boolean(req.body.permitirPrecos), permitirUnidades: req.body.permitirUnidades !== false, expiresAt
+  } });
+  res.status(201).json(share);
+});
+
+router.patch('/:id/compartilhamentos/:shareId/revogar', requirePermission('empreendimentos', 'ler'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!await getAccessibleEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
+  const isOwner = req.user.role === 'super_admin' || Boolean(await getManageableEmpreendimento(req.user, id));
+  const result = await prisma.compartilhamentoEmpreendimento.updateMany({ where: { id: Number(req.params.shareId), empreendimentoId: id, ...(isOwner ? {} : { createdById: req.user.id }) }, data: { ativo: false } });
+  if (!result.count) return res.status(404).json({ error: 'Compartilhamento não encontrado' });
+  res.json({ ok: true });
 });
 
 module.exports = router;

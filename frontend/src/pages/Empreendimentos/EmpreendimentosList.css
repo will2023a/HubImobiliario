@@ -32,6 +32,13 @@
   grid-template-columns: 2fr 1fr;
   gap: 1rem;
 }
+.catalog-filters-grid { grid-template-columns: repeat(3, minmax(160px, 1fr)); align-items: end; }
+.catalog-checkbox { display: flex; align-items: center; gap: 8px; font-size: .875rem; color: #333; }
+.catalog-featured { display: inline-block; padding: 3px 8px; border: 1px solid #d4af37; color: #806913; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+.catalog-delivery { color: #806913; font-weight: 600; font-size: .84rem; }
+.availability-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid #e5e5e5; }
+.availability-summary span { display: grid; font-size: .68rem; color: #666; }.availability-summary b { color: #171717; font-size: .95rem; }
+@media(max-width: 800px){.catalog-filters-grid{grid-template-columns:1fr}.availability-summary{grid-template-columns:repeat(2,1fr)}}
 
 .filter-select {
   width: 100%;

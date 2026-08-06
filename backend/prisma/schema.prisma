@@ -8,37 +8,40 @@ datasource db {
 }
 
 model User {
-  id                  Int                   @id @default(autoincrement())
-  name                String
-  email               String                @unique
-  password            String
-  role                String // super_admin, admin_imobiliaria, diretor, gerente, corretor
-  imobiliariaId       Int?
-  imobiliaria         Imobiliaria?          @relation("ImobiliariaUsers", fields: [imobiliariaId], references: [id])
-  diretorId           Int? // Se for gerente, aponta para o diretor
-  diretor             User?                 @relation("DiretorGerentes", fields: [diretorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  gerentes            User[]                @relation("DiretorGerentes")
-  gerenteId           Int? // Se for corretor, aponta para o gerente
-  gerente             User?                 @relation("GerenteCorretores", fields: [gerenteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  corretores          User[]                @relation("GerenteCorretores")
-  leadsAsCorretor     Lead[]                @relation("LeadCorretor")
-  atendimentos        Atendimento[]
-  propostas           Proposta[]
-  visitas             Visita[]              @relation("AtendenteVisitas")
-  dispensacoes        DispensacaoMaterial[] @relation("DispensadoPor")
-  tasks               Task[]                @relation("UserTasks")
-  notifications       Notification[]        @relation("UserNotifications")
-  conversations       Conversation[]        @relation("ConversationAssigned")
-  comissoes           Comissao[]            @relation("UserComissoes")
-  auditLogs           AuditLog[]            @relation("UserAuditLogs")
-  accessRules         UserAccess[]
-  isApproved          Boolean               @default(false)
-  approvedAt          DateTime?
-  approvedById        Int?
-  lastSeenAt          DateTime?
-  managedImobiliarias ImobiliariaAdmin[]
-  ownedImobiliarias   Imobiliaria[]         @relation("ImobiliariaOwner")
-  createdAt           DateTime              @default(now())
+  id                       Int                              @id @default(autoincrement())
+  name                     String
+  email                    String                           @unique
+  password                 String
+  role                     String // super_admin, admin_imobiliaria, diretor, gerente, corretor
+  imobiliariaId            Int?
+  imobiliaria              Imobiliaria?                     @relation("ImobiliariaUsers", fields: [imobiliariaId], references: [id])
+  diretorId                Int? // Se for gerente, aponta para o diretor
+  diretor                  User?                            @relation("DiretorGerentes", fields: [diretorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  gerentes                 User[]                           @relation("DiretorGerentes")
+  gerenteId                Int? // Se for corretor, aponta para o gerente
+  gerente                  User?                            @relation("GerenteCorretores", fields: [gerenteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  corretores               User[]                           @relation("GerenteCorretores")
+  leadsAsCorretor          Lead[]                           @relation("LeadCorretor")
+  atendimentos             Atendimento[]
+  propostas                Proposta[]
+  visitas                  Visita[]                         @relation("AtendenteVisitas")
+  dispensacoes             DispensacaoMaterial[]            @relation("DispensadoPor")
+  tasks                    Task[]                           @relation("UserTasks")
+  notifications            Notification[]                   @relation("UserNotifications")
+  conversations            Conversation[]                   @relation("ConversationAssigned")
+  comissoes                Comissao[]                       @relation("UserComissoes")
+  auditLogs                AuditLog[]                       @relation("UserAuditLogs")
+  accessRules              UserAccess[]
+  reservasCriadas          ReservaUnidade[]                 @relation("ReservaCriadaPor")
+  historicosUnidade        UnidadeStatusHistorico[]         @relation("UnidadeAlteradaPor")
+  compartilhamentosCriados CompartilhamentoEmpreendimento[] @relation("CompartilhamentoCriadoPor")
+  isApproved               Boolean                          @default(false)
+  approvedAt               DateTime?
+  approvedById             Int?
+  lastSeenAt               DateTime?
+  managedImobiliarias      ImobiliariaAdmin[]
+  ownedImobiliarias        Imobiliaria[]                    @relation("ImobiliariaOwner")
+  createdAt                DateTime                         @default(now())
 }
 
 model Imobiliaria {
@@ -170,11 +173,11 @@ model Atendimento {
 }
 
 model Empreendimento {
-  id                     Int                    @id @default(autoincrement())
+  id                     Int                              @id @default(autoincrement())
   nome                   String
   tipoUnidade            String // lote, casa, apartamento
   quantidadeUnidades     Int
-  imagemUrl              String?                @db.LongText
+  imagemUrl              String?                          @db.LongText
   blocosCount            Int?
   andaresPorBloco        Int?
   apartamentosPorAndar   Int?
@@ -186,7 +189,18 @@ model Empreendimento {
   longitude              Float? // Geolocalização
   dataLancamento         DateTime?
   dataPrevisaoConstrucao DateTime?
-  descricao              String?                @db.Text
+  descricao              String?                          @db.Text
+  status                 String                           @default("planejamento")
+  destaque               Boolean                          @default(false)
+  videoUrl               String?
+  quartosMin             Int?
+  quartosMax             Int?
+  suitesMin              Int?
+  suitesMax              Int?
+  vagasMin               Int?
+  vagasMax               Int?
+  areaMin                Float?
+  areaMax                Float?
   contatoGerente1        String?
   nomeGerente1           String?
   contatoGerente2        String?
@@ -198,7 +212,7 @@ model Empreendimento {
   contatoGerente5        String?
   nomeGerente5           String?
   imobiliariaId          Int
-  imobiliaria            Imobiliaria            @relation(fields: [imobiliariaId], references: [id])
+  imobiliaria            Imobiliaria                      @relation(fields: [imobiliariaId], references: [id])
   unidades               Unidade[]
   propostas              Proposta[]
   visitas                Visita[]
@@ -206,22 +220,97 @@ model Empreendimento {
   galeria                GaleriaImagem[]
   equipes                EmpreendimentoEquipe[]
   tabelasPreco           TabelaPreco[]
-  createdAt              DateTime               @default(now())
+  documentos             DocumentoEmpreendimento[]
+  compartilhamentos      CompartilhamentoEmpreendimento[]
+  createdAt              DateTime                         @default(now())
 }
 
 model Unidade {
+  id               Int                      @id @default(autoincrement())
+  empreendimentoId Int
+  empreendimento   Empreendimento           @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  numero           String // número do lote/casa/apartamento
+  valorBase        Float
+  juros            Float                    @default(0)
+  valorTotal       Float // valorBase + juros (calculado)
+  status           String                   @default("disponivel") // disponivel, reservada, em_aprovacao, em_negociacao, venda_suspensa, vendido, permuta, alugada, fora_de_venda, pre_reservada
+  bloco            String?
+  identificacao    String?
+  tipo             String?
+  area             Float?
+  andar            Int?
+  quartos          Int?
+  suites           Int?
+  vagas            Int?
+  propostas        Proposta[]
+  visitas          Visita[]
+  reservas         ReservaUnidade[]
+  historicoStatus  UnidadeStatusHistorico[]
+  createdAt        DateTime                 @default(now())
+}
+
+model DocumentoEmpreendimento {
   id               Int            @id @default(autoincrement())
   empreendimentoId Int
   empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
-  numero           String // número do lote/casa/apartamento
-  valorBase        Float
-  juros            Float          @default(0)
-  valorTotal       Float // valorBase + juros (calculado)
-  status           String         @default("disponivel") // disponivel, reservada, em_aprovacao, em_negociacao, venda_suspensa, vendido, permuta, alugada, fora_de_venda, pre_reservada
-  bloco            String?
-  propostas        Proposta[]
-  visitas          Visita[]
+  nome             String
+  tipo             String         @default("outro")
+  url              String         @db.LongText
+  publico          Boolean        @default(false)
   createdAt        DateTime       @default(now())
+
+  @@index([empreendimentoId])
+}
+
+model CompartilhamentoEmpreendimento {
+  id               Int            @id @default(autoincrement())
+  token            String         @unique
+  empreendimentoId Int
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  createdById      Int
+  createdBy        User           @relation("CompartilhamentoCriadoPor", fields: [createdById], references: [id])
+  clienteNome      String?
+  clienteEmail     String?
+  permitirPrecos   Boolean        @default(false)
+  permitirUnidades Boolean        @default(true)
+  ativo            Boolean        @default(true)
+  expiresAt        DateTime?
+  visualizacoes    Int            @default(0)
+  lastViewedAt     DateTime?
+  createdAt        DateTime       @default(now())
+
+  @@index([empreendimentoId, ativo])
+}
+
+model ReservaUnidade {
+  id                 Int       @id @default(autoincrement())
+  unidadeId          Int
+  unidade            Unidade   @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  createdById        Int
+  createdBy          User      @relation("ReservaCriadaPor", fields: [createdById], references: [id])
+  clienteNome        String
+  clienteCpf         String?
+  status             String    @default("ativa")
+  expiresAt          DateTime
+  cancelledAt        DateTime?
+  motivoCancelamento String?
+  createdAt          DateTime  @default(now())
+
+  @@index([unidadeId, status, expiresAt])
+}
+
+model UnidadeStatusHistorico {
+  id             Int      @id @default(autoincrement())
+  unidadeId      Int
+  unidade        Unidade  @relation(fields: [unidadeId], references: [id], onDelete: Cascade)
+  statusAnterior String
+  statusNovo     String
+  changedById    Int?
+  changedBy      User?    @relation("UnidadeAlteradaPor", fields: [changedById], references: [id], onDelete: SetNull)
+  motivo         String?
+  createdAt      DateTime @default(now())
+
+  @@index([unidadeId, createdAt])
 }
 
 model Proposta {

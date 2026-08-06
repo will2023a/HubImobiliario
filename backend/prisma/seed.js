@@ -104,14 +104,17 @@ async function main() {
   let empreendimento = await prisma.empreendimento.findFirst({ where: { nome: 'Residencial Horizonte', imobiliariaId: imobiliaria.id } })
   if (!empreendimento) {
     empreendimento = await prisma.empreendimento.create({
-      data: { nome: 'Residencial Horizonte', tipoUnidade: 'apartamento', quantidadeUnidades: 3, bairro: 'Centro', cidade: 'São Paulo', estado: 'SP', endereco: 'Av. Exemplo, 1000', descricao: 'Empreendimento demonstrativo', imobiliariaId: imobiliaria.id }
+      data: { nome: 'Residencial Horizonte', tipoUnidade: 'apartamento', quantidadeUnidades: 3, bairro: 'Centro', cidade: 'São Paulo', estado: 'SP', endereco: 'Av. Exemplo, 1000', descricao: 'Empreendimento demonstrativo', status: 'construcao', destaque: true, dataPrevisaoConstrucao: new Date('2028-12-01'), quartosMin: 2, quartosMax: 3, suitesMin: 1, suitesMax: 2, vagasMin: 1, vagasMax: 2, areaMin: 62, areaMax: 94, imobiliariaId: imobiliaria.id }
     })
     await prisma.unidade.createMany({ data: [
-      { empreendimentoId: empreendimento.id, numero: '101', bloco: 'A', valorBase: 450000, valorTotal: 450000, status: 'disponivel' },
-      { empreendimentoId: empreendimento.id, numero: '102', bloco: 'A', valorBase: 470000, valorTotal: 470000, status: 'reservada' },
-      { empreendimentoId: empreendimento.id, numero: '201', bloco: 'A', valorBase: 520000, valorTotal: 520000, status: 'disponivel' }
+      { empreendimentoId: empreendimento.id, numero: '101', identificacao: 'A-101', tipo: 'apartamento', bloco: 'A', andar: 1, area: 62, quartos: 2, suites: 1, vagas: 1, valorBase: 450000, valorTotal: 450000, status: 'disponivel' },
+      { empreendimentoId: empreendimento.id, numero: '102', identificacao: 'A-102', tipo: 'apartamento', bloco: 'A', andar: 1, area: 71, quartos: 2, suites: 1, vagas: 1, valorBase: 470000, valorTotal: 470000, status: 'reservada' },
+      { empreendimentoId: empreendimento.id, numero: '201', identificacao: 'A-201', tipo: 'apartamento', bloco: 'A', andar: 2, area: 94, quartos: 3, suites: 2, vagas: 2, valorBase: 520000, valorTotal: 520000, status: 'disponivel' }
     ] })
   }
+
+  await prisma.empreendimento.update({ where: { id: empreendimento.id }, data: { status: 'construcao', destaque: true, dataPrevisaoConstrucao: new Date('2028-12-01'), quartosMin: 2, quartosMax: 3, suitesMin: 1, suitesMax: 2, vagasMin: 1, vagasMax: 2, areaMin: 62, areaMax: 94 } })
+  await prisma.unidade.updateMany({ where: { empreendimentoId: empreendimento.id, identificacao: null }, data: { tipo: 'apartamento' } })
 
   await prisma.empreendimentoEquipe.upsert({
     where: { empreendimentoId_imobiliariaId: { empreendimentoId: empreendimento.id, imobiliariaId: imobiliaria.id } },
@@ -124,6 +127,10 @@ async function main() {
       { empreendimentoId: empreendimento.id, url: 'https://placehold.co/1200x800?text=Fachada', categoria: 'fachada', titulo: 'Fachada principal demo', isCapa: true, ordem: 0 },
       { empreendimentoId: empreendimento.id, url: 'https://placehold.co/1200x800?text=Area+Comum', categoria: 'areas_comuns', titulo: 'Área de lazer demo', ordem: 1 }
     ] })
+  }
+
+  if (!await prisma.documentoEmpreendimento.findFirst({ where: { empreendimentoId: empreendimento.id, nome: 'Memorial descritivo demonstrativo' } })) {
+    await prisma.documentoEmpreendimento.create({ data: { empreendimentoId: empreendimento.id, nome: 'Memorial descritivo demonstrativo', tipo: 'memorial', url: 'https://example.com/memorial-demo.pdf', publico: true } })
   }
 
   const unidades = await prisma.unidade.findMany({ where: { empreendimentoId: empreendimento.id }, orderBy: { numero: 'asc' } })

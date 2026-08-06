@@ -10,6 +10,7 @@ import { SocketProvider } from './contexts/SocketContext'
 import { NotificationProvider } from './contexts/NotificationContext'
 import { ToastProvider } from './components/ui/Toast'
 import PrivateRoute from './components/PrivateRoute'
+import PublicCatalog from './pages/PublicCatalog'
 import './styles/global.css'
 import './styles/responsive.css'
 
@@ -24,6 +25,7 @@ export default function App(){
               <Route path="/login" element={<Login/>} />
               <Route path="/register-imobiliaria" element={<RegisterImobiliaria/>} />
               <Route path="/aguardando-aprovacao" element={<AguardandoAprovacao/>} />
+              <Route path="/catalogo/:token" element={<PublicCatalog/>} />
               <Route path="/dashboard/*" element={<PrivateRoute><Dashboard/></PrivateRoute>} />
               <Route path="/super/*" element={<PrivateRoute requiredRole="super_admin"><SuperAdmin/></PrivateRoute>} />
             </Routes>

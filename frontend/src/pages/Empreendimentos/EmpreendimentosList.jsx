@@ -14,6 +14,10 @@ export default function EmpreendimentosList() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
+  const [cidade, setCidade] = useState('')
+  const [bairro, setBairro] = useState('')
+  const [entregaAte, setEntregaAte] = useState('')
+  const [somenteDisponiveis, setSomenteDisponiveis] = useState(false)
 
   useEffect(() => {
     loadEmpreendimentos()
@@ -22,7 +26,11 @@ export default function EmpreendimentosList() {
   const loadEmpreendimentos = async () => {
     try {
       setLoading(true)
-      const response = await api.get('/empreendimentos')
+      const response = await api.get('/empreendimentos', { params: {
+        q: searchTerm || undefined, cidade: cidade || undefined, bairro: bairro || undefined,
+        status: filterStatus === 'todos' ? undefined : filterStatus,
+        entregaAte: entregaAte || undefined, somenteDisponiveis: somenteDisponiveis || undefined
+      } })
       setEmpreendimentos(response.data)
     } catch (error) {
       console.error('Erro ao carregar empreendimentos:', error)
@@ -31,12 +39,15 @@ export default function EmpreendimentosList() {
     }
   }
 
-  const filteredEmpreendimentos = empreendimentos.filter(emp => {
-    const matchSearch = emp.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       emp.cidade.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchStatus = filterStatus === 'todos' || emp.status === filterStatus
-    return matchSearch && matchStatus
-  })
+  const filteredEmpreendimentos = empreendimentos
+
+  const deliveryLabel = value => {
+    if (!value) return 'Entrega não informada'
+    const date = new Date(value)
+    if (date <= new Date()) return 'Pronto'
+    const months = Math.max(1, Math.ceil((date - new Date()) / (30.44 * 86400000)))
+    return `Faltam ${months} meses`
+  }
 
   const statusColors = {
     planejamento: '#94a3b8',
@@ -63,7 +74,7 @@ export default function EmpreendimentosList() {
 
       {/* Filters */}
       <Card className="filters-card">
-        <div className="filters-grid">
+        <div className="filters-grid catalog-filters-grid">
           <div className="filter-item">
             <Input
               type="text"
@@ -72,6 +83,9 @@ export default function EmpreendimentosList() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <Input placeholder="Cidade" value={cidade} onChange={e => setCidade(e.target.value)} />
+          <Input placeholder="Bairro" value={bairro} onChange={e => setBairro(e.target.value)} />
+          <Input type="date" value={entregaAte} onChange={e => setEntregaAte(e.target.value)} />
           <div className="filter-item">
             <select
               className="filter-select"
@@ -85,6 +99,8 @@ export default function EmpreendimentosList() {
               <option value="concluido">Concluído</option>
             </select>
           </div>
+          <label className="catalog-checkbox"><input type="checkbox" checked={somenteDisponiveis} onChange={e => setSomenteDisponiveis(e.target.checked)} /> Somente com unidades disponíveis</label>
+          <Button onClick={loadEmpreendimentos}>Localizar</Button>
         </div>
       </Card>
 
@@ -165,7 +181,9 @@ export default function EmpreendimentosList() {
 
               <div className="card-body">
                 <h3 className="empreendimento-nome">{emp.nome}</h3>
+                {emp.destaque && <span className="catalog-featured">Destaque</span>}
                 <p className="empreendimento-tipo">{emp.tipo}</p>
+                <p className="catalog-delivery">{deliveryLabel(emp.dataPrevisaoConstrucao)}</p>
                 
                 <div className="empreendimento-location">
                   <span className="location-icon"><AppIcon name="pin" size={14} /></span>
@@ -179,6 +197,15 @@ export default function EmpreendimentosList() {
                       : emp.descricao}
                   </p>
                 )}
+
+                <div className="availability-summary">
+                  <span><b>{emp.disponibilidade?.disponivel || 0}</b> disponíveis</span>
+                  <span><b>{emp.disponibilidade?.em_negociacao || 0}</b> negociação</span>
+                  <span><b>{emp.disponibilidade?.reservada || 0}</b> reservadas</span>
+                  <span><b>{emp.disponibilidade?.em_aprovacao || 0}</b> aprovação</span>
+                  <span><b>{emp.disponibilidade?.vendido || 0}</b> vendidas</span>
+                  <span><b>{emp._count?.unidades || 0}</b> total</span>
+                </div>
 
                 <div className="card-footer">
                   <Link to={`/dashboard/empreendimentos/${emp.id}`}>

@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../prisma/client');
 const auth = require('../middlewares/auth');
 const { requirePermission } = require('../middlewares/permissions');
+const { getAccessibleEmpreendimento } = require('../utils/empreendimento-access');
 
 const router = express.Router();
 
@@ -9,9 +10,16 @@ router.use(auth);
 
 // Criar proposta
 router.post('/', requirePermission('propostas', 'criar'), async (req, res) => {
+  const empreendimentoId = Number(req.body.empreendimentoId);
+  const unidadeId = Number(req.body.unidadeId);
+  const empreendimento = await getAccessibleEmpreendimento(req.user, empreendimentoId);
+  const unidade = await prisma.unidade.findFirst({ where: { id: unidadeId, empreendimentoId } });
+  if (!empreendimento || !unidade) return res.status(404).json({ error: 'Empreendimento ou unidade não encontrado' });
   const data = { 
     ...req.body,
-    corretorId: req.body.corretorId || req.user.id
+    empreendimentoId, unidadeId,
+    corretorId: req.user.role === 'super_admin' && req.body.corretorId ? Number(req.body.corretorId) : req.user.id,
+    imobiliariaId: req.user.imobiliariaId || req.body.imobiliariaId || empreendimento.imobiliariaId
   };
   
   try {
@@ -23,7 +31,7 @@ router.post('/', requirePermission('propostas', 'criar'), async (req, res) => {
     // Atualizar status da unidade para reservado
     await prisma.unidade.update({
       where: { id: proposta.unidadeId },
-      data: { status: 'reservado' }
+      data: { status: 'reservada' }
     });
     
     res.json(proposta);
@@ -63,7 +71,7 @@ router.get('/', requirePermission('propostas', 'ler'), async (req, res) => {
   }
   // Admin imobiliária vê todas da sua imobiliária
   else if (req.user.role === 'admin_imobiliaria') {
-    where.empreendimento = { imobiliariaId: req.user.imobiliariaId };
+    where.imobiliariaId = req.user.imobiliariaId;
   }
   
   const propostas = await prisma.proposta.findMany({ 
@@ -86,6 +94,7 @@ router.get('/:id', requirePermission('propostas', 'ler'), async (req, res) => {
   });
   
   if (!proposta) return res.status(404).json({ error: 'Não encontrada' });
+  if (req.user.role !== 'super_admin' && proposta.imobiliariaId !== req.user.imobiliariaId && proposta.corretorId !== req.user.id) return res.status(403).json({ error: 'Acesso negado' });
   
   // Verificar permissão baseada em hierarquia
   if (req.user.role === 'corretor' && proposta.corretorId !== req.user.id) {
@@ -98,9 +107,15 @@ router.get('/:id', requirePermission('propostas', 'ler'), async (req, res) => {
 // Atualizar proposta (status, observações)
 router.patch('/:id', requirePermission('propostas', 'atualizar'), async (req, res) => {
   try {
+    const current = await prisma.proposta.findUnique({ where: { id: Number(req.params.id) } });
+    if (!current) return res.status(404).json({ error: 'Proposta não encontrada' });
+    if (req.user.role !== 'super_admin' && current.imobiliariaId !== req.user.imobiliariaId && current.corretorId !== req.user.id) return res.status(403).json({ error: 'Acesso negado' });
+    const data = {};
+    if (['pendente', 'aprovada', 'rejeitada'].includes(req.body.status)) data.status = req.body.status;
+    if (typeof req.body.observacoes === 'string') data.observacoes = req.body.observacoes;
     const proposta = await prisma.proposta.update({ 
       where: { id: Number(req.params.id) }, 
-      data: req.body,
+      data,
       include: { corretor: true, unidade: true, empreendimento: true }
     });
     
@@ -129,6 +144,8 @@ router.patch('/:id', requirePermission('propostas', 'atualizar'), async (req, re
 router.delete('/:id', requirePermission('propostas', 'deletar'), async (req, res) => {
   try {
     const proposta = await prisma.proposta.findUnique({ where: { id: Number(req.params.id) } });
+    if (!proposta) return res.status(404).json({ error: 'Proposta não encontrada' });
+    if (req.user.role !== 'super_admin' && proposta.imobiliariaId !== req.user.imobiliariaId) return res.status(403).json({ error: 'Acesso negado' });
     
     // Liberar unidade
     await prisma.unidade.update({

@@ -2,10 +2,17 @@ const express = require('express');
 const router = express.Router();
 const authenticate = require('../middlewares/auth');
 const prisma = require('../prisma/client');
+const { getAccessibleEmpreendimento, getManageableEmpreendimento } = require('../utils/empreendimento-access');
+
+async function manageableLink(req, id) {
+  const link = await prisma.empreendimentoEquipe.findUnique({ where: { id: Number(id) } });
+  return link && await getManageableEmpreendimento(req.user, link.empreendimentoId) ? link : null;
+}
 
 // GET /equipes-empreendimento/:empreendimentoId - Listar equipes vinculadas
 router.get('/:empreendimentoId', authenticate, async (req, res) => {
   try {
+    if (!await getAccessibleEmpreendimento(req.user, req.params.empreendimentoId)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
     const equipes = await prisma.empreendimentoEquipe.findMany({
       where: { empreendimentoId: parseInt(req.params.empreendimentoId) },
       include: {
@@ -27,6 +34,8 @@ router.post('/', authenticate, async (req, res) => {
     if (!empreendimentoId || !imobiliariaId) {
       return res.status(400).json({ error: 'empreendimentoId e imobiliariaId são obrigatórios' });
     }
+    if (!await getManageableEmpreendimento(req.user, empreendimentoId)) return res.status(404).json({ error: 'Empreendimento não encontrado ou não gerenciável' });
+    if (!await prisma.imobiliaria.findFirst({ where: { id: Number(imobiliariaId), status: 'ativa' } })) return res.status(400).json({ error: 'Imobiliária parceira inválida ou inativa' });
 
     const vinculo = await prisma.empreendimentoEquipe.create({
       data: {
@@ -54,6 +63,7 @@ router.put('/:id', authenticate, async (req, res) => {
   try {
     const { comissaoPercent, ativa } = req.body;
 
+    if (!await manageableLink(req, req.params.id)) return res.status(404).json({ error: 'Vínculo não encontrado ou não gerenciável' });
     const vinculo = await prisma.empreendimentoEquipe.update({
       where: { id: parseInt(req.params.id) },
       data: {
@@ -71,6 +81,7 @@ router.put('/:id', authenticate, async (req, res) => {
 // DELETE /equipes-empreendimento/:id - Remover vínculo
 router.delete('/:id', authenticate, async (req, res) => {
   try {
+    if (!await manageableLink(req, req.params.id)) return res.status(404).json({ error: 'Vínculo não encontrado ou não gerenciável' });
     await prisma.empreendimentoEquipe.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'Vínculo removido' });
   } catch (error) {

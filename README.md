@@ -103,8 +103,8 @@ docker compose exec backend node prisma/seed.js
 
 | Role | Email | Senha |
 |------|-------|-------|
-| Super Admin | super@crm.com | super123 |
-| Admin Imobiliária | admin@imob1.com | 123456 |
+| Super Admin | super@gestorpro.local | Super@123 |
+| Admin Imobiliária | admin@prime.local | Admin@123 |
 
 ---
 
@@ -231,6 +231,23 @@ Os planos iniciais limitam usuários em 10, 20, 30, 40 ou 50 e permitem administ
 O administrador geral usa **Super Admin > Usuários globais** para visualizar contas pendentes e presença recente, e **Super Admin > Imobiliárias** para aprovar, suspender e acompanhar o consumo do plano. O administrador de imobiliária só acessa dados das imobiliárias às quais está vinculado; quando administra mais de uma, seleciona o contexto no cabeçalho.
 
 Depois de atualizar o projeto no servidor Docker, execute:
+
+```bash
+docker compose build backend frontend
+docker compose run --rm backend npx prisma migrate deploy
+docker compose run --rm backend npx prisma db seed
+docker compose up -d
+```
+
+## Catálogo comercial, compartilhamento e reservas
+
+O catálogo de empreendimentos aceita busca por nome/localização, status, cidade, bairro, previsão de entrega e disponibilidade. Empreendimentos vinculados por `EmpreendimentoEquipe` aparecem para a imobiliária parceira enquanto o vínculo estiver ativo; somente a proprietária pode alterar cadastro, documentos, tabelas e vínculos.
+
+Na ficha do empreendimento, a aba **Compartilhar e documentos** permite cadastrar anexos por URL e gerar links públicos com validade. Cada link controla separadamente a exibição de unidades e preços, registra visualizações e pode ser revogado. Apenas documentos marcados como públicos aparecem para o cliente.
+
+Reservas de unidade possuem responsável, cliente, validade, cancelamento e histórico de status. A tomada da unidade é condicional e executada em transação serializável para evitar reserva dupla. O backend verifica reservas expiradas a cada minuto e devolve a unidade à disponibilidade quando aplicável.
+
+Após esta atualização, aplique a migration e reconstrua as imagens:
 
 ```bash
 docker compose build backend frontend

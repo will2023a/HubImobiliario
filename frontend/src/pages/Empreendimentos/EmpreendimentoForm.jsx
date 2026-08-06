@@ -68,6 +68,11 @@ export default function EmpreendimentoForm() {
     imagemUrl: '',
     dataLancamento: '',
     dataPrevisaoConstrucao: '',
+    status: 'planejamento',
+    destaque: false,
+    videoUrl: '',
+    quartosMin: '', quartosMax: '', suitesMin: '', suitesMax: '',
+    vagasMin: '', vagasMax: '', areaMin: '', areaMax: '',
     contatoGerente1: '',
     nomeGerente1: '',
     contatoGerente2: '',
@@ -807,6 +812,19 @@ export default function EmpreendimentoForm() {
                   ))}
                 </Select>
               </div>
+              <div className="form-field">
+                <Select label="Status comercial" name="status" value={formData.status} onChange={handleChange}><option value="planejamento">Planejamento</option><option value="construcao">Em construção</option><option value="pronto">Pronto</option><option value="concluido">Concluído</option></Select>
+              </div>
+              <div className="form-field"><Input label="URL do vídeo" type="url" name="videoUrl" value={formData.videoUrl || ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Quartos mínimos" type="number" min="0" name="quartosMin" value={formData.quartosMin ?? ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Quartos máximos" type="number" min="0" name="quartosMax" value={formData.quartosMax ?? ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Suítes mínimas" type="number" min="0" name="suitesMin" value={formData.suitesMin ?? ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Suítes máximas" type="number" min="0" name="suitesMax" value={formData.suitesMax ?? ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Vagas mínimas" type="number" min="0" name="vagasMin" value={formData.vagasMin ?? ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Vagas máximas" type="number" min="0" name="vagasMax" value={formData.vagasMax ?? ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Área mínima (m²)" type="number" min="0" step="0.01" name="areaMin" value={formData.areaMin ?? ''} onChange={handleChange} /></div>
+              <div className="form-field"><Input label="Área máxima (m²)" type="number" min="0" step="0.01" name="areaMax" value={formData.areaMax ?? ''} onChange={handleChange} /></div>
+              <label className="form-field" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" checked={Boolean(formData.destaque)} onChange={e => setFormData(prev => ({ ...prev, destaque: e.target.checked }))} /> Destacar no catálogo</label>
             </div>
           </div>
 

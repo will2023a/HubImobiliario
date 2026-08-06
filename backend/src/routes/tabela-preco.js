@@ -2,10 +2,23 @@ const express = require('express');
 const router = express.Router();
 const authenticate = require('../middlewares/auth');
 const prisma = require('../prisma/client');
+const { getAccessibleEmpreendimento, getManageableEmpreendimento } = require('../utils/empreendimento-access');
+
+async function getTable(req, id, manage = false) {
+  const table = await prisma.tabelaPreco.findUnique({ where: { id: Number(id) } });
+  if (!table) return null;
+  return (manage ? await getManageableEmpreendimento(req.user, table.empreendimentoId) : await getAccessibleEmpreendimento(req.user, table.empreendimentoId)) ? table : null;
+}
+
+async function getItemTable(req, itemId) {
+  const item = await prisma.tabelaPrecoItem.findUnique({ where: { id: Number(itemId) }, include: { tabela: true } });
+  return item && await getManageableEmpreendimento(req.user, item.tabela.empreendimentoId) ? item : null;
+}
 
 // GET /tabela-preco/:empreendimentoId - Listar tabelas de preço do empreendimento
 router.get('/:empreendimentoId', authenticate, async (req, res) => {
   try {
+    if (!await getAccessibleEmpreendimento(req.user, req.params.empreendimentoId)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
     const tabelas = await prisma.tabelaPreco.findMany({
       where: { empreendimentoId: parseInt(req.params.empreendimentoId) },
       include: {
@@ -29,6 +42,7 @@ router.post('/', authenticate, async (req, res) => {
     if (!empreendimentoId || !nome) {
       return res.status(400).json({ error: 'empreendimentoId e nome são obrigatórios' });
     }
+    if (!await getManageableEmpreendimento(req.user, empreendimentoId)) return res.status(404).json({ error: 'Empreendimento não encontrado ou não gerenciável' });
 
     const tabela = await prisma.tabelaPreco.create({
       data: {
@@ -67,6 +81,7 @@ router.put('/:id', authenticate, async (req, res) => {
   try {
     const { nome, grupo, modelo, incluirDesconto, incluirJuros, ativa } = req.body;
 
+    if (!await getTable(req, req.params.id, true)) return res.status(404).json({ error: 'Tabela não encontrada ou não gerenciável' });
     const tabela = await prisma.tabelaPreco.update({
       where: { id: parseInt(req.params.id) },
       data: {
@@ -94,6 +109,7 @@ router.post('/:id/itens', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'descricao e valor são obrigatórios' });
     }
 
+    if (!await getTable(req, req.params.id, true)) return res.status(404).json({ error: 'Tabela não encontrada ou não gerenciável' });
     const lastItem = await prisma.tabelaPrecoItem.findFirst({
       where: { tabelaId: parseInt(req.params.id) },
       orderBy: { ordem: 'desc' }
@@ -126,6 +142,7 @@ router.put('/itens/:itemId', authenticate, async (req, res) => {
   try {
     const { descricao, valor, parcelas, valorParcela, desconto, juros, observacao } = req.body;
 
+    if (!await getItemTable(req, req.params.itemId)) return res.status(404).json({ error: 'Item não encontrado ou não gerenciável' });
     const item = await prisma.tabelaPrecoItem.update({
       where: { id: parseInt(req.params.itemId) },
       data: {
@@ -148,6 +165,7 @@ router.put('/itens/:itemId', authenticate, async (req, res) => {
 // DELETE /tabela-preco/:id - Deletar tabela
 router.delete('/:id', authenticate, async (req, res) => {
   try {
+    if (!await getTable(req, req.params.id, true)) return res.status(404).json({ error: 'Tabela não encontrada ou não gerenciável' });
     await prisma.tabelaPreco.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: 'Tabela removida' });
   } catch (error) {
@@ -158,6 +176,7 @@ router.delete('/:id', authenticate, async (req, res) => {
 // DELETE /tabela-preco/itens/:itemId - Deletar item
 router.delete('/itens/:itemId', authenticate, async (req, res) => {
   try {
+    if (!await getItemTable(req, req.params.itemId)) return res.status(404).json({ error: 'Item não encontrado ou não gerenciável' });
     await prisma.tabelaPrecoItem.delete({ where: { id: parseInt(req.params.itemId) } });
     res.json({ message: 'Item removido' });
   } catch (error) {

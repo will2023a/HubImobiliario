@@ -36,6 +36,7 @@ const comissoesRoutes = require('./routes/comissoes');
 const automationsRoutes = require('./routes/automations');
 const auditRoutes = require('./routes/audit');
 const webhooksConfigRoutes = require('./routes/webhooks-config');
+const catalogoPublicoRoutes = require('./routes/catalogo-publico');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use(express.json({ limit: '1mb' }));
 app.use(rateLimit({ windowMs: 60_000, max: 180 }));
 
 app.use('/auth', rateLimit({ windowMs: 15 * 60_000, max: 20 }), authRoutes);
+app.use('/catalogo-publico', catalogoPublicoRoutes);
 app.use('/super', superRoutes);
 app.use('/imobiliarias', imobiliariasRoutes);
 app.use('/users', auth, requirePageAccess('users'), usersRoutes);
