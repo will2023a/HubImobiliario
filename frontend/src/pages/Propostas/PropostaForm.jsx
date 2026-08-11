@@ -4,6 +4,9 @@ import api from '../../services/api'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
+import Modal from '../../components/ui/Modal'
+import AppIcon from '../../components/ui/AppIcon'
+import MapaDisponibilidade from '../Empreendimentos/MapaDisponibilidade'
 import './PropostaForm.css'
 
 export default function PropostaForm() {
@@ -17,6 +20,8 @@ export default function PropostaForm() {
   const [empreendimentos, setEmpreendimentos] = useState([])
   const [unidades, setUnidades] = useState([])
   const [selectedEmpId, setSelectedEmpId] = useState(empIdFromUrl || '')
+  const [mapOpen, setMapOpen] = useState(false)
+  const [mapCandidate, setMapCandidate] = useState(null)
   const [formData, setFormData] = useState({
     unidadeId: unidadeIdFromUrl || '',
     clienteNome: '',
@@ -68,6 +73,29 @@ export default function PropostaForm() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const selectedEmpreendimento = empreendimentos.find(emp => Number(emp.id) === Number(selectedEmpId))
+  const selectedUnidade = unidades.find(un => Number(un.id) === Number(formData.unidadeId))
+
+  const selectEmpreendimento = event => {
+    const value = event.target.value
+    setFormData(prev => ({ ...prev, unidadeId: '', valorProposta: '' }))
+    setMapCandidate(null)
+    if (value) loadUnidades(value)
+    else { setSelectedEmpId(''); setUnidades([]) }
+  }
+
+  const openMap = () => {
+    if (!selectedEmpId) return
+    setMapCandidate(selectedUnidade || null)
+    setMapOpen(true)
+  }
+
+  const confirmMapUnit = () => {
+    if (!mapCandidate) return
+    setFormData(prev => ({ ...prev, unidadeId: String(mapCandidate.id), valorProposta: String(mapCandidate.valorTotal || '') }))
+    setMapOpen(false)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -96,12 +124,12 @@ export default function PropostaForm() {
       <form onSubmit={handleSubmit}>
         <Card padding="lg">
           <div className="form-section">
-            <h2 className="section-title">Unidade</h2>
+            <div className="proposta-section-heading"><div><h2 className="section-title">Unidade</h2><p>Escolha pelos campos ou consulte a posição no mapa do empreendimento.</p></div><Button type="button" variant="secondary" onClick={openMap} disabled={!selectedEmpId}><AppIcon name="building" /> Mapa de disponibilidade</Button></div>
             <div className="form-grid">
               <Select
                 label="Empreendimento *"
                 value={selectedEmpId}
-                onChange={(e) => loadUnidades(e.target.value)}
+                onChange={selectEmpreendimento}
                 required
                 disabled={!!empIdFromUrl}
               >
@@ -118,13 +146,15 @@ export default function PropostaForm() {
                 required
               >
                 <option value="">Selecione...</option>
-                {unidades.map(un => (
+                {unidades.filter(un => un.status === 'disponivel' || Number(un.id) === Number(formData.unidadeId)).map(un => (
                   <option key={un.id} value={un.id}>
                     {un.numero} - {un.tipo} - R$ {un.valorTotal?.toLocaleString('pt-BR')}
                   </option>
                 ))}
               </Select>
             </div>
+            {!selectedEmpId && <p className="map-helper">Selecione um empreendimento para liberar o mapa de disponibilidade.</p>}
+            {selectedUnidade && <div className="proposal-unit-selected"><i><AppIcon name="check" /></i><div><small>UNIDADE SELECIONADA</small><strong>{selectedUnidade.identificacao || selectedUnidade.numero}</strong><span>{selectedEmpreendimento?.nome}{selectedUnidade.bloco ? ` · Bloco ${selectedUnidade.bloco}` : ''}</span></div><div><small>ÁREA PRIVATIVA</small><strong>{selectedUnidade.area ? `${Number(selectedUnidade.area).toLocaleString('pt-BR')} m²` : '—'}</strong></div><div><small>VALOR DE TABELA</small><strong>{new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(selectedUnidade.valorTotal || 0)}</strong></div><b>Disponível</b></div>}
           </div>
 
           <div className="form-divider"></div>
@@ -229,6 +259,14 @@ export default function PropostaForm() {
           </div>
         </Card>
       </form>
+      <Modal isOpen={mapOpen} onClose={() => setMapOpen(false)} title={`Mapa de disponibilidade${selectedEmpreendimento ? ` · ${selectedEmpreendimento.nome}` : ''}`} size="xl">
+        <div className="proposal-map-intro"><div><strong>Escolha a unidade visualmente</strong><span>Somente unidades disponíveis podem ser selecionadas para esta proposta.</span></div><span><i />{unidades.filter(un => un.status === 'disponivel').length} disponíveis</span></div>
+        <MapaDisponibilidade unidades={unidades} empreendimentoNome={selectedEmpreendimento?.nome} selectionMode selectedId={mapCandidate?.id} onSelect={setMapCandidate} />
+        <div className="proposal-map-footer">
+          {mapCandidate ? <div><i><AppIcon name="building" /></i><p><small>SELECIONADA</small><strong>{mapCandidate.identificacao || mapCandidate.numero}</strong><span>{mapCandidate.bloco ? `Bloco ${mapCandidate.bloco} · ` : ''}{mapCandidate.area ? `${Number(mapCandidate.area).toLocaleString('pt-BR')} m² · ` : ''}{new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(mapCandidate.valorTotal || 0)}</span></p></div> : <p>Selecione uma unidade disponível no mapa para continuar.</p>}
+          <div><Button type="button" variant="secondary" onClick={() => setMapOpen(false)}>Cancelar</Button><Button type="button" onClick={confirmMapUnit} disabled={!mapCandidate}>Usar esta unidade</Button></div>
+        </div>
+      </Modal>
     </div>
   )
 }

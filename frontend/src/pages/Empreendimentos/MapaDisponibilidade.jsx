@@ -15,7 +15,7 @@ const STATUS_CONFIG = {
   pre_reservada:   { label: 'Pré-reservada', cor: '#e8c766', icon: '●' },
 }
 
-export default function MapaDisponibilidade({ unidades = [], empreendimentoNome }) {
+export default function MapaDisponibilidade({ unidades = [], empreendimentoNome, selectionMode = false, selectedId = null, onSelect }) {
   const [agrupamento, setAgrupamento] = useState('andar') // andar, bloco, andar_bloco
   const [filterStatus, setFilterStatus] = useState([])
   const [compact, setCompact] = useState(false)
@@ -144,11 +144,14 @@ export default function MapaDisponibilidade({ unidades = [], empreendimentoNome 
                 {units.map(u => {
                   const cfg = STATUS_CONFIG[u.status] || STATUS_CONFIG.disponivel
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={u.id}
-                      className={`mapa-disp-cell ${u.status === 'vendido' ? 'cell-vendido' : ''}`}
+                      className={`mapa-disp-cell ${u.status === 'vendido' ? 'cell-vendido' : ''} ${selectionMode ? 'cell-selection' : ''} ${Number(selectedId) === u.id ? 'cell-selected' : ''}`}
                       style={{ borderColor: cfg.cor, '--status-color': cfg.cor }}
                       title={`${u.numero} - ${cfg.label} - ${formatCurrency(u.valorTotal)}`}
+                      disabled={selectionMode && u.status !== 'disponivel'}
+                      onClick={() => selectionMode && u.status === 'disponivel' && onSelect?.(u)}
                     >
                       <span className="cell-numero">{u.numero}</span>
                       {!compact && (
@@ -158,7 +161,8 @@ export default function MapaDisponibilidade({ unidades = [], empreendimentoNome 
                         </>
                       )}
                       <span className="cell-indicator" style={{ background: cfg.cor }} />
-                    </div>
+                      {selectionMode && u.status === 'disponivel' && <span className="cell-select-hint">Selecionar</span>}
+                    </button>
                   )
                 })}
               </div>
