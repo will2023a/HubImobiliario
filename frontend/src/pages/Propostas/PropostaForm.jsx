@@ -261,7 +261,7 @@ export default function PropostaForm() {
       </form>
       <Modal isOpen={mapOpen} onClose={() => setMapOpen(false)} title={`Mapa de disponibilidade${selectedEmpreendimento ? ` · ${selectedEmpreendimento.nome}` : ''}`} size="xl">
         <div className="proposal-map-intro"><div><strong>Escolha a unidade visualmente</strong><span>Somente unidades disponíveis podem ser selecionadas para esta proposta.</span></div><span><i />{unidades.filter(un => un.status === 'disponivel').length} disponíveis</span></div>
-        <MapaDisponibilidade unidades={unidades} empreendimentoNome={selectedEmpreendimento?.nome} selectionMode selectedId={mapCandidate?.id} onSelect={setMapCandidate} />
+        <MapaDisponibilidade unidades={unidades} empreendimentoNome={selectedEmpreendimento?.nome} empreendimentoId={selectedEmpId} selectionMode selectedId={mapCandidate?.id} onSelect={setMapCandidate} />
         <div className="proposal-map-footer">
           {mapCandidate ? <div><i><AppIcon name="building" /></i><p><small>SELECIONADA</small><strong>{mapCandidate.identificacao || mapCandidate.numero}</strong><span>{mapCandidate.bloco ? `Bloco ${mapCandidate.bloco} · ` : ''}{mapCandidate.area ? `${Number(mapCandidate.area).toLocaleString('pt-BR')} m² · ` : ''}{new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(mapCandidate.valorTotal || 0)}</span></p></div> : <p>Selecione uma unidade disponível no mapa para continuar.</p>}
           <div><Button type="button" variant="secondary" onClick={() => setMapOpen(false)}>Cancelar</Button><Button type="button" onClick={confirmMapUnit} disabled={!mapCandidate}>Usar esta unidade</Button></div>

@@ -437,6 +437,8 @@ export default function EmpreendimentoDashboard() {
         <MapaDisponibilidade
           unidades={unidades}
           empreendimentoNome={empreendimento.nome}
+          empreendimentoId={id}
+          onReload={loadEmpreendimento}
         />
       )}
       <Modal isOpen={Boolean(reservaUnidade)} onClose={() => setReservaUnidade(null)} title={`Reservar ${reservaUnidade?.identificacao || reservaUnidade?.numero || ''}`}>
