@@ -186,9 +186,30 @@ export default function MapaDisponibilidade({
     }
   }
 
-  function gerarProposta(u) {
+  function simularVenda(u) {
     setDetailUnit(null); setMenuFor(null)
-    navigate(`/dashboard/propostas/nova?empreendimentoId=${empreendimentoId || u.empreendimentoId}&unidadeId=${u.id}`)
+    navigate(`/dashboard/propostas/simular?empreendimentoId=${empreendimentoId || u.empreendimentoId}&unidadeId=${u.id}`)
+  }
+
+  function abrirAnalise(propostaId) {
+    setDetailUnit(null); setMenuFor(null)
+    navigate(`/dashboard/propostas/${propostaId}/analise`)
+  }
+
+  async function cancelarNegociacao(u, propostaId) {
+    setMenuFor(null)
+    if (!window.confirm('Atenção!\n\nEsta unidade está em negociação. Cancelar a negociação libera a unidade e encerra a proposta atual. Seu nome ficará registrado no histórico da unidade.\n\nDeseja continuar?')) return
+    setBusy(true); setErro('')
+    try {
+      await api.post(`/propostas/${propostaId}/cancelar-negociacao`, {})
+      setDetailUnit(null)
+      setAviso(`Negociação da unidade ${u.identificacao || u.numero} cancelada.`)
+      await onReload?.()
+    } catch (error) {
+      setErro(error.response?.data?.error || 'Não foi possível cancelar a negociação')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const precoM2 = (u) => (u.area ? (u.valorTotal || 0) / u.area : null)
@@ -196,8 +217,17 @@ export default function MapaDisponibilidade({
   // Lista de ações para uma unidade (usada no popup e no menu da tabela)
   const acoesDaUnidade = (u) => {
     const acoes = []
-    if (u.status === 'disponivel') acoes.push({ key: 'reservar', label: 'Reservar', primary: true, run: () => pedirReserva(u) })
-    if (empreendimentoId && u.status === 'disponivel') acoes.push({ key: 'proposta', label: 'Gerar proposta', run: () => gerarProposta(u) })
+    const proposta = Array.isArray(u.propostas) ? u.propostas[0] : null
+    if (u.status === 'disponivel') {
+      acoes.push({ key: 'reservar', label: 'Reservar', primary: true, run: () => pedirReserva(u) })
+      if (empreendimentoId || u.empreendimentoId) acoes.push({ key: 'simular', label: 'Simular venda', run: () => simularVenda(u) })
+    }
+    if (proposta) {
+      acoes.push({ key: 'analise', label: 'Análise da proposta', run: () => abrirAnalise(proposta.id) })
+      if (['reservada', 'pre_reservada', 'em_negociacao', 'em_aprovacao'].includes(u.status)) {
+        acoes.push({ key: 'cancelar-neg', label: 'Cancelar negociação', run: () => cancelarNegociacao(u, proposta.id) })
+      }
+    }
     STATUS_ACTIONS.filter((a) => a.status !== u.status).forEach((a) =>
       acoes.push({ key: a.status, label: a.label, dot: STATUS_CONFIG[a.status].cor, run: () => pedirStatus(u, a.status) })
     )

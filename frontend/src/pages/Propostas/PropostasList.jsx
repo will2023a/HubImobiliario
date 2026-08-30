@@ -37,10 +37,29 @@ export default function PropostasList() {
   })
 
   const statusConfig = {
+    rascunho: { label: 'Rascunho' },
+    simulacao: { label: 'Simulação' },
     pendente: { label: 'Pendente' },
+    em_analise: { label: 'Em análise' },
     analise: { label: 'Em análise' },
     aprovada: { label: 'Aprovada' },
-    rejeitada: { label: 'Rejeitada' }
+    reprovada: { label: 'Reprovada' },
+    rejeitada: { label: 'Rejeitada' },
+    cancelada: { label: 'Cancelada' }
+  }
+
+  const currentUser = (() => { try { return JSON.parse(sessionStorage.getItem('user') || '{}') } catch { return {} } })()
+  const isGestor = ['gerente', 'diretor', 'admin_imobiliaria', 'super_admin'].includes(currentUser.role)
+
+  const decidir = async (e, id, acao) => {
+    e.preventDefault()
+    const motivo = acao === 'reprovar' ? window.prompt('Motivo da reprovação (opcional):') || '' : ''
+    try {
+      await api.post(`/propostas/${id}/${acao}`, { motivo })
+      loadPropostas()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Não foi possível concluir a ação')
+    }
   }
 
   const formatCurrency = (value) => {
@@ -52,7 +71,7 @@ export default function PropostasList() {
 
   const stats = {
     total: propostas.length,
-    pendentes: propostas.filter(p => p.status === 'pendente').length,
+    pendentes: propostas.filter(p => ['pendente', 'em_analise'].includes(p.status)).length,
     aprovadas: propostas.filter(p => p.status === 'aprovada').length,
     valorTotal: propostas.reduce((sum, p) => sum + (p.valorProposta || 0), 0)
   }
@@ -111,10 +130,11 @@ export default function PropostasList() {
           />
           <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
             <option value="todos">Todos os Status</option>
-            <option value="pendente">Pendente</option>
-            <option value="analise">Em Análise</option>
+            <option value="rascunho">Rascunho</option>
+            <option value="em_analise">Em Análise</option>
             <option value="aprovada">Aprovada</option>
-            <option value="rejeitada">Rejeitada</option>
+            <option value="reprovada">Reprovada</option>
+            <option value="cancelada">Cancelada</option>
           </Select>
         </div>
 
@@ -132,21 +152,22 @@ export default function PropostasList() {
         ) : (
           <div className="propostas-list">
             {filteredPropostas.map((proposta) => (
-              <Link to={`/dashboard/propostas/${proposta.id}`} key={proposta.id}>
+              <Link to={proposta.tabelaId ? `/dashboard/propostas/${proposta.id}/analise` : `/dashboard/propostas/${proposta.id}`} key={proposta.id}>
                 <Card hover className="proposta-card">
                   <div className="proposta-header">
                     <div>
                       <h3 className="proposta-cliente">{proposta.clienteNome}</h3>
-                      <p className="proposta-info">{proposta.clienteEmail}</p>
+                      <p className="proposta-info">{proposta.empreendimento?.nome}</p>
                     </div>
                     <div className={`proposta-status status-${proposta.status}`}>
-                      {statusConfig[proposta.status]?.label}
+                      {statusConfig[proposta.status]?.label || proposta.status}
+                      {proposta.requerAprovacao && ' · requer aprovação'}
                     </div>
                   </div>
                   <div className="proposta-details">
                     <div className="detail-item">
                       <span className="detail-label">Unidade:</span>
-                      <span className="detail-value">{proposta.unidade?.numero || 'N/A'}</span>
+                      <span className="detail-value">{proposta.unidade?.identificacao || proposta.unidade?.numero || 'N/A'}</span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Corretor:</span>
@@ -157,10 +178,16 @@ export default function PropostasList() {
                       <span className="detail-value gold">{formatCurrency(proposta.valorProposta)}</span>
                     </div>
                     <div className="detail-item">
-                      <span className="detail-label">Forma:</span>
-                      <span className="detail-value">{proposta.formaPagamento}</span>
+                      <span className="detail-label">Diferença:</span>
+                      <span className="detail-value">{proposta.diferenca != null ? formatCurrency(proposta.diferenca) : '—'}</span>
                     </div>
                   </div>
+                  {isGestor && proposta.status === 'em_analise' && (
+                    <div className="proposta-decisao">
+                      <Button size="sm" variant="primary" onClick={(e) => decidir(e, proposta.id, 'aprovar')}>Aprovar</Button>
+                      <Button size="sm" variant="secondary" onClick={(e) => decidir(e, proposta.id, 'reprovar')}>Reprovar</Button>
+                    </div>
+                  )}
                 </Card>
               </Link>
             ))}

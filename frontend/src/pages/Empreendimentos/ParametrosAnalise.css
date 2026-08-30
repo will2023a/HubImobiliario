@@ -1,0 +1,14 @@
+.par-analise { display: grid; gap: 14px; }
+.par-head h3 { margin: 0 0 4px; font-size: 1rem; color: var(--text-primary); }
+.par-head p { margin: 0; color: var(--text-secondary); font-size: .82rem; max-width: 620px; }
+.par-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.par-check { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--text-primary); }
+.par-msg { margin: 0; font-size: .82rem; color: var(--text-secondary); }
+.par-actions { display: flex; justify-content: flex-end; }
+
+.par-formas { border-top: 1px solid var(--border-color, #e5e7eb); padding-top: 12px; display: grid; gap: 6px; }
+.par-formas strong { color: var(--text-primary); font-size: .9rem; }
+.par-formas p { margin: 0; color: var(--text-secondary); font-size: .8rem; }
+.par-formas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin-top: 6px; }
+.par-formas-grid .par-check { grid-column: auto; }
+.par-nota { margin: 0; font-size: .8rem; color: var(--text-secondary); background: var(--gray-50, #f9fafb); border-radius: 8px; padding: 8px 10px; }

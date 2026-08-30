@@ -106,3 +106,15 @@
   background: var(--error);
   color: white;
 }
+
+/* Editor de séries */
+.tp-table-wrap { overflow-x: auto; }
+.tp-table { min-width: 720px; }
+.tp-in { border: 1px solid var(--border-color, #d1d5db); border-radius: 6px; padding: 4px 6px; font: inherit; background: var(--white, #fff); color: var(--text-primary); }
+.tp-in-xs { width: 46px; }
+.tp-in-sm { width: 64px; }
+.tp-in-md { width: 110px; }
+.tp-inicio { display: flex; gap: 4px; }
+.tp-empty { text-align: center; color: var(--text-secondary); padding: 1.5rem; }
+.tp-content-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+.tp-meta .tp-btn-delete { margin-left: auto; font-size: .78rem; }

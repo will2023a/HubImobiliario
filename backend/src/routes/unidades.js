@@ -27,10 +27,16 @@ router.post('/', requirePermission('empreendimentos', 'atualizar'), async (req, 
 // Listar unidades de um empreendimento
 router.get('/empreendimento/:empreendimentoId', requirePermission('empreendimentos', 'ler'), async (req, res) => {
   if (!await getAccessibleEmpreendimento(req.user, req.params.empreendimentoId)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
-  const unidades = await prisma.unidade.findMany({ 
+  const unidades = await prisma.unidade.findMany({
     where: { empreendimentoId: Number(req.params.empreendimentoId) },
     include: {
-      _count: { select: { propostas: true } }
+      _count: { select: { propostas: true } },
+      propostas: {
+        where: { status: { in: ['rascunho', 'simulacao', 'em_analise'] } },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: { id: true, status: true, tipoAnalise: true, requerAprovacao: true, clienteNome: true }
+      }
     },
     orderBy: { numero: 'asc' }
   });

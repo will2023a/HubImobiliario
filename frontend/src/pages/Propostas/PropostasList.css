@@ -195,3 +195,5 @@
     grid-template-columns: 1fr;
   }
 }
+
+.proposta-decisao { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color, #e5e7eb); }

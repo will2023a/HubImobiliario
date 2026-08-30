@@ -37,6 +37,8 @@ const automationsRoutes = require('./routes/automations');
 const auditRoutes = require('./routes/audit');
 const webhooksConfigRoutes = require('./routes/webhooks-config');
 const catalogoPublicoRoutes = require('./routes/catalogo-publico');
+const analisePropostaRoutes = require('./routes/analise-proposta');
+const atualizacaoPrecoRoutes = require('./routes/atualizacao-preco');
 
 const app = express();
 
@@ -68,7 +70,9 @@ app.use('/atendimentos', auth, requirePageAccess('leads'), atendimentosRoutes);
 app.use('/permissoes', permissoesRoutes);
 app.use('/empreendimentos', auth, requirePageAccess('empreendimentos'), empreendimentosRoutes);
 app.use('/unidades', auth, requirePageAccess('empreendimentos'), unidadesRoutes);
+app.use('/propostas', auth, requirePageAccess('propostas'), analisePropostaRoutes);
 app.use('/propostas', auth, requirePageAccess('propostas'), propostasRoutes);
+app.use('/atualizacoes-preco', auth, requirePageAccess('empreendimentos'), atualizacaoPrecoRoutes);
 app.use('/visitas', auth, requirePageAccess('visitas'), visitasRoutes);
 app.use('/marketing', auth, requirePageAccess('marketing'), marketingRoutes);
 app.use('/pipeline', auth, requirePageAccess('pipeline'), pipelineRoutes);

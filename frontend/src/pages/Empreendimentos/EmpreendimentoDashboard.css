@@ -422,3 +422,5 @@
   color: var(--text-secondary);
   line-height: 1.6;
 }
+
+.precos-analise-stack { display: grid; gap: 18px; }

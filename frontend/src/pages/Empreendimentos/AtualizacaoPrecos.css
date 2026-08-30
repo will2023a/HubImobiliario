@@ -1,0 +1,18 @@
+.atu-precos { display: grid; gap: 14px; }
+.atu-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.atu-header h3 { margin: 0 0 4px; font-size: 1rem; color: var(--text-primary); }
+.atu-header p { margin: 0; color: var(--text-secondary); font-size: .82rem; max-width: 560px; }
+
+.atu-flash { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 8px 12px; border-radius: var(--border-radius); font-size: .82rem; }
+
+.atu-table-wrap { overflow-x: auto; }
+.atu-table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 760px; }
+.atu-table th, .atu-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border-color, #e5e7eb); vertical-align: top; }
+.atu-table th { font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-secondary); }
+.atu-sub { color: var(--text-secondary); font-size: .74rem; margin-top: 2px; }
+.atu-acoes button { border: 1px solid var(--border-color, #d1d5db); background: var(--white, #fff); border-radius: 6px; padding: 3px 8px; font-size: .74rem; cursor: pointer; color: var(--text-primary); }
+.atu-acoes button:hover { background: var(--gray-50, #f9fafb); }
+
+.atu-form { display: grid; gap: 12px; }
+.atu-hint { margin: -6px 0 0; color: var(--text-secondary); font-size: .76rem; }
+.atu-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }

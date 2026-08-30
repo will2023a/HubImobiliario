@@ -163,7 +163,8 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
       }
 
       if (tabelaPreco && tabelaPreco.nome) {
-        const itens = Array.isArray(tabelaPreco.itens) ? tabelaPreco.itens : [];
+        const series = Array.isArray(tabelaPreco.series) ? tabelaPreco.series : [];
+        const somaSeries = series.reduce((acc, s) => acc + (parseFloat(s.valor) || 0) * (parseInt(s.quantidade, 10) || 1), 0);
 
         await tx.tabelaPreco.create({
           data: {
@@ -173,21 +174,29 @@ router.post('/', requirePermission('empreendimentos', 'criar'), async (req, res)
             modelo: tabelaPreco.modelo || 'modelo_1',
             incluirDesconto: Boolean(tabelaPreco.incluirDesconto),
             incluirJuros: Boolean(tabelaPreco.incluirJuros),
-            itens: itens.length > 0
+            tipologia: tabelaPreco.tipologia || null,
+            series: series.length > 0
               ? {
-                  create: itens.map((item, idx) => ({
-                    descricao: item.descricao || `Item ${idx + 1}`,
-                    valor: parseFloat(item.valor) || 0,
-                    parcelas: item.parcelas ? parseInt(item.parcelas) : null,
-                    valorParcela: item.valorParcela ? parseFloat(item.valorParcela) : null,
-                    desconto: item.desconto ? parseFloat(item.desconto) : null,
-                    juros: item.juros ? parseFloat(item.juros) : null,
-                    observacao: item.observacao || null,
-                    ordem: idx
-                  }))
+                  create: series.map((s, idx) => {
+                    const valor = parseFloat(s.valor) || 0;
+                    const quantidade = Math.max(1, parseInt(s.quantidade, 10) || 1);
+                    return {
+                      nome: s.nome || `Série ${idx + 1}`,
+                      tipo: s.tipo || 'pontual',
+                      inicioMes: Math.min(12, Math.max(1, parseInt(s.inicioMes, 10) || 1)),
+                      inicioAno: parseInt(s.inicioAno, 10) || new Date().getFullYear(),
+                      valor,
+                      quantidade,
+                      periodicidade: Math.max(1, parseInt(s.periodicidade, 10) || 1),
+                      aposHabitese: Boolean(s.aposHabitese),
+                      percentualTotal: somaSeries ? Math.round((valor * quantidade / somaSeries) * 10000) / 100 : null,
+                      observacao: s.observacao || null,
+                      ordem: idx,
+                    };
+                  }),
                 }
-              : undefined
-          }
+              : undefined,
+          },
         });
       }
 
@@ -255,14 +264,21 @@ router.get('/:id', requirePermission('empreendimentos', 'ler'), async (req, res)
         },
         tabelasPreco: {
           include: {
-            itens: {
+            series: {
               orderBy: { ordem: 'asc' }
             }
           }
         },
+        parametrosAnalise: true,
         unidades: {
           include: {
-            _count: { select: { propostas: true } }
+            _count: { select: { propostas: true } },
+            propostas: {
+              where: { status: { in: ['rascunho', 'simulacao', 'em_analise'] } },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { id: true, status: true, tipoAnalise: true, requerAprovacao: true, clienteNome: true }
+            }
           }
         },
         propostas: {
@@ -368,6 +384,36 @@ router.patch('/:id/compartilhamentos/:shareId/revogar', requirePermission('empre
   const result = await prisma.compartilhamentoEmpreendimento.updateMany({ where: { id: Number(req.params.shareId), empreendimentoId: id, ...(isOwner ? {} : { createdById: req.user.id }) }, data: { ativo: false } });
   if (!result.count) return res.status(404).json({ error: 'Compartilhamento não encontrado' });
   res.json({ ok: true });
+});
+
+// ===== Parâmetros de análise de proposta (por empreendimento) =====
+
+const PARAM_FLOAT = ['captacaoAvistaMin', 'captacaoAteHabiteseMin', 'captacaoMensalMin', 'diferencaAvMax', 'descontoNominalMax', 'taxaAtratividade', 'toleranciaGeral'];
+const PARAM_INT = ['prazoFinanciamentoMax'];
+
+router.get('/:id/parametros-analise', requirePermission('empreendimentos', 'ler'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!await getAccessibleEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
+  const parametros = await prisma.parametrosAnalise.findUnique({ where: { empreendimentoId: id } });
+  res.json(parametros || { empreendimentoId: id });
+});
+
+router.put('/:id/parametros-analise', requirePermission('empreendimentos', 'atualizar'), async (req, res) => {
+  const id = Number(req.params.id);
+  if (!await getManageableEmpreendimento(req.user, id)) return res.status(404).json({ error: 'Empreendimento não encontrado ou não gerenciável' });
+  const data = {};
+  for (const field of PARAM_FLOAT) if (req.body[field] !== undefined) data[field] = req.body[field] === '' || req.body[field] === null ? null : parseFloat(req.body[field]);
+  for (const field of PARAM_INT) if (req.body[field] !== undefined) data[field] = req.body[field] === '' || req.body[field] === null ? null : parseInt(req.body[field], 10);
+  if (req.body.exigirIntercalacao !== undefined) data.exigirIntercalacao = Boolean(req.body.exigirIntercalacao);
+  if (req.body.toleranciasJson !== undefined) data.toleranciasJson = req.body.toleranciasJson || null;
+  if (req.body.formasPagamento !== undefined) data.formasPagamento = Array.isArray(req.body.formasPagamento) ? req.body.formasPagamento.filter(Boolean) : null;
+  if (data.toleranciaGeral == null) data.toleranciaGeral = 0;
+  const parametros = await prisma.parametrosAnalise.upsert({
+    where: { empreendimentoId: id },
+    update: data,
+    create: { empreendimentoId: id, ...data },
+  });
+  res.json(parametros);
 });
 
 module.exports = router;

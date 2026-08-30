@@ -15,9 +15,10 @@ router.post('/', requirePermission('propostas', 'criar'), async (req, res) => {
   const empreendimento = await getAccessibleEmpreendimento(req.user, empreendimentoId);
   const unidade = await prisma.unidade.findFirst({ where: { id: unidadeId, empreendimentoId } });
   if (!empreendimento || !unidade) return res.status(404).json({ error: 'Empreendimento ou unidade não encontrado' });
-  const data = { 
+  const data = {
     ...req.body,
     empreendimentoId, unidadeId,
+    status: req.body.status || 'pendente',
     corretorId: req.user.role === 'super_admin' && req.body.corretorId ? Number(req.body.corretorId) : req.user.id,
     imobiliariaId: req.user.imobiliariaId || req.body.imobiliariaId || empreendimento.imobiliariaId
   };

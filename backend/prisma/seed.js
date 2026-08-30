@@ -136,12 +136,36 @@ async function main() {
   const unidades = await prisma.unidade.findMany({ where: { empreendimentoId: empreendimento.id }, orderBy: { numero: 'asc' } })
   let tabela = await prisma.tabelaPreco.findFirst({ where: { empreendimentoId: empreendimento.id, nome: 'Tabela Demo 2026' } })
   if (!tabela) {
-    tabela = await prisma.tabelaPreco.create({ data: { empreendimentoId: empreendimento.id, nome: 'Tabela Demo 2026', grupo: 'padrao', modelo: 'modelo_1', ativa: true, incluirDesconto: true, incluirJuros: true } })
-    await prisma.tabelaPrecoItem.createMany({ data: [
-      { tabelaId: tabela.id, unidadeId: unidades[0]?.id, descricao: 'Entrada', valor: 90000, parcelas: 1, valorParcela: 90000, desconto: 2, ordem: 1 },
-      { tabelaId: tabela.id, unidadeId: unidades[0]?.id, descricao: 'Parcelas mensais', valor: 360000, parcelas: 36, valorParcela: 10000, juros: 0.6, ordem: 2 }
+    tabela = await prisma.tabelaPreco.create({ data: { empreendimentoId: empreendimento.id, nome: 'Tabela Demo 2026', grupo: 'padrao', modelo: 'modelo_1', ativa: true, incluirDesconto: true, incluirJuros: true, validadeInicio: new Date('2026-01-01'), validadeFim: new Date('2026-12-31') } })
+    // Séries somam 100% (Ato 10 / 30dd 1 / 60dd 1 / Mensais 5 / Semestrais 8 / Única 5 / Financiamento 70).
+    await prisma.tabelaPrecoSerie.createMany({ data: [
+      { tabelaId: tabela.id, nome: 'Ato', tipo: 'ato', inicioMes: 8, inicioAno: 2026, valor: 45000, quantidade: 1, periodicidade: 1, aposHabitese: false, percentualTotal: 10, ordem: 0 },
+      { tabelaId: tabela.id, nome: '30dd', tipo: 'pontual', inicioMes: 9, inicioAno: 2026, valor: 4500, quantidade: 1, periodicidade: 1, aposHabitese: false, percentualTotal: 1, ordem: 1 },
+      { tabelaId: tabela.id, nome: '60dd', tipo: 'pontual', inicioMes: 10, inicioAno: 2026, valor: 4500, quantidade: 1, periodicidade: 1, aposHabitese: false, percentualTotal: 1, ordem: 2 },
+      { tabelaId: tabela.id, nome: 'Mensais', tipo: 'mensal', inicioMes: 11, inicioAno: 2026, valor: 750, quantidade: 30, periodicidade: 1, aposHabitese: false, percentualTotal: 5, ordem: 3 },
+      { tabelaId: tabela.id, nome: 'Semestrais', tipo: 'semestral', inicioMes: 2, inicioAno: 2027, valor: 7200, quantidade: 5, periodicidade: 6, aposHabitese: false, percentualTotal: 8, ordem: 4 },
+      { tabelaId: tabela.id, nome: 'Única', tipo: 'unica', inicioMes: 5, inicioAno: 2029, valor: 22500, quantidade: 1, periodicidade: 1, aposHabitese: true, percentualTotal: 5, ordem: 5 },
+      { tabelaId: tabela.id, nome: 'Financiamento', tipo: 'financiamento', inicioMes: 6, inicioAno: 2029, valor: 315000, quantidade: 1, periodicidade: 1, aposHabitese: true, percentualTotal: 70, ordem: 6 }
     ] })
   }
+
+  await prisma.parametrosAnalise.upsert({
+    where: { empreendimentoId: empreendimento.id },
+    update: {},
+    create: {
+      empreendimentoId: empreendimento.id,
+      prazoFinanciamentoMax: 120,
+      captacaoAvistaMin: 8,
+      captacaoAteHabiteseMin: 25,
+      captacaoMensalMin: 4,
+      diferencaAvMax: 10,
+      descontoNominalMax: 5,
+      taxaAtratividade: 0.8,
+      toleranciaGeral: 1,
+      exigirIntercalacao: false,
+      formasPagamento: ['ato', 'pontual', 'mensal', 'semestral', 'anual', 'unica', 'financiamento'],
+    },
+  })
 
   if (!await prisma.imovel.findFirst({ where: { titulo: 'Casa Jardim Demo', imobiliariaId: imobiliaria.id } })) {
     await prisma.imovel.create({ data: { titulo: 'Casa Jardim Demo', descricao: 'Imóvel para testes do catálogo', valor: 780000, endereco: 'Rua das Flores, 50', cidade: 'São Paulo', estado: 'SP', status: 'disponivel', imobiliariaId: imobiliaria.id } })

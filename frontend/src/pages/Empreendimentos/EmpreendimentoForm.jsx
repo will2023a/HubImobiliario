@@ -544,22 +544,30 @@ export default function EmpreendimentoForm() {
         }
 
         if (useTabelaPreco && tabelaPrecoForm.nome.trim()) {
+          const agora = new Date()
           payload.tabelaPreco = {
             nome: tabelaPrecoForm.nome,
             grupo: tabelaPrecoForm.grupo,
             modelo: tabelaPrecoForm.modelo,
             incluirDesconto: Boolean(tabelaPrecoForm.incluirDesconto),
             incluirJuros: Boolean(tabelaPrecoForm.incluirJuros),
-            itens: tabelaPrecoForm.itens
+            // Converte os itens simples do assistente em séries da tabela de venda.
+            series: tabelaPrecoForm.itens
               .filter((item) => item.descricao && item.valor !== '')
-              .map((item) => ({
-                descricao: item.descricao,
-                valor: parseFloat(item.valor),
-                parcelas: item.parcelas ? parseInt(item.parcelas) : null,
-                valorParcela: item.valorParcela ? parseFloat(item.valorParcela) : null,
-                desconto: item.desconto ? parseFloat(item.desconto) : null,
-                juros: item.juros ? parseFloat(item.juros) : null
-              }))
+              .map((item) => {
+                const parcelas = item.parcelas ? parseInt(item.parcelas, 10) : 1
+                const valorTotal = parseFloat(item.valor)
+                return {
+                  nome: item.descricao,
+                  tipo: parcelas > 1 ? 'mensal' : 'pontual',
+                  inicioMes: agora.getMonth() + 1,
+                  inicioAno: agora.getFullYear(),
+                  valor: item.valorParcela ? parseFloat(item.valorParcela) : (parcelas > 1 ? valorTotal / parcelas : valorTotal),
+                  quantidade: parcelas,
+                  periodicidade: 1,
+                  aposHabitese: false,
+                }
+              }),
           }
         }
         

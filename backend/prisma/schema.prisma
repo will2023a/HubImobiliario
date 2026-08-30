@@ -34,6 +34,8 @@ model User {
   accessRules              UserAccess[]
   reservasCriadas          ReservaUnidade[]                 @relation("ReservaCriadaPor")
   historicosUnidade        UnidadeStatusHistorico[]         @relation("UnidadeAlteradaPor")
+  propostasAprovadas       Proposta[]                       @relation("PropostaAprovadaPor")
+  atualizacoesPrecoCriadas AtualizacaoPreco[]               @relation("AtualizacaoPrecoCriadaPor")
   compartilhamentosCriados CompartilhamentoEmpreendimento[] @relation("CompartilhamentoCriadoPor")
   isApproved               Boolean                          @default(false)
   approvedAt               DateTime?
@@ -222,6 +224,8 @@ model Empreendimento {
   tabelasPreco           TabelaPreco[]
   documentos             DocumentoEmpreendimento[]
   compartilhamentos      CompartilhamentoEmpreendimento[]
+  parametrosAnalise      ParametrosAnalise?
+  atualizacoesPreco      AtualizacaoPreco[]
   createdAt              DateTime                         @default(now())
 }
 
@@ -323,16 +327,18 @@ model Proposta {
   corretor         User           @relation(fields: [corretorId], references: [id])
   imobiliariaId    Int?
   imobiliaria      Imobiliaria?   @relation("ImobiliariaPropostas", fields: [imobiliariaId], references: [id])
+  tabelaId         Int?
+  tabela           TabelaPreco?   @relation(fields: [tabelaId], references: [id])
 
   // Dados do cliente
   clienteNome        String
-  clienteSobrenome   String
-  clienteRg          String
-  clienteCpf         String
-  clienteProfissao   String
-  clienteRemuneracao Float
+  clienteSobrenome   String  @default("")
+  clienteRg          String  @default("")
+  clienteCpf         String  @default("")
+  clienteProfissao   String  @default("")
+  clienteRemuneracao Float   @default(0)
 
-  // Forma de pagamento
+  // Forma de pagamento (legado / resumo rápido)
   valorAVista     Float?
   valor30Dias     Float?
   valor60Dias     Float?
@@ -343,10 +349,90 @@ model Proposta {
   valorUnico      Float?
   saldoFinanciar  Float?
 
-  status      String     @default("pendente") // pendente, aprovada, rejeitada
+  // Simulação / análise de proposta
+  tipoAnalise      String          @default("simulacao") // simulacao | proposta
+  valorTabela      Float? // total da tabela de venda para a unidade
+  valorProposta    Float? // total proposto pelo cliente
+  diferenca        Float? // valorProposta - valorTabela
+  resultadoAnalise Json? // snapshot dos critérios calculados
+  indicadores      Json? // snapshot dos indicadores complementares
+  requerAprovacao  Boolean         @default(false)
+  aprovadoPorId    Int?
+  aprovadoPor      User?           @relation("PropostaAprovadaPor", fields: [aprovadoPorId], references: [id], onDelete: SetNull)
+  aprovadoEm       DateTime?
+  motivoReprovacao String?         @db.Text
+  series           PropostaSerie[]
+
+  status      String     @default("rascunho") // rascunho | simulacao | em_analise | aprovada | reprovada | cancelada | pendente
   observacoes String?    @db.Text
   comissoes   Comissao[]
   createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now()) @updatedAt
+}
+
+// Linha da "proposta do cliente" — espelha as séries da tabela e é editável.
+model PropostaSerie {
+  id            Int      @id @default(autoincrement())
+  propostaId    Int
+  proposta      Proposta @relation(fields: [propostaId], references: [id], onDelete: Cascade)
+  nome          String
+  tipo          String
+  inicioMes     Int
+  inicioAno     Int
+  quantidade    Int      @default(1)
+  valor         Float
+  periodicidade Int      @default(1)
+  aposHabitese  Boolean  @default(false)
+  vencimentoDia Int?
+  total         Float    @default(0)
+  ordem         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([propostaId])
+}
+
+// Parâmetros de análise de proposta, configurados por empreendimento.
+model ParametrosAnalise {
+  id                     Int            @id @default(autoincrement())
+  empreendimentoId       Int            @unique
+  empreendimento         Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  prazoFinanciamentoMax  Int? // meses
+  captacaoAvistaMin      Float? // %
+  captacaoAteHabiteseMin Float? // %
+  captacaoMensalMin      Float? // %
+  diferencaAvMax         Float? // % de diferença tolerada no valor à vista
+  descontoNominalMax     Float? // % de desconto nominal máximo
+  exigirIntercalacao     Boolean        @default(false)
+  taxaAtratividade       Float? // % a.m. usada no valor presente / equivalência de fluxo
+  toleranciaGeral        Float          @default(0) // % de tolerância aplicada aos limites
+  toleranciasJson        Json? // tolerância fina por critério (opcional)
+  formasPagamento        Json? // tipos de série aceitos na proposta (vazio/null = todos)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @default(now()) @updatedAt
+}
+
+// Job de atualização de preço das unidades de um empreendimento.
+model AtualizacaoPreco {
+  id               Int            @id @default(autoincrement())
+  empreendimentoId Int
+  empreendimento   Empreendimento @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  titulo           String
+  justificativa    String?        @db.Text
+  metodo           String // manter | percentual | valor_fixo
+  valorParametro   Float? // % ou R$ conforme o método
+  alvo             String         @default("valorBase") // valorBase | valorTotal
+  executarEm       DateTime? // null = executa imediatamente
+  situacao         String         @default("agendada") // agendada | processando | concluida | cancelada | erro
+  qtdUnidades      Int            @default(0)
+  criadoPorId      Int
+  criadoPor        User           @relation("AtualizacaoPrecoCriadaPor", fields: [criadoPorId], references: [id])
+  executadaEm      DateTime?
+  erroMensagem     String?        @db.Text
+  snapshotJson     Json? // preços anteriores para permitir desfazer
+  createdAt        DateTime       @default(now())
+
+  @@index([situacao, executarEm])
+  @@index([empreendimentoId, createdAt])
 }
 
 model Visita {
@@ -509,34 +595,45 @@ model EmpreendimentoEquipe {
 // ===== TABELA DE PREÇOS (NCC) =====
 
 model TabelaPreco {
-  id               Int               @id @default(autoincrement())
+  id               Int                @id @default(autoincrement())
   empreendimentoId Int
-  empreendimento   Empreendimento    @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
+  empreendimento   Empreendimento     @relation(fields: [empreendimentoId], references: [id], onDelete: Cascade)
   nome             String // Ex: "Tabela Padrão", "Tabela Promocional", "NCC Julho 2026"
-  grupo            String            @default("padrao") // padrao, promocional, especial
-  modelo           String            @default("modelo_1") // modelo_1 a modelo_5, flex_01, flex_02
-  ativa            Boolean           @default(true)
-  incluirDesconto  Boolean           @default(false)
-  incluirJuros     Boolean           @default(false)
-  itens            TabelaPrecoItem[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  grupo            String             @default("padrao") // padrao, promocional, especial
+  modelo           String             @default("modelo_1") // modelo_1 a modelo_5, flex_01, flex_02
+  ativa            Boolean            @default(true)
+  incluirDesconto  Boolean            @default(false)
+  incluirJuros     Boolean            @default(false)
+  validadeInicio   DateTime? // Período de validade da tabela de venda
+  validadeFim      DateTime?
+  tipologia        String? // Se a tabela é específica de uma tipologia/planta (null = todas)
+  series           TabelaPrecoSerie[]
+  propostas        Proposta[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 }
 
-model TabelaPrecoItem {
-  id           Int         @id @default(autoincrement())
-  tabelaId     Int
-  tabela       TabelaPreco @relation(fields: [tabelaId], references: [id], onDelete: Cascade)
-  unidadeId    Int? // Se vinculado a uma unidade específica (null = item genérico)
-  descricao    String // Ex: "Entrada", "Parcelas mensais", "Saldo financiamento"
-  valor        Float
-  parcelas     Int? // Número de parcelas (null = à vista)
-  valorParcela Float? // Valor de cada parcela
-  desconto     Float? // % de desconto
-  juros        Float? // % de juros
-  observacao   String?     @db.Text
-  ordem        Int         @default(0)
-  createdAt    DateTime    @default(now())
+// Série de pagamento da tabela de venda (estilo Anapro): Ato, 30dd, 60dd,
+// Mensais, Semestrais, Única, Financiamento.
+model TabelaPrecoSerie {
+  id              Int         @id @default(autoincrement())
+  tabelaId        Int
+  tabela          TabelaPreco @relation(fields: [tabelaId], references: [id], onDelete: Cascade)
+  unidadeId       Int? // Override por unidade específica (null = vale para toda a tabela)
+  nome            String // "Ato", "30dd", "Mensais", "Semestrais", "Única", "Financiamento"
+  tipo            String // ato | pontual | mensal | semestral | anual | unica | financiamento
+  inicioMes       Int // 1-12
+  inicioAno       Int
+  valor           Float // valor unitário da parcela
+  quantidade      Int         @default(1)
+  periodicidade   Int         @default(1) // meses entre parcelas
+  aposHabitese    Boolean     @default(false)
+  percentualTotal Float? // % do valor total (calculado no backend)
+  observacao      String?     @db.Text
+  ordem           Int         @default(0)
+  createdAt       DateTime    @default(now())
+
+  @@index([tabelaId])
 }
 
 // ===== INBOX / CONVERSAS =====

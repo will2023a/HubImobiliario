@@ -15,7 +15,7 @@ router.get('/:token', async (req, res) => {
           galeria: { orderBy: { ordem: 'asc' } },
           documentos: { where: { publico: true }, orderBy: { createdAt: 'desc' } },
           unidades: { select: { id: true, numero: true, identificacao: true, tipo: true, area: true, andar: true, quartos: true, suites: true, vagas: true, status: true, valorTotal: true } },
-          tabelasPreco: { where: { ativa: true }, include: { itens: { orderBy: { ordem: 'asc' } } } }
+          tabelasPreco: { where: { ativa: true }, include: { series: { orderBy: { ordem: 'asc' } } } }
         }
       }
     }

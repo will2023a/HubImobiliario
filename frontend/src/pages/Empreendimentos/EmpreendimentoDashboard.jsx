@@ -9,6 +9,8 @@ import MapaDisponibilidade from './MapaDisponibilidade'
 import MiniMap from '../../components/shared/MiniMap'
 import ImageGallery from '../../components/shared/ImageGallery'
 import TabelaPrecos from './TabelaPrecos'
+import ParametrosAnalise from './ParametrosAnalise'
+import AtualizacaoPrecos from './AtualizacaoPrecos'
 import AppIcon from '../../components/ui/AppIcon'
 import EmpreendimentoComercial from './EmpreendimentoComercial'
 import Modal from '../../components/ui/Modal'
@@ -193,7 +195,7 @@ export default function EmpreendimentoDashboard() {
           className={`tab ${activeTab === 'tabela-preco' ? 'tab-active' : ''}`}
           onClick={() => setActiveTab('tabela-preco')}
         >
-          Tabela de Preços
+          Preços & Análise
         </button>
         <button
           className={`tab ${activeTab === 'propostas' ? 'tab-active' : ''}`}
@@ -318,7 +320,11 @@ export default function EmpreendimentoDashboard() {
       )}
 
       {activeTab === 'tabela-preco' && (
-        <TabelaPrecos empreendimentoId={id} />
+        <div className="precos-analise-stack">
+          <TabelaPrecos empreendimentoId={id} />
+          <Card padding="lg"><ParametrosAnalise empreendimentoId={id} /></Card>
+          <Card padding="lg"><AtualizacaoPrecos empreendimentoId={id} onChanged={loadEmpreendimento} /></Card>
+        </div>
       )}
 
       {activeTab === 'unidades' && (
