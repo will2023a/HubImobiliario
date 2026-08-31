@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import api from '../../services/api'
 import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
@@ -8,6 +8,7 @@ import AppIcon from '../../components/ui/AppIcon'
 import './PropostasList.css'
 
 export default function PropostasList() {
+  const navigate = useNavigate()
   const [propostas, setPropostas] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -56,6 +57,10 @@ export default function PropostasList() {
     const motivo = acao === 'reprovar' ? window.prompt('Motivo da reprovação (opcional):') || '' : ''
     try {
       await api.post(`/propostas/${id}/${acao}`, { motivo })
+      if (acao === 'aprovar') {
+        navigate(`/dashboard/propostas/${id}/comprador`)
+        return
+      }
       loadPropostas()
     } catch (err) {
       alert(err.response?.data?.error || 'Não foi possível concluir a ação')
@@ -186,6 +191,16 @@ export default function PropostasList() {
                     <div className="proposta-decisao">
                       <Button size="sm" variant="primary" onClick={(e) => decidir(e, proposta.id, 'aprovar')}>Aprovar</Button>
                       <Button size="sm" variant="secondary" onClick={(e) => decidir(e, proposta.id, 'reprovar')}>Reprovar</Button>
+                    </div>
+                  )}
+                  {proposta.status === 'aprovada' && (
+                    <div className="proposta-decisao">
+                      <span className={`proposta-comprador ${proposta.comprador?.concluido ? 'is-ok' : 'is-pend'}`}>
+                        {proposta.comprador?.concluido ? 'Comprador cadastrado' : 'Comprador pendente'}
+                      </span>
+                      <Button size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); navigate(`/dashboard/propostas/${proposta.id}/comprador`) }}>
+                        {proposta.comprador ? 'Editar comprador' : 'Cadastrar comprador'}
+                      </Button>
                     </div>
                   )}
                 </Card>

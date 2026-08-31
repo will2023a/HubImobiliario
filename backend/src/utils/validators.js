@@ -16,4 +16,17 @@ function validateImobiliariaData(data){
   return { ok: true };
 }
 
-module.exports = { validateEmail, validatePassword, validateImobiliariaData };
+// Valida CPF (11 dígitos + dígitos verificadores). Aceita com ou sem máscara.
+function validateCpf(value){
+  const cpf = String(value || '').replace(/\D/g, '');
+  if(cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  const digito = (base) => {
+    let soma = 0;
+    for(let i = 0; i < base; i++) soma += Number(cpf[i]) * (base + 1 - i);
+    const resto = (soma * 10) % 11;
+    return resto === 10 ? 0 : resto;
+  };
+  return digito(9) === Number(cpf[9]) && digito(10) === Number(cpf[10]);
+}
+
+module.exports = { validateEmail, validatePassword, validateImobiliariaData, validateCpf };

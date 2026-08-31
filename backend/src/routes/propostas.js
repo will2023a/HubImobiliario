@@ -75,12 +75,13 @@ router.get('/', requirePermission('propostas', 'ler'), async (req, res) => {
     where.imobiliariaId = req.user.imobiliariaId;
   }
   
-  const propostas = await prisma.proposta.findMany({ 
+  const propostas = await prisma.proposta.findMany({
     where,
-    include: { 
+    include: {
       corretor: { select: { id: true, name: true, email: true } },
       unidade: true,
-      empreendimento: { select: { id: true, nome: true, cidade: true } }
+      empreendimento: { select: { id: true, nome: true, cidade: true } },
+      comprador: { select: { id: true, concluido: true } }
     },
     orderBy: { createdAt: 'desc' }
   });

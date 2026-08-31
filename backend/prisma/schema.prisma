@@ -161,6 +161,7 @@ model Lead {
   pipeline      LeadPipeline?
   tasks         Task[]         @relation("LeadTasks")
   conversations Conversation[]
+  compradores   Comprador[]    @relation("LeadCompradores")
   createdAt     DateTime       @default(now())
 }
 
@@ -363,11 +364,57 @@ model Proposta {
   motivoReprovacao String?         @db.Text
   series           PropostaSerie[]
 
-  status      String     @default("rascunho") // rascunho | simulacao | em_analise | aprovada | reprovada | cancelada | pendente
-  observacoes String?    @db.Text
+  status      String      @default("rascunho") // rascunho | simulacao | em_analise | aprovada | reprovada | cancelada | pendente
+  observacoes String?     @db.Text
   comissoes   Comissao[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @default(now()) @updatedAt
+  comprador   Comprador?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @default(now()) @updatedAt
+}
+
+// Cadastro completo do comprador, preenchido depois que a proposta é aprovada.
+model Comprador {
+  id                 Int      @id @default(autoincrement())
+  propostaId         Int      @unique
+  proposta           Proposta @relation(fields: [propostaId], references: [id], onDelete: Cascade)
+  leadId             Int?
+  lead               Lead?    @relation("LeadCompradores", fields: [leadId], references: [id], onDelete: SetNull)
+
+  nome               String
+  sobrenome          String?
+  cpf                String
+  rg                 String?
+  orgaoExpedidor     String?
+  dataNascimento     DateTime?
+  nacionalidade      String?  @default("Brasileira")
+  estadoCivil        String? // solteiro | casado | uniao_estavel | divorciado | viuvo
+  profissao          String?
+  rendaMensal        Float?
+  email              String?
+  telefone           String?
+
+  // Endereço
+  cep                String?
+  logradouro         String?
+  numero             String?
+  complemento        String?
+  bairro             String?
+  cidade             String?
+  estado             String?
+
+  // Cônjuge / co-participante
+  conjugeNome        String?
+  conjugeCpf         String?
+  conjugeRg          String?
+  conjugeProfissao   String?
+  conjugeRendaMensal Float?
+
+  observacoes        String?  @db.Text
+  concluido          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+
+  @@index([leadId])
 }
 
 // Linha da "proposta do cliente" — espelha as séries da tabela e é editável.

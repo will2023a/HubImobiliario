@@ -1,4 +1,4 @@
-const { validateEmail, validatePassword, validateImobiliariaData } = require('../../src/utils/validators');
+const { validateEmail, validatePassword, validateImobiliariaData, validateCpf } = require('../../src/utils/validators');
 
 describe('Validators', () => {
   describe('validateEmail', () => {
@@ -48,6 +48,21 @@ describe('Validators', () => {
     it('should reject invalid email', () => {
       const result = validateImobiliariaData({ nome: 'Test', cnpj: '123', email: 'invalid', telefone: '11999' });
       expect(result.ok).toBe(false);
+    });
+  });
+
+  describe('validateCpf', () => {
+    it('accepts valid CPFs with or without mask', () => {
+      expect(validateCpf('529.982.247-25')).toBe(true);
+      expect(validateCpf('52998224725')).toBe(true);
+    });
+
+    it('rejects wrong check digits, repeated digits and bad length', () => {
+      expect(validateCpf('529.982.247-24')).toBe(false);
+      expect(validateCpf('111.111.111-11')).toBe(false);
+      expect(validateCpf('123')).toBe(false);
+      expect(validateCpf('')).toBe(false);
+      expect(validateCpf(null)).toBe(false);
     });
   });
 });

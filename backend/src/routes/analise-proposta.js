@@ -4,6 +4,7 @@ const { requirePermission } = require('../middlewares/permissions');
 const { getAccessibleEmpreendimento } = require('../utils/empreendimento-access');
 const { logAudit } = require('../services/audit.service');
 const { resolverTabela, analisar, round2 } = require('../utils/analise-proposta');
+const { validateCpf } = require('../utils/validators');
 
 const router = express.Router();
 
@@ -318,6 +319,77 @@ router.post('/:id/cancelar-negociacao', requirePermission('propostas', 'atualiza
   });
   await logAudit({ userId: req.user.id, acao: 'editar', recurso: 'proposta', recursoId: proposta.id, imobiliariaId: proposta.imobiliariaId, detalhes: { acao: 'cancelar_negociacao', motivo: req.body.motivo || null } });
   res.json({ ok: true });
+});
+
+// ===== Cadastro do comprador (etapa pós-aprovação) =====
+
+const COMPRADOR_STR =['nome', 'sobrenome', 'cpf', 'rg', 'orgaoExpedidor', 'nacionalidade', 'estadoCivil', 'profissao', 'email', 'telefone', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'conjugeNome', 'conjugeCpf', 'conjugeRg', 'conjugeProfissao', 'observacoes'];
+const COMPRADOR_FLOAT = ['rendaMensal', 'conjugeRendaMensal'];
+
+function montarDadosComprador(body) {
+  const data = {};
+  for (const f of COMPRADOR_STR) if (body[f] !== undefined) data[f] = body[f] === '' ? null : String(body[f]).trim();
+  for (const f of COMPRADOR_FLOAT) if (body[f] !== undefined) data[f] = body[f] === '' || body[f] === null ? null : parseFloat(body[f]);
+  if (body.dataNascimento !== undefined) data.dataNascimento = body.dataNascimento ? new Date(body.dataNascimento) : null;
+  if (body.leadId !== undefined) data.leadId = body.leadId ? Number(body.leadId) : null;
+  return data;
+}
+
+// GET /propostas/:id/comprador  -> comprador atual + leads da imobiliária para vincular
+router.get('/:id/comprador', requirePermission('propostas', 'ler'), async (req, res) => {
+  const proposta = await prisma.proposta.findUnique({
+    where: { id: Number(req.params.id) },
+    include: { comprador: true, unidade: true, empreendimento: { select: { nome: true } } },
+  });
+  if (!proposta) return res.status(404).json({ error: 'Proposta não encontrada' });
+  if (!canAccess(req.user, proposta)) return res.status(403).json({ error: 'Acesso negado' });
+  const leads = await prisma.lead.findMany({
+    where: req.user.role === 'super_admin' ? {} : { imobiliariaId: req.user.imobiliariaId },
+    select: { id: true, nome: true, telefone: true, email: true },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+  res.json({
+    proposta: { id: proposta.id, status: proposta.status, clienteNome: proposta.clienteNome, empreendimento: proposta.empreendimento?.nome, unidade: proposta.unidade?.identificacao || proposta.unidade?.numero },
+    comprador: proposta.comprador,
+    leads,
+  });
+});
+
+// PUT /propostas/:id/comprador  -> cria/atualiza o cadastro do comprador (só com proposta aprovada)
+router.put('/:id/comprador', requirePermission('propostas', 'atualizar'), async (req, res) => {
+  try {
+    const proposta = await prisma.proposta.findUnique({ where: { id: Number(req.params.id) }, include: { comprador: true } });
+    if (!proposta) return res.status(404).json({ error: 'Proposta não encontrada' });
+    if (!canAccess(req.user, proposta)) return res.status(403).json({ error: 'Acesso negado' });
+    if (proposta.status !== 'aprovada') return res.status(409).json({ error: 'O comprador só pode ser cadastrado depois que a proposta é aprovada' });
+
+    const data = montarDadosComprador(req.body);
+    const nome = data.nome ?? proposta.comprador?.nome ?? proposta.clienteNome;
+    const cpf = data.cpf ?? proposta.comprador?.cpf;
+    if (!nome?.trim()) return res.status(400).json({ error: 'Informe o nome do comprador' });
+    if (!cpf || !validateCpf(cpf)) return res.status(400).json({ error: 'CPF do comprador inválido' });
+    if (data.conjugeCpf && !validateCpf(data.conjugeCpf)) return res.status(400).json({ error: 'CPF do cônjuge inválido' });
+    if (data.leadId) {
+      const lead = await prisma.lead.findFirst({ where: { id: data.leadId, ...(req.user.role === 'super_admin' ? {} : { imobiliariaId: req.user.imobiliariaId }) } });
+      if (!lead) return res.status(400).json({ error: 'Lead informado não encontrado' });
+    }
+
+    // Concluído quando os campos essenciais da ficha estão preenchidos.
+    const merged = { ...proposta.comprador, ...data, nome, cpf };
+    data.concluido = Boolean(merged.nome && merged.cpf && merged.rg && merged.estadoCivil && merged.profissao && merged.telefone);
+
+    const comprador = await prisma.comprador.upsert({
+      where: { propostaId: proposta.id },
+      update: data,
+      create: { propostaId: proposta.id, ...data, nome, cpf },
+    });
+    await logAudit({ userId: req.user.id, acao: proposta.comprador ? 'editar' : 'criar', recurso: 'proposta', recursoId: proposta.id, imobiliariaId: proposta.imobiliariaId, detalhes: { acao: 'cadastro_comprador', concluido: comprador.concluido } });
+    res.json(comprador);
+  } catch (err) {
+    console.error('Erro comprador:', err);
+    res.status(500).json({ error: 'Erro ao salvar comprador' });
+  }
 });
 
 module.exports = router;

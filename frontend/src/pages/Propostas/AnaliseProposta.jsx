@@ -139,6 +139,16 @@ export default function AnaliseProposta() {
 
       {erro && <div className="ap-flash">{erro}</div>}
 
+      {data.proposta?.status === 'aprovada' && (
+        <div className="ap-banner ap-banner-ok">
+          <span className="ap-banner-icon">✓</span>
+          <div>
+            <strong>Proposta aprovada</strong>
+            <span>Próximo passo: <button className="ap-link" onClick={() => navigate(`/dashboard/propostas/${data.proposta.id}/comprador`)}>cadastrar o comprador</button>.</span>
+          </div>
+        </div>
+      )}
+
       <div className={`ap-banner ${aprovavel ? 'ap-banner-ok' : 'ap-banner-warn'}`}>
         <span className="ap-banner-icon">{aprovavel ? '✓' : '!'}</span>
         <div>
