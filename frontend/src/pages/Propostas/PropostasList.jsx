@@ -58,7 +58,7 @@ export default function PropostasList() {
     try {
       await api.post(`/propostas/${id}/${acao}`, { motivo })
       if (acao === 'aprovar') {
-        navigate(`/dashboard/propostas/${id}/comprador`)
+        navigate(`/dashboard/propostas/${id}/cliente`)
         return
       }
       loadPropostas()
@@ -195,11 +195,11 @@ export default function PropostasList() {
                   )}
                   {proposta.status === 'aprovada' && (
                     <div className="proposta-decisao">
-                      <span className={`proposta-comprador ${proposta.comprador?.concluido ? 'is-ok' : 'is-pend'}`}>
-                        {proposta.comprador?.concluido ? 'Comprador cadastrado' : 'Comprador pendente'}
+                      <span className={`proposta-cliente-tag ${proposta.cliente?.concluido ? 'is-ok' : 'is-pend'}`}>
+                        {proposta.cliente?.concluido ? 'Cliente cadastrado' : 'Cliente pendente'}
                       </span>
-                      <Button size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); navigate(`/dashboard/propostas/${proposta.id}/comprador`) }}>
-                        {proposta.comprador ? 'Editar comprador' : 'Cadastrar comprador'}
+                      <Button size="sm" variant="secondary" onClick={(e) => { e.preventDefault(); navigate(`/dashboard/propostas/${proposta.id}/cliente`) }}>
+                        {proposta.cliente ? 'Editar cliente' : 'Cadastrar cliente'}
                       </Button>
                     </div>
                   )}

@@ -198,6 +198,6 @@
 
 .proposta-decisao { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color, #e5e7eb); }
 
-.proposta-comprador { font-size: .78rem; font-weight: 600; padding: .2em .6em; border-radius: 999px; align-self: center; }
-.proposta-comprador.is-ok { background: #ecfdf5; color: #065f46; }
-.proposta-comprador.is-pend { background: #fffbeb; color: #92400e; }
+.proposta-cliente-tag { font-size: .78rem; font-weight: 600; padding: .2em .6em; border-radius: 999px; align-self: center; }
+.proposta-cliente-tag.is-ok { background: #ecfdf5; color: #065f46; }
+.proposta-cliente-tag.is-pend { background: #fffbeb; color: #92400e; }

@@ -161,7 +161,7 @@ model Lead {
   pipeline      LeadPipeline?
   tasks         Task[]         @relation("LeadTasks")
   conversations Conversation[]
-  compradores   Comprador[]    @relation("LeadCompradores")
+  clientes      Cliente[]      @relation("LeadClientes")
   createdAt     DateTime       @default(now())
 }
 
@@ -367,18 +367,18 @@ model Proposta {
   status      String      @default("rascunho") // rascunho | simulacao | em_analise | aprovada | reprovada | cancelada | pendente
   observacoes String?     @db.Text
   comissoes   Comissao[]
-  comprador   Comprador?
+  cliente     Cliente?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @default(now()) @updatedAt
 }
 
-// Cadastro completo do comprador, preenchido depois que a proposta é aprovada.
-model Comprador {
+// Cadastro completo do cliente, preenchido depois que a proposta é aprovada.
+model Cliente {
   id                 Int      @id @default(autoincrement())
   propostaId         Int      @unique
   proposta           Proposta @relation(fields: [propostaId], references: [id], onDelete: Cascade)
   leadId             Int?
-  lead               Lead?    @relation("LeadCompradores", fields: [leadId], references: [id], onDelete: SetNull)
+  lead               Lead?    @relation("LeadClientes", fields: [leadId], references: [id], onDelete: SetNull)
 
   nome               String
   sobrenome          String?

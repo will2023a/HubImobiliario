@@ -5,13 +5,13 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import { Spinner } from '../../components/ui'
-import './CadastroComprador.css'
+import './CadastroCliente.css'
 
 const CAMPOS_TEXTO = ['nome', 'sobrenome', 'cpf', 'rg', 'orgaoExpedidor', 'nacionalidade', 'estadoCivil', 'profissao', 'email', 'telefone', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'conjugeNome', 'conjugeCpf', 'conjugeRg', 'conjugeProfissao', 'observacoes']
 const vazio = () => ({ ...Object.fromEntries(CAMPOS_TEXTO.map((k) => [k, ''])), nacionalidade: 'Brasileira', dataNascimento: '', rendaMensal: '', conjugeRendaMensal: '', leadId: '' })
 const COM_CONJUGE = ['casado', 'uniao_estavel']
 
-export default function CadastroComprador() {
+export default function CadastroCliente() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -25,11 +25,11 @@ export default function CadastroComprador() {
   const carregar = useCallback(async () => {
     setLoading(true); setErro('')
     try {
-      const { data } = await api.get(`/propostas/${id}/comprador`)
+      const { data } = await api.get(`/propostas/${id}/cliente`)
       setMeta(data.proposta)
       setLeads(data.leads || [])
-      if (data.comprador) {
-        const c = data.comprador
+      if (data.cliente) {
+        const c = data.cliente
         setForm({
           ...vazio(),
           ...Object.fromEntries(CAMPOS_TEXTO.map((k) => [k, c[k] ?? ''])),
@@ -57,8 +57,8 @@ export default function CadastroComprador() {
     e.preventDefault()
     setSaving(true); setErro(''); setOk('')
     try {
-      const { data } = await api.put(`/propostas/${id}/comprador`, { ...form, leadId: form.leadId || null })
-      setOk(data.concluido ? 'Cadastro do comprador concluído.' : 'Cadastro salvo (ainda faltam campos obrigatórios para concluir).')
+      const { data } = await api.put(`/propostas/${id}/cliente`, { ...form, leadId: form.leadId || null })
+      setOk(data.concluido ? 'Cadastro do cliente concluído.' : 'Cadastro salvo (ainda faltam campos obrigatórios para concluir).')
     } catch (e) {
       setErro(e.response?.data?.error || 'Erro ao salvar')
     } finally {
@@ -67,25 +67,25 @@ export default function CadastroComprador() {
   }
 
   if (loading) return <Spinner fullPage label="Carregando cadastro..." />
-  if (erro && !meta) return <Card><p className="cc-erro">{erro}</p><Button variant="secondary" onClick={() => navigate('/dashboard/propostas')}>Voltar</Button></Card>
+  if (erro && !meta) return <Card><p className="cli-erro">{erro}</p><Button variant="secondary" onClick={() => navigate('/dashboard/propostas')}>Voltar</Button></Card>
 
   return (
-    <div className="cc-page">
+    <div className="cli-page">
       <div className="page-header">
-        <h1 className="page-title">Cadastro do comprador</h1>
+        <h1 className="page-title">Cadastro do cliente</h1>
         <p className="page-subtitle">{meta?.empreendimento} · Unidade {meta?.unidade} · Proposta #{meta?.id}</p>
       </div>
 
       {meta?.status !== 'aprovada' && (
-        <div className="cc-flash cc-flash-warn">Esta proposta ainda não está aprovada. O comprador só pode ser cadastrado depois da aprovação do gestor.</div>
+        <div className="cli-flash cli-flash-warn">Esta proposta ainda não está aprovada. O cliente só pode ser cadastrado depois da aprovação do gestor.</div>
       )}
-      {erro && <div className="cc-flash cc-flash-err">{erro}</div>}
-      {ok && <div className="cc-flash cc-flash-ok">{ok}</div>}
+      {erro && <div className="cli-flash cli-flash-err">{erro}</div>}
+      {ok && <div className="cli-flash cli-flash-ok">{ok}</div>}
 
       <form onSubmit={salvar}>
         <Card padding="lg">
-          <h2 className="cc-sec">Dados pessoais</h2>
-          <div className="cc-grid">
+          <h2 className="cli-sec">Dados pessoais</h2>
+          <div className="cli-grid">
             <Input label="Nome *" value={form.nome} onChange={(e) => set('nome', e.target.value)} />
             <Input label="Sobrenome" value={form.sobrenome} onChange={(e) => set('sobrenome', e.target.value)} />
             <Input label="CPF *" value={form.cpf} onChange={(e) => set('cpf', e.target.value)} placeholder="000.000.000-00" />
@@ -109,8 +109,8 @@ export default function CadastroComprador() {
         </Card>
 
         <Card padding="lg">
-          <h2 className="cc-sec">Endereço</h2>
-          <div className="cc-grid">
+          <h2 className="cli-sec">Endereço</h2>
+          <div className="cli-grid">
             <Input label="CEP" value={form.cep} onChange={(e) => set('cep', e.target.value)} />
             <Input label="Logradouro" value={form.logradouro} onChange={(e) => set('logradouro', e.target.value)} />
             <Input label="Número" value={form.numero} onChange={(e) => set('numero', e.target.value)} />
@@ -123,8 +123,8 @@ export default function CadastroComprador() {
 
         {temConjuge && (
           <Card padding="lg">
-            <h2 className="cc-sec">Cônjuge / co-participante</h2>
-            <div className="cc-grid">
+            <h2 className="cli-sec">Cônjuge / co-participante</h2>
+            <div className="cli-grid">
               <Input label="Nome do cônjuge" value={form.conjugeNome} onChange={(e) => set('conjugeNome', e.target.value)} />
               <Input label="CPF do cônjuge" value={form.conjugeCpf} onChange={(e) => set('conjugeCpf', e.target.value)} placeholder="000.000.000-00" />
               <Input label="RG do cônjuge" value={form.conjugeRg} onChange={(e) => set('conjugeRg', e.target.value)} />
@@ -135,8 +135,8 @@ export default function CadastroComprador() {
         )}
 
         <Card padding="lg">
-          <h2 className="cc-sec">Vínculo e observações</h2>
-          <div className="cc-grid">
+          <h2 className="cli-sec">Vínculo e observações</h2>
+          <div className="cli-grid">
             <Select label="Vincular a um lead do CRM" value={form.leadId} onChange={(e) => set('leadId', e.target.value)}>
               <option value="">Sem vínculo</option>
               {leads.map((l) => <option key={l.id} value={l.id}>{l.nome}{l.telefone ? ` · ${l.telefone}` : ''}</option>)}
@@ -145,7 +145,7 @@ export default function CadastroComprador() {
           <Textarea label="Observações" value={form.observacoes} onChange={(e) => set('observacoes', e.target.value)} rows={3} />
         </Card>
 
-        <div className="cc-actions">
+        <div className="cli-actions">
           <Button type="button" variant="secondary" onClick={() => navigate('/dashboard/propostas')}>Voltar às propostas</Button>
           <Button type="submit" loading={saving} disabled={meta?.status !== 'aprovada'}>Salvar cadastro</Button>
         </div>

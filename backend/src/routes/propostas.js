@@ -81,7 +81,7 @@ router.get('/', requirePermission('propostas', 'ler'), async (req, res) => {
       corretor: { select: { id: true, name: true, email: true } },
       unidade: true,
       empreendimento: { select: { id: true, nome: true, cidade: true } },
-      comprador: { select: { id: true, concluido: true } }
+      cliente: { select: { id: true, concluido: true } }
     },
     orderBy: { createdAt: 'desc' }
   });

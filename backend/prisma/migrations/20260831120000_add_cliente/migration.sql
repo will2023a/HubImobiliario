@@ -1,6 +1,6 @@
--- Cadastro completo do comprador (preenchido após a proposta ser aprovada).
+-- Cadastro completo do cliente (preenchido após a proposta ser aprovada).
 
-CREATE TABLE `Comprador` (
+CREATE TABLE `Cliente` (
   `id` INTEGER NOT NULL AUTO_INCREMENT,
   `propostaId` INTEGER NOT NULL,
   `leadId` INTEGER NULL,
@@ -32,9 +32,9 @@ CREATE TABLE `Comprador` (
   `concluido` BOOLEAN NOT NULL DEFAULT false,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-  UNIQUE INDEX `Comprador_propostaId_key` (`propostaId`),
-  INDEX `Comprador_leadId_idx` (`leadId`),
+  UNIQUE INDEX `Cliente_propostaId_key` (`propostaId`),
+  INDEX `Cliente_leadId_idx` (`leadId`),
   PRIMARY KEY (`id`),
-  CONSTRAINT `Comprador_propostaId_fkey` FOREIGN KEY (`propostaId`) REFERENCES `Proposta` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `Comprador_leadId_fkey` FOREIGN KEY (`leadId`) REFERENCES `Lead` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `Cliente_propostaId_fkey` FOREIGN KEY (`propostaId`) REFERENCES `Proposta` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `Cliente_leadId_fkey` FOREIGN KEY (`leadId`) REFERENCES `Lead` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

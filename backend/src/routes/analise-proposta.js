@@ -321,25 +321,25 @@ router.post('/:id/cancelar-negociacao', requirePermission('propostas', 'atualiza
   res.json({ ok: true });
 });
 
-// ===== Cadastro do comprador (etapa pós-aprovação) =====
+// ===== Cadastro do cliente (etapa pós-aprovação) =====
 
-const COMPRADOR_STR =['nome', 'sobrenome', 'cpf', 'rg', 'orgaoExpedidor', 'nacionalidade', 'estadoCivil', 'profissao', 'email', 'telefone', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'conjugeNome', 'conjugeCpf', 'conjugeRg', 'conjugeProfissao', 'observacoes'];
-const COMPRADOR_FLOAT = ['rendaMensal', 'conjugeRendaMensal'];
+const CLIENTE_STR = ['nome', 'sobrenome', 'cpf', 'rg', 'orgaoExpedidor', 'nacionalidade', 'estadoCivil', 'profissao', 'email', 'telefone', 'cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'conjugeNome', 'conjugeCpf', 'conjugeRg', 'conjugeProfissao', 'observacoes'];
+const CLIENTE_FLOAT = ['rendaMensal', 'conjugeRendaMensal'];
 
-function montarDadosComprador(body) {
+function montarDadosCliente(body) {
   const data = {};
-  for (const f of COMPRADOR_STR) if (body[f] !== undefined) data[f] = body[f] === '' ? null : String(body[f]).trim();
-  for (const f of COMPRADOR_FLOAT) if (body[f] !== undefined) data[f] = body[f] === '' || body[f] === null ? null : parseFloat(body[f]);
+  for (const f of CLIENTE_STR) if (body[f] !== undefined) data[f] = body[f] === '' ? null : String(body[f]).trim();
+  for (const f of CLIENTE_FLOAT) if (body[f] !== undefined) data[f] = body[f] === '' || body[f] === null ? null : parseFloat(body[f]);
   if (body.dataNascimento !== undefined) data.dataNascimento = body.dataNascimento ? new Date(body.dataNascimento) : null;
   if (body.leadId !== undefined) data.leadId = body.leadId ? Number(body.leadId) : null;
   return data;
 }
 
-// GET /propostas/:id/comprador  -> comprador atual + leads da imobiliária para vincular
-router.get('/:id/comprador', requirePermission('propostas', 'ler'), async (req, res) => {
+// GET /propostas/:id/cliente  -> cliente atual + leads da imobiliária para vincular
+router.get('/:id/cliente', requirePermission('propostas', 'ler'), async (req, res) => {
   const proposta = await prisma.proposta.findUnique({
     where: { id: Number(req.params.id) },
-    include: { comprador: true, unidade: true, empreendimento: { select: { nome: true } } },
+    include: { cliente: true, unidade: true, empreendimento: { select: { nome: true } } },
   });
   if (!proposta) return res.status(404).json({ error: 'Proposta não encontrada' });
   if (!canAccess(req.user, proposta)) return res.status(403).json({ error: 'Acesso negado' });
@@ -351,24 +351,24 @@ router.get('/:id/comprador', requirePermission('propostas', 'ler'), async (req, 
   });
   res.json({
     proposta: { id: proposta.id, status: proposta.status, clienteNome: proposta.clienteNome, empreendimento: proposta.empreendimento?.nome, unidade: proposta.unidade?.identificacao || proposta.unidade?.numero },
-    comprador: proposta.comprador,
+    cliente: proposta.cliente,
     leads,
   });
 });
 
-// PUT /propostas/:id/comprador  -> cria/atualiza o cadastro do comprador (só com proposta aprovada)
-router.put('/:id/comprador', requirePermission('propostas', 'atualizar'), async (req, res) => {
+// PUT /propostas/:id/cliente  -> cria/atualiza o cadastro do cliente (só com proposta aprovada)
+router.put('/:id/cliente', requirePermission('propostas', 'atualizar'), async (req, res) => {
   try {
-    const proposta = await prisma.proposta.findUnique({ where: { id: Number(req.params.id) }, include: { comprador: true } });
+    const proposta = await prisma.proposta.findUnique({ where: { id: Number(req.params.id) }, include: { cliente: true } });
     if (!proposta) return res.status(404).json({ error: 'Proposta não encontrada' });
     if (!canAccess(req.user, proposta)) return res.status(403).json({ error: 'Acesso negado' });
-    if (proposta.status !== 'aprovada') return res.status(409).json({ error: 'O comprador só pode ser cadastrado depois que a proposta é aprovada' });
+    if (proposta.status !== 'aprovada') return res.status(409).json({ error: 'O cliente só pode ser cadastrado depois que a proposta é aprovada' });
 
-    const data = montarDadosComprador(req.body);
-    const nome = data.nome ?? proposta.comprador?.nome ?? proposta.clienteNome;
-    const cpf = data.cpf ?? proposta.comprador?.cpf;
-    if (!nome?.trim()) return res.status(400).json({ error: 'Informe o nome do comprador' });
-    if (!cpf || !validateCpf(cpf)) return res.status(400).json({ error: 'CPF do comprador inválido' });
+    const data = montarDadosCliente(req.body);
+    const nome = data.nome ?? proposta.cliente?.nome ?? proposta.clienteNome;
+    const cpf = data.cpf ?? proposta.cliente?.cpf;
+    if (!nome?.trim()) return res.status(400).json({ error: 'Informe o nome do cliente' });
+    if (!cpf || !validateCpf(cpf)) return res.status(400).json({ error: 'CPF do cliente inválido' });
     if (data.conjugeCpf && !validateCpf(data.conjugeCpf)) return res.status(400).json({ error: 'CPF do cônjuge inválido' });
     if (data.leadId) {
       const lead = await prisma.lead.findFirst({ where: { id: data.leadId, ...(req.user.role === 'super_admin' ? {} : { imobiliariaId: req.user.imobiliariaId }) } });
@@ -376,19 +376,19 @@ router.put('/:id/comprador', requirePermission('propostas', 'atualizar'), async 
     }
 
     // Concluído quando os campos essenciais da ficha estão preenchidos.
-    const merged = { ...proposta.comprador, ...data, nome, cpf };
+    const merged = { ...proposta.cliente, ...data, nome, cpf };
     data.concluido = Boolean(merged.nome && merged.cpf && merged.rg && merged.estadoCivil && merged.profissao && merged.telefone);
 
-    const comprador = await prisma.comprador.upsert({
+    const cliente = await prisma.cliente.upsert({
       where: { propostaId: proposta.id },
       update: data,
       create: { propostaId: proposta.id, ...data, nome, cpf },
     });
-    await logAudit({ userId: req.user.id, acao: proposta.comprador ? 'editar' : 'criar', recurso: 'proposta', recursoId: proposta.id, imobiliariaId: proposta.imobiliariaId, detalhes: { acao: 'cadastro_comprador', concluido: comprador.concluido } });
-    res.json(comprador);
+    await logAudit({ userId: req.user.id, acao: proposta.cliente ? 'editar' : 'criar', recurso: 'proposta', recursoId: proposta.id, imobiliariaId: proposta.imobiliariaId, detalhes: { acao: 'cadastro_cliente', concluido: cliente.concluido } });
+    res.json(cliente);
   } catch (err) {
-    console.error('Erro comprador:', err);
-    res.status(500).json({ error: 'Erro ao salvar comprador' });
+    console.error('Erro cliente:', err);
+    res.status(500).json({ error: 'Erro ao salvar cliente' });
   }
 });
 

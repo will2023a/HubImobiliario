@@ -1,0 +1,14 @@
+.cli-page { display: grid; gap: 16px; }
+.cli-page form { display: grid; gap: 16px; }
+.cli-page .card { margin: 0; }
+
+.cli-sec { font-family: inherit; font-size: 1rem; font-weight: 700; margin: 0 0 14px; color: var(--text-primary); }
+.cli-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+
+.cli-flash { padding: 10px 14px; border-radius: 10px; font-size: .88rem; }
+.cli-flash-warn { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
+.cli-flash-err { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; }
+.cli-flash-ok { background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; }
+.cli-erro { color: #b91c1c; }
+
+.cli-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }

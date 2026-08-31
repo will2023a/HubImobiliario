@@ -144,7 +144,7 @@ export default function AnaliseProposta() {
           <span className="ap-banner-icon">✓</span>
           <div>
             <strong>Proposta aprovada</strong>
-            <span>Próximo passo: <button className="ap-link" onClick={() => navigate(`/dashboard/propostas/${data.proposta.id}/comprador`)}>cadastrar o comprador</button>.</span>
+            <span>Próximo passo: <button className="ap-link" onClick={() => navigate(`/dashboard/propostas/${data.proposta.id}/cliente`)}>cadastrar o cliente</button>.</span>
           </div>
         </div>
       )}

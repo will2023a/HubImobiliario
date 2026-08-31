@@ -15,7 +15,7 @@ import UnidadeForm from './Empreendimentos/UnidadeForm'
 import PropostasList from './Propostas/PropostasList'
 import PropostaForm from './Propostas/PropostaForm'
 import AnaliseProposta from './Propostas/AnaliseProposta'
-import CadastroComprador from './Propostas/CadastroComprador'
+import CadastroCliente from './Propostas/CadastroCliente'
 import Equipe from './Equipe/Equipe'
 import Permissoes from './Permissoes/Permissoes'
 import VisitasList from './Visitas/VisitasList'
@@ -65,7 +65,7 @@ export default function Dashboard(){
           <Route path="propostas/nova" element={allowed('propostas', <PropostaForm/>, true)} />
           <Route path="propostas/simular" element={allowed('propostas', <AnaliseProposta/>, true)} />
           <Route path="propostas/:id/analise" element={allowed('propostas', <AnaliseProposta/>, true)} />
-          <Route path="propostas/:id/comprador" element={allowed('propostas', <CadastroComprador/>, true)} />
+          <Route path="propostas/:id/cliente" element={allowed('propostas', <CadastroCliente/>, true)} />
           <Route path="visitas" element={allowed('visitas', <VisitasList/>)} />
           <Route path="visitas/nova" element={allowed('visitas', <VisitaForm/>, true)} />
           <Route path="marketing" element={allowed('marketing', <MarketingList/>)} />
