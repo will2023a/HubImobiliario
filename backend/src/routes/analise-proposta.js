@@ -48,12 +48,13 @@ async function tabelaPadrao(empreendimentoId, tipologia) {
 function montarPayload({ proposta, tabela, unidade, empreendimento, parametros }) {
   const tabelaResolvida = resolverTabela(tabela, unidade, empreendimento);
   const propostaSeries = (proposta?.series?.length ? proposta.series : tabelaResolvida.series);
-  const analise = analisar({ tabelaResolvida, propostaSeries, parametros: parametros || {}, unidade, empreendimento });
+  const descontoAplicado = Number(proposta?.descontoAplicado) || 0;
+  const analise = analisar({ tabelaResolvida, propostaSeries, parametros: parametros || {}, unidade, empreendimento, descontoAplicado });
   return {
     proposta: proposta ? {
       id: proposta.id, status: proposta.status, tipoAnalise: proposta.tipoAnalise,
       requerAprovacao: proposta.requerAprovacao, clienteNome: proposta.clienteNome,
-      aprovadoEm: proposta.aprovadoEm, motivoReprovacao: proposta.motivoReprovacao,
+      descontoAplicado, aprovadoEm: proposta.aprovadoEm, motivoReprovacao: proposta.motivoReprovacao,
     } : null,
     unidade: {
       id: unidade.id, numero: unidade.numero, identificacao: unidade.identificacao,
@@ -146,6 +147,7 @@ router.post('/analise/preview', requirePermission('propostas', 'ler'), async (re
       parametros: unidade.empreendimento.parametrosAnalise || {},
       unidade,
       empreendimento: unidade.empreendimento,
+      descontoAplicado: Number(req.body.descontoAplicado) || 0,
     });
     res.json({ tabelaSeries: tabelaResolvida.series, tabelaTotal: tabelaResolvida.total, analise });
   } catch (err) {
@@ -186,8 +188,9 @@ router.put('/:id/series', requirePermission('propostas', 'atualizar'), async (re
     if (['aprovada', 'cancelada'].includes(proposta.status)) return res.status(409).json({ error: 'Proposta não editável' });
 
     const series = (req.body.series || []).map(normSerie);
+    const descontoAplicado = Math.max(0, Number(req.body.descontoAplicado) || 0);
     const tabelaResolvida = resolverTabela(proposta.tabela, proposta.unidade, proposta.empreendimento);
-    const analise = analisar({ tabelaResolvida, propostaSeries: series, parametros: proposta.empreendimento.parametrosAnalise || {}, unidade: proposta.unidade, empreendimento: proposta.empreendimento });
+    const analise = analisar({ tabelaResolvida, propostaSeries: series, parametros: proposta.empreendimento.parametrosAnalise || {}, unidade: proposta.unidade, empreendimento: proposta.empreendimento, descontoAplicado });
 
     await prisma.$transaction([
       prisma.propostaSerie.deleteMany({ where: { propostaId: proposta.id } }),
@@ -195,6 +198,7 @@ router.put('/:id/series', requirePermission('propostas', 'atualizar'), async (re
       prisma.proposta.update({
         where: { id: proposta.id },
         data: {
+          descontoAplicado,
           valorTabela: tabelaResolvida.total,
           valorProposta: analise.totais.proposta,
           diferenca: analise.totais.diferenca,
@@ -231,8 +235,8 @@ router.post('/:id/enviar', requirePermission('propostas', 'atualizar'), async (r
     if (proposta.unidade.status !== 'disponivel') return res.status(409).json({ error: 'Unidade não está mais disponível' });
 
     const tabelaResolvida = resolverTabela(proposta.tabela, proposta.unidade, proposta.empreendimento);
-    const analise = analisar({ tabelaResolvida, propostaSeries: proposta.series, parametros: proposta.empreendimento.parametrosAnalise || {}, unidade: proposta.unidade, empreendimento: proposta.empreendimento });
-    if (Math.abs(analise.totais.diferenca) > 0.5) return res.status(422).json({ error: 'A diferença entre proposta e tabela precisa ser zero', diferenca: analise.totais.diferenca });
+    const analise = analisar({ tabelaResolvida, propostaSeries: proposta.series, parametros: proposta.empreendimento.parametrosAnalise || {}, unidade: proposta.unidade, empreendimento: proposta.empreendimento, descontoAplicado: proposta.descontoAplicado });
+    if (Math.abs(analise.totais.diferenca) > 0.5) return res.status(422).json({ error: 'A proposta precisa fechar na meta (Diferença R$ 0,00)', diferenca: analise.totais.diferenca });
     if (!analise.formasOk) return res.status(422).json({ error: `Formas de pagamento não aceitas neste empreendimento: ${analise.tiposForaDaLista.join(', ')}` });
 
     const dados = req.body.cliente || {};

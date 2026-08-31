@@ -137,6 +137,29 @@ describe('analisar', () => {
     expect(res.aprovavel).toBe(false);
   });
 
+  it('desconto aplicado muda a meta e a diferença passa a ser medida contra ela', () => {
+    const tab = resolverTabela(tabelaDemo, unidade, empreendimento, dataBase);
+    // proposta = tabela, mas com 2.000 de desconto na unidade
+    const res = analisar({ tabelaResolvida: tab, propostaSeries: tab.series, parametros, unidade, empreendimento, descontoAplicado: 2000 });
+    expect(res.totais.meta).toBe(98000);
+    expect(res.totais.descontoAplicado).toBe(2000);
+    expect(res.totais.diferenca).toBe(2000); // proposta (100k) ainda 2k acima da meta
+    // agora baixando a proposta em 2.000 para fechar na meta
+    const propostaMenor = [tab.series[0], tab.series[1], { ...tab.series[2], valor: tab.series[2].valor - 2000, total: tab.series[2].total - 2000 }];
+    const res2 = analisar({ tabelaResolvida: tab, propostaSeries: propostaMenor, parametros, unidade, empreendimento, descontoAplicado: 2000 });
+    expect(res2.totais.diferenca).toBe(0);
+    expect(res2.indicadores.descontoNominal).toBe(-2000);
+  });
+
+  it('critérios de Diferença AV e Equivalência de fluxo trazem detalhe expansível', () => {
+    const tab = resolverTabela(tabelaDemo, unidade, empreendimento, dataBase);
+    const res = analisar({ tabelaResolvida: tab, propostaSeries: tab.series, parametros, unidade, empreendimento });
+    const difAv = res.criterios.find((c) => c.nome === 'diferencaAv');
+    expect(Array.isArray(difAv.detalhe)).toBe(true);
+    expect(difAv.detalhe.map((d) => d.label)).toEqual(['Proposta AV', 'Tabela AV', 'Resultado']);
+    expect(res.criterios.find((c) => c.nome === 'equivalenciaFluxo').detalhe).toBeDefined();
+  });
+
   it('gera o fluxo mês a mês com acumulado e percentuais', () => {
     const tab = resolverTabela(tabelaDemo, unidade, empreendimento, dataBase);
     const res = analisar({ tabelaResolvida: tab, propostaSeries: tab.series, parametros: {}, unidade, empreendimento });

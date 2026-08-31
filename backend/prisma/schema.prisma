@@ -354,7 +354,8 @@ model Proposta {
   tipoAnalise      String          @default("simulacao") // simulacao | proposta
   valorTabela      Float? // total da tabela de venda para a unidade
   valorProposta    Float? // total proposto pelo cliente
-  diferenca        Float? // valorProposta - valorTabela
+  descontoAplicado Float           @default(0) // desconto em R$ concedido na unidade
+  diferenca        Float? // valorProposta - (valorTabela - descontoAplicado)
   resultadoAnalise Json? // snapshot dos critérios calculados
   indicadores      Json? // snapshot dos indicadores complementares
   requerAprovacao  Boolean         @default(false)

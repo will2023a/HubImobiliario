@@ -41,6 +41,7 @@ ALTER TABLE `Proposta`
   ADD COLUMN `tipoAnalise` VARCHAR(191) NOT NULL DEFAULT 'simulacao',
   ADD COLUMN `valorTabela` DOUBLE NULL,
   ADD COLUMN `valorProposta` DOUBLE NULL,
+  ADD COLUMN `descontoAplicado` DOUBLE NOT NULL DEFAULT 0,
   ADD COLUMN `diferenca` DOUBLE NULL,
   ADD COLUMN `resultadoAnalise` JSON NULL,
   ADD COLUMN `indicadores` JSON NULL,

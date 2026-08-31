@@ -163,8 +163,8 @@ function metricas(series, { dataHabitese, area, dataBase }) {
   };
 }
 
-function criterio(nome, label, tabela, proposta, limite, tolerancia, ok) {
-  return { nome, label, tabela, proposta, limite, tolerancia, ok };
+function criterio(nome, label, tabela, proposta, limite, tolerancia, ok, detalhe) {
+  return { nome, label, tabela, proposta, limite, tolerancia, ok, ...(detalhe ? { detalhe } : {}) };
 }
 
 // Fluxo mês a mês da proposta (estilo "Fluxo da proposta de compra e venda" do Anapro).
@@ -211,7 +211,8 @@ function montarFluxoDetalhado(series, { totalTabela = 0 } = {}) {
 
 // Análise principal.
 // params: { tabelaResolvida, propostaSeries, parametros, unidade, empreendimento }
-function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = {}, empreendimento = {} }) {
+function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = {}, empreendimento = {}, descontoAplicado = 0 }) {
+  const desconto = Math.max(0, round2(descontoAplicado));
   const dataBase = tabelaResolvida?.dataBase ? new Date(tabelaResolvida.dataBase) : new Date();
   const dataHabitese = tabelaResolvida?.dataHabitese ? new Date(tabelaResolvida.dataHabitese) : null;
   const area = Number(unidade?.area) || 0;
@@ -267,7 +268,12 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
       limiteHab == null ? true : mProp.ateHabitesePct >= limiteHab - tol),
     criterio('diferencaAv', 'Diferença AV',
       round2(mTab.av), round2(mProp.av), limiteDifAv == null ? '--' : `-${limiteDifAv}%`, `${tol}%`,
-      limiteDifAv == null ? true : difAvPct >= -(limiteDifAv) - tol),
+      limiteDifAv == null ? true : difAvPct >= -(limiteDifAv) - tol,
+      [
+        { label: 'Proposta AV', valor: round2(mProp.av) },
+        { label: 'Tabela AV', valor: round2(mTab.av) },
+        { label: 'Resultado', valor: `${difAvPct}%` },
+      ]),
     criterio('captacaoMensal', '% de captação mensal',
       `${mTab.mensaisPct}%`, `${mProp.mensaisPct}%`, limiteMensal == null ? '--' : `${limiteMensal}%`, `${tol}%`,
       limiteMensal == null ? true : mProp.mensaisPct >= limiteMensal - tol),
@@ -277,7 +283,11 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
       exigeInterc ? mProp.temIntercalacao : true),
     criterio('equivalenciaFluxo', 'Equivalência de fluxo',
       vpTabela, vpProposta, 0, tolFluxo,
-      difFluxo >= -tolFluxo),
+      difFluxo >= -tolFluxo,
+      [
+        { label: 'Diferença de fluxo', valor: difFluxo },
+        { label: 'Início da perda', valor: inicioDaPerda ? new Date(inicioDaPerda).toISOString().slice(0, 10) : '--' },
+      ]),
     criterio('formasPagamento', 'Formas de pagamento aceitas',
       formasAceitas.length ? formasAceitas.join(', ') : 'Todas',
       tiposUsados.join(', ') || '--',
@@ -294,10 +304,12 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
     captacaoAteData: { tabela: mTab.ateHabitese, proposta: mProp.ateHabitese },
   };
 
+  const meta = round2(mTab.total - desconto);
   const descontoNominal = round2(mProp.total - mTab.total);
   const indicadores = {
     descontoNominal,
     descontoNominalPct: mTab.total ? round2((descontoNominal / mTab.total) * 100) : 0,
+    descontoAplicado: desconto,
     taxaAtratividade: taxa,
     valorPresenteTabela: vpTabela,
     valorPresenteProposta: vpProposta,
@@ -317,7 +329,7 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
   return {
     dataBase,
     dataHabitese,
-    totais: { tabela: mTab.total, proposta: mProp.total, diferenca: round2(mProp.total - mTab.total) },
+    totais: { tabela: mTab.total, proposta: mProp.total, meta, descontoAplicado: desconto, diferenca: round2(mProp.total - meta) },
     criterios,
     comparativo,
     indicadores,
