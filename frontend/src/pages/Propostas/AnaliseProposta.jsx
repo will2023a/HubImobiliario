@@ -11,6 +11,7 @@ import './AnaliseProposta.css'
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
 const pct = (v) => `${(Number(v) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%`
 const round2 = (v) => Math.round((Number(v) || 0) * 100) / 100
+const clamp01 = (v) => Math.max(0, Math.min(1, v))
 const TIPOS = [
   ['ato', 'Ato / entrada'], ['pontual', 'Pontual (30/60/90dd)'], ['mensal', 'Mensais'],
   ['semestral', 'Semestrais'], ['anual', 'Anuais'], ['unica', 'Única / balão'], ['financiamento', 'Financiamento'],
@@ -20,7 +21,73 @@ const DIAS_VENC = [5, 10, 15, 20, 25, 28]
 const fmtChave = (chave) => { const [a, m] = chave.split('-'); return `${MESES[Number(m) - 1]}/${a}` }
 const mesInput = (s) => `${String(s.inicioAno || new Date().getFullYear()).padStart(4, '0')}-${String(s.inicioMes || 1).padStart(2, '0')}`
 const criterioValor = (v) => (typeof v === 'number' ? money(v) : (v ?? '--'))
+const fmtData = (d) => (d ? new Date(d).toLocaleDateString('pt-BR') : '--')
 const serieRow = () => ({ nome: 'Nova série', tipo: 'pontual', inicioMes: new Date().getMonth() + 1, inicioAno: new Date().getFullYear(), quantidade: 1, valor: 0, periodicidade: 1, aposHabitese: false, vencimentoDia: null })
+
+// Barra valor × limite de um critério. Só desenha quando há um limite numérico positivo.
+function barra(meta) {
+  if (!meta || meta.tipo === 'bool' || meta.tipo === 'info') return null
+  const { propostaNum, tabelaNum, limiteNum, tipo, unidade } = meta
+  if (limiteNum == null || limiteNum <= 0 || propostaNum == null) return null
+  const escala = limiteNum * (tipo === 'max' ? 1.4 : 1.6)
+  const un = unidade === '%' ? pct : unidade === 'meses' ? ((x) => `${Math.round(x)} m`) : money
+  return {
+    fill: clamp01(propostaNum / escala),
+    marker: clamp01(limiteNum / escala),
+    tab: tabelaNum == null ? null : clamp01(tabelaNum / escala),
+    txtProp: un(propostaNum),
+    txtLim: `limite ${un(limiteNum)}`,
+  }
+}
+
+function CriterioCard({ c, aberto, onToggle }) {
+  const b = barra(c.meta)
+  const temDetalhe = Array.isArray(c.detalhe) && c.detalhe.length > 0
+  return (
+    <div className={`ap-crit ${c.ok ? 'ok' : 'bad'}`}>
+      <button className="ap-crit-head" onClick={() => temDetalhe && onToggle(c.nome)} disabled={!temDetalhe}>
+        <span className={`ap-pill ${c.ok ? 'ok' : 'bad'}`}>{c.ok ? '✓' : '✕'}</span>
+        <span className="ap-crit-label">{c.label}</span>
+        <span className="ap-crit-vals">
+          <em>tabela</em> {criterioValor(c.tabela)} <em>· proposta</em> <strong>{criterioValor(c.proposta)}</strong>
+          {c.limite !== '--' && <> <em>· limite</em> {criterioValor(c.limite)}</>}
+        </span>
+        {temDetalhe && <span className="ap-crit-caret">{aberto ? '▾' : '▸'}</span>}
+      </button>
+      {b && (
+        <div className="ap-bar" title={`${b.txtProp} · ${b.txtLim}`}>
+          <div className={`ap-bar-fill ${c.ok ? 'ok' : 'bad'}`} style={{ width: `${b.fill * 100}%` }} />
+          <div className="ap-bar-marker" style={{ left: `${b.marker * 100}%` }} />
+          {b.tab != null && <div className="ap-bar-tab" style={{ left: `${b.tab * 100}%` }} />}
+        </div>
+      )}
+      {temDetalhe && aberto && (
+        <div className="ap-crit-detail">
+          {c.detalhe.map((d, k) => (
+            <span key={k}><em>{d.label}:</em> {criterioValor(d.valor)}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function MetricCard({ label, tabela, proposta, tipo = 'money', nota }) {
+  const fmt = tipo === 'pct' ? pct : money
+  const delta = (Number(proposta) || 0) - (Number(tabela) || 0)
+  const temDelta = tabela != null && proposta != null && round2(delta) !== 0
+  return (
+    <div className="ap-metric">
+      <small>{label}</small>
+      <strong>{proposta == null ? '--' : fmt(proposta)}</strong>
+      <span className="ap-metric-sub">
+        tabela {tabela == null ? '--' : fmt(tabela)}
+        {temDelta && <em className={delta < 0 ? 'neg' : 'pos'}>{delta < 0 ? '−' : '+'}{fmt(Math.abs(delta))}</em>}
+      </span>
+      {nota && <span className="ap-metric-nota">{nota}</span>}
+    </div>
+  )
+}
 
 export default function AnaliseProposta() {
   const { id } = useParams()
@@ -151,6 +218,7 @@ export default function AnaliseProposta() {
   const criterios = analise?.criterios || []
   const comp = analise?.comparativo || {}
   const ind = analise?.indicadores || {}
+  const pv = ind.pvLiquido || {}
   const fluxo = analise?.fluxo || { colunas: [], linhas: [] }
   const readonly = ['aprovada', 'cancelada'].includes(data.proposta?.status)
   const falhas = criterios.filter((c) => !c.ok).map((c) => c.label)
@@ -319,45 +387,29 @@ export default function AnaliseProposta() {
         {/* ===== Coluna de análise ===== */}
         <div className="ap-col-result">
           <Card padding="lg">
-            <h2 className="ap-section-title">Resultado da análise</h2>
-            <div className="ap-table-wrap">
-              <table className="ap-table">
-                <thead><tr><th /><th>Critério</th><th>Tabela</th><th>Proposta</th><th>Limite</th><th>Toler.</th></tr></thead>
-                <tbody>
-                  {criterios.map((c) => (
-                    <React.Fragment key={c.nome}>
-                      <tr className={`${c.ok ? '' : 'ap-row-bad'} ${c.detalhe ? 'ap-row-exp' : ''}`} onClick={() => c.detalhe && toggleCrit(c.nome)}>
-                        <td><span className={`ap-dot ${c.ok ? 'ap-dot-ok' : 'ap-dot-bad'}`}>{c.ok ? '✓' : '✕'}</span></td>
-                        <td>{c.label}{c.detalhe && <span className="ap-exp-caret">{expandido.includes(c.nome) ? '▾' : '▸'}</span>}</td>
-                        <td>{criterioValor(c.tabela)}</td>
-                        <td>{criterioValor(c.proposta)}</td>
-                        <td>{criterioValor(c.limite)}</td>
-                        <td>{criterioValor(c.tolerancia)}</td>
-                      </tr>
-                      {c.detalhe && expandido.includes(c.nome) && (
-                        <tr className="ap-detail-row"><td /><td colSpan={5}>
-                          {c.detalhe.map((d, k) => <span key={k} className="ap-detail-item"><em>{d.label}:</em> {criterioValor(d.valor)}</span>)}
-                        </td></tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+            <div className="ap-section-heading">
+              <h2 className="ap-section-title">Resultado da análise</h2>
+              <span className={`ap-status ${aprovavel ? 'ok' : 'bad'}`}>{aprovavel ? 'Aprovável' : 'Requer gestor'}</span>
+            </div>
+            <div className="ap-crit-list">
+              {criterios.map((c) => (
+                <CriterioCard key={c.nome} c={c} aberto={expandido.includes(c.nome)} onToggle={toggleCrit} />
+              ))}
             </div>
           </Card>
 
           <Card padding="lg">
             <h2 className="ap-section-title">Tabela comparativa</h2>
-            <table className="ap-table">
-              <thead><tr><th>Item</th><th>Tabela</th><th>Proposta</th></tr></thead>
-              <tbody>
-                <tr><td>Valor m²</td><td>{money(comp.valorM2?.tabela)}</td><td>{money(comp.valorM2?.proposta)}</td></tr>
-                <tr><td>Valor m² do AV</td><td>{money(comp.valorM2Av?.tabela)}</td><td>{money(comp.valorM2Av?.proposta)}</td></tr>
-                <tr><td>Captação até habite-se</td><td>{money(comp.captacaoAteHabitese?.tabela)}</td><td>{money(comp.captacaoAteHabitese?.proposta)}</td></tr>
-                <tr><td>Captação após habite-se</td><td>{money(comp.captacaoAposHabitese?.tabela)}</td><td>{money(comp.captacaoAposHabitese?.proposta)}</td></tr>
-                <tr><td>Captação até metade da obra</td><td>{money(comp.captacaoMetadeObra?.tabela)}</td><td>{money(comp.captacaoMetadeObra?.proposta)}</td></tr>
-              </tbody>
-            </table>
+            <div className="ap-metric-grid">
+              <MetricCard label="Valor m²" tabela={comp.valorM2?.tabela} proposta={comp.valorM2?.proposta} />
+              <MetricCard label="Valor m² do AV" tabela={comp.valorM2Av?.tabela} proposta={comp.valorM2Av?.proposta} />
+              <MetricCard label="Captação até habite-se" tabela={comp.captacaoAteHabitese?.tabela} proposta={comp.captacaoAteHabitese?.proposta} />
+              <MetricCard label="Captação após habite-se" tabela={comp.captacaoAposHabitese?.tabela} proposta={comp.captacaoAposHabitese?.proposta} />
+              <MetricCard label="Captação até metade da obra" tabela={comp.captacaoMetadeObra?.tabela} proposta={comp.captacaoMetadeObra?.proposta}
+                nota={comp.captacaoMetadeObra?.data ? fmtData(comp.captacaoMetadeObra.data) : null} />
+              <MetricCard label="Captação até a data" tabela={comp.captacaoAteData?.tabela} proposta={comp.captacaoAteData?.proposta}
+                nota={comp.captacaoAteData?.data ? fmtData(comp.captacaoAteData.data) : 'defina a data nos parâmetros'} />
+            </div>
           </Card>
 
           <Card padding="lg">
@@ -365,12 +417,19 @@ export default function AnaliseProposta() {
             <ul className="ap-ind">
               <li><span>Desconto nominal (proposta − tabela)</span><strong className={ind.descontoNominal < 0 ? 'ap-neg' : ''}>{money(ind.descontoNominal)} ({pct(ind.descontoNominalPct)})</strong></li>
               <li><span>Limite de auto-aprovação</span><strong>{ind.descontoNominalMax != null ? pct(-ind.descontoNominalMax) : '—'}</strong></li>
-              <li><span>Taxa de atratividade</span><strong>{pct(ind.taxaAtratividade)}</strong></li>
-              <li><span>Valor presente — tabela</span><strong>{money(ind.valorPresenteTabela)}</strong></li>
-              <li><span>Valor presente — proposta</span><strong>{money(ind.valorPresenteProposta)}</strong></li>
-              <li><span>Equivalência de fluxo (dif.)</span><strong className={ind.diferencaFluxo < 0 ? 'ap-neg' : ''}>{money(ind.diferencaFluxo)}</strong></li>
+              <li><span>Taxa de atratividade — antes do habite-se</span><strong>{pct(ind.taxaAtratividadeAntesHabitese || ind.taxaAtratividade)}</strong></li>
+              <li><span>Taxa de atratividade — após o habite-se</span><strong>{pct(ind.taxaAtratividadeAposHabitese || ind.taxaAtratividade)}</strong></li>
+              <li><span>GRL</span><strong>{pct(ind.grl)}</strong></li>
+              <li><span>Equivalência de fluxo (dif.)</span><strong className={ind.diferencaFluxo < 0 ? 'ap-neg' : ''}>{ind.equivalenciaDesativada ? 'desativada' : money(ind.diferencaFluxo)}</strong></li>
               <li><span>Início da perda</span><strong>{ind.inicioDaPerda ? new Date(ind.inicioDaPerda).toLocaleDateString('pt-BR') : '—'}</strong></li>
             </ul>
+
+            <div className="ap-pv">
+              <div className="ap-pv-head">PV líquido <em>· taxa de desconto de fluxo {pct(pv.taxa)}</em></div>
+              <div className="ap-pv-line"><span>(P) Proposta</span><strong>{money(pv.proposta)}</strong></div>
+              <div className="ap-pv-line"><span>(T) Tabela</span><strong>{money(pv.tabela)}</strong></div>
+              <div className="ap-pv-line ap-pv-diff"><span>(P) − (T)</span><strong className={pv.diferenca < 0 ? 'ap-neg' : ''}>{money(pv.diferenca)}</strong></div>
+            </div>
           </Card>
         </div>
       </div>
@@ -393,6 +452,9 @@ export default function AnaliseProposta() {
 
       {/* Modal: fluxo */}
       <Modal isOpen={fluxoOpen} onClose={() => setFluxoOpen(false)} title="Fluxo da proposta de compra e venda" size="xl">
+        {ind.inicioDaPerda && (
+          <p className="ap-warn">Início da perda de fluxo a partir de {new Date(ind.inicioDaPerda).toLocaleDateString('pt-BR')} (linhas destacadas).</p>
+        )}
         <div className="ap-table-wrap">
           <table className="ap-table ap-fluxo">
             <thead>
@@ -400,7 +462,7 @@ export default function AnaliseProposta() {
             </thead>
             <tbody>
               {fluxo.linhas.map((l) => (
-                <tr key={l.mesAno}>
+                <tr key={l.mesAno} className={l.perda ? 'ap-fluxo-perda' : ''}>
                   <td>{fmtChave(l.mesAno)}</td>
                   {fluxo.colunas.map((c) => <td key={c}>{l.valores[c] ? money(l.valores[c]) : '—'}</td>)}
                   <td>{money(l.valorPago)}</td><td>{money(l.acumulado)}</td><td>{pct(l.pctSobreTabela)}</td><td>{pct(l.pctSobreProposta)}</td>

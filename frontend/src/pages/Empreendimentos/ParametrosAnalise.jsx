@@ -5,16 +5,32 @@ import { Input } from '../../components/ui/Input'
 import { Spinner } from '../../components/ui'
 import './ParametrosAnalise.css'
 
-const CAMPOS = [
-  { key: 'prazoFinanciamentoMax', label: 'Prazo máx. de financiamento (meses)', tipo: 'int' },
-  { key: 'captacaoAvistaMin', label: '% mín. de captação à vista', tipo: 'float' },
-  { key: 'captacaoAteHabiteseMin', label: '% mín. de captação até habite-se', tipo: 'float' },
-  { key: 'captacaoMensalMin', label: '% mín. de captação mensal', tipo: 'float' },
-  { key: 'diferencaAvMax', label: '% máx. de queda no valor à vista', tipo: 'float' },
-  { key: 'descontoNominalMax', label: '% de desconto que aprova automaticamente', tipo: 'float' },
-  { key: 'taxaAtratividade', label: 'Taxa de atratividade (% a.m.)', tipo: 'float' },
-  { key: 'toleranciaGeral', label: 'Tolerância geral (%)', tipo: 'float' },
+const GRUPOS = [
+  {
+    titulo: 'Limites de captação',
+    campos: [
+      { key: 'prazoFinanciamentoMax', label: 'Prazo máx. de financiamento (meses)', tipo: 'int' },
+      { key: 'captacaoAvistaMin', label: '% mín. de captação à vista', tipo: 'float' },
+      { key: 'captacaoAteHabiteseMin', label: '% mín. de captação até habite-se', tipo: 'float' },
+      { key: 'captacaoAteHabiteseMenos1Min', label: '% mín. de captação até habite-se − 1', tipo: 'float' },
+      { key: 'captacaoMensalMaxParcela', label: '% máx. de uma parcela mensal (sobre o total)', tipo: 'float' },
+      { key: 'diferencaAvMax', label: '% máx. de queda no valor à vista', tipo: 'float' },
+      { key: 'descontoNominalMax', label: '% de desconto que aprova automaticamente', tipo: 'float' },
+      { key: 'toleranciaGeral', label: 'Tolerância geral (%)', tipo: 'float' },
+    ],
+  },
+  {
+    titulo: 'Taxas financeiras',
+    campos: [
+      { key: 'taxaAtratividadeAntesHabitese', label: 'Taxa de atratividade — antes do habite-se (% a.m.)', tipo: 'float' },
+      { key: 'taxaAtratividadeAposHabitese', label: 'Taxa de atratividade — após o habite-se (% a.m.)', tipo: 'float' },
+      { key: 'taxaAtratividade', label: 'Taxa de atratividade única (% a.m.) — legado / fallback', tipo: 'float' },
+      { key: 'taxaDescontoFluxo', label: 'Taxa de desconto de fluxo p/ PV líquido (% a.m.)', tipo: 'float' },
+      { key: 'grl', label: 'GRL (%)', tipo: 'float' },
+    ],
+  },
 ]
+const CAMPOS = GRUPOS.flatMap((g) => g.campos)
 
 const FORMAS = [
   { key: 'ato', label: 'Ato / entrada' },
@@ -42,6 +58,7 @@ export default function ParametrosAnalise({ empreendimentoId }) {
       const data = res.data || {}
       const next = { exigirIntercalacao: Boolean(data.exigirIntercalacao) }
       CAMPOS.forEach((c) => { next[c.key] = data[c.key] ?? '' })
+      next.dataReferenciaCaptacao = data.dataReferenciaCaptacao ? String(data.dataReferenciaCaptacao).slice(0, 10) : ''
       setForm(next)
       setFormas(Array.isArray(data.formasPagamento) && data.formasPagamento.length ? data.formasPagamento : FORMAS.map((f) => f.key))
     } catch { setMsg('Erro ao carregar parâmetros') }
@@ -71,17 +88,34 @@ export default function ParametrosAnalise({ empreendimentoId }) {
         </div>
       </div>
 
-      <div className="par-grid">
-        {CAMPOS.map((c) => (
+      {GRUPOS.map((g) => (
+        <div key={g.titulo} className="par-bloco">
+          <strong>{g.titulo}</strong>
+          <div className="par-grid">
+            {g.campos.map((c) => (
+              <Input
+                key={c.key}
+                label={c.label}
+                type="number"
+                step={c.tipo === 'int' ? '1' : '0.01'}
+                value={form[c.key] ?? ''}
+                onChange={(e) => setForm((f) => ({ ...f, [c.key]: e.target.value }))}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+
+      <div className="par-bloco">
+        <strong>Datas e regras</strong>
+        <div className="par-grid">
           <Input
-            key={c.key}
-            label={c.label}
-            type="number"
-            step={c.tipo === 'int' ? '1' : '0.01'}
-            value={form[c.key] ?? ''}
-            onChange={(e) => setForm((f) => ({ ...f, [c.key]: e.target.value }))}
+            label="Data de referência para “captação até a data”"
+            type="date"
+            value={form.dataReferenciaCaptacao ?? ''}
+            onChange={(e) => setForm((f) => ({ ...f, dataReferenciaCaptacao: e.target.value }))}
           />
-        ))}
+        </div>
         <label className="par-check">
           <input type="checkbox" checked={Boolean(form.exigirIntercalacao)} onChange={(e) => setForm((f) => ({ ...f, exigirIntercalacao: e.target.checked }))} />
           Exigir intercalação de parcelas (semestrais/anuais entre as mensais)

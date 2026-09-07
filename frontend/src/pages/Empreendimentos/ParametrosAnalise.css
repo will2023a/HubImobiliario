@@ -1,6 +1,8 @@
 .par-analise { display: grid; gap: 14px; }
 .par-head h3 { margin: 0 0 4px; font-size: 1rem; color: var(--text-primary); }
 .par-head p { margin: 0; color: var(--text-secondary); font-size: .82rem; max-width: 620px; }
+.par-bloco { border-top: 1px solid var(--border-color, #e5e7eb); padding-top: 12px; display: grid; gap: 10px; }
+.par-bloco > strong { color: var(--text-primary); font-size: .9rem; }
 .par-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .par-check { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--text-primary); }
 .par-msg { margin: 0; font-size: .82rem; color: var(--text-secondary); }

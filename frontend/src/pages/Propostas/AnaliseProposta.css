@@ -101,3 +101,55 @@
 .ap-radio { display: flex; align-items: center; gap: 8px; font-size: .88rem; }
 .ap-desc-preview { font-size: .85rem; color: var(--text-secondary); margin: 2px 0 0; }
 .ap-desc-preview strong { color: var(--text-primary); }
+
+/* ===== Resultado da análise: cards de critério ===== */
+.ap-status { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 10px; border-radius: 999px; }
+.ap-status.ok { background: #ecfdf5; color: #065f46; }
+.ap-status.bad { background: #fef2f2; color: #b91c1c; }
+
+.ap-crit-list { display: grid; gap: 8px; }
+.ap-crit { border: 1px solid var(--border-color, #e5e7eb); border-left: 3px solid #cbd5e1; border-radius: 10px; padding: 10px 12px; background: var(--white, #fff); }
+.ap-crit.ok { border-left-color: #10b981; }
+.ap-crit.bad { border-left-color: #ef4444; background: #fef5f5; }
+.ap-crit-head { display: flex; align-items: center; gap: 8px; width: 100%; border: none; background: none; padding: 0; font: inherit; text-align: left; cursor: default; flex-wrap: wrap; }
+.ap-crit-head:not(:disabled) { cursor: pointer; }
+.ap-pill { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-size: .64rem; font-weight: 800; color: #fff; flex: 0 0 auto; }
+.ap-pill.ok { background: #10b981; }
+.ap-pill.bad { background: #ef4444; }
+.ap-crit-label { font-weight: 600; color: var(--text-primary); font-size: .86rem; }
+.ap-crit-vals { margin-left: auto; font-size: .78rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.ap-crit-vals em { font-style: normal; opacity: .7; }
+.ap-crit-vals strong { color: var(--text-primary); }
+.ap-crit-caret { color: var(--text-secondary); font-size: .8em; flex: 0 0 auto; }
+
+.ap-bar { position: relative; height: 6px; border-radius: 3px; background: var(--gray-100, #eef1f4); margin-top: 8px; overflow: hidden; }
+.ap-bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; }
+.ap-bar-fill.ok { background: #34d399; }
+.ap-bar-fill.bad { background: #f87171; }
+.ap-bar-marker { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text-primary, #1f2937); }
+.ap-bar-tab { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #94a3b8; }
+.ap-crit-detail { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color, #e5e7eb); display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: .8rem; color: var(--text-secondary); }
+.ap-crit-detail em { font-style: normal; color: var(--text-primary); }
+
+/* ===== Tabela comparativa: cards de métrica ===== */
+.ap-metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.ap-metric { border: 1px solid var(--border-color, #e5e7eb); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+.ap-metric small { color: var(--text-secondary); font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; }
+.ap-metric > strong { color: var(--text-primary); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.ap-metric-sub { font-size: .76rem; color: var(--text-secondary); }
+.ap-metric-sub em { font-style: normal; margin-left: 6px; font-weight: 700; }
+.ap-metric-sub em.pos { color: #15803d; }
+.ap-metric-sub em.neg { color: #b91c1c; }
+.ap-metric-nota { font-size: .72rem; color: var(--text-secondary); font-style: italic; }
+
+/* ===== PV líquido ===== */
+.ap-pv { margin-top: 14px; padding-top: 12px; border-top: 2px solid var(--border-color, #e5e7eb); display: grid; gap: 4px; }
+.ap-pv-head { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--text-primary); }
+.ap-pv-head em { font-style: normal; font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-secondary); }
+.ap-pv-line { display: flex; justify-content: space-between; gap: 16px; font-size: .85rem; }
+.ap-pv-line span { color: var(--text-secondary); }
+.ap-pv-line strong { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.ap-pv-diff { border-top: 1px dashed var(--border-color, #e5e7eb); padding-top: 6px; margin-top: 2px; }
+
+.ap-fluxo-perda td { background: #fff7ed; }
+.ap-fluxo-perda td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
