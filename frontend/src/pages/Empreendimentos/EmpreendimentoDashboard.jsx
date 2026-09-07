@@ -306,7 +306,7 @@ export default function EmpreendimentoDashboard() {
                     <p>Tipo: {unidade.tipo || empreendimento.tipoUnidade}</p>
                     <p>Valor: {formatCurrency(unidade.valorTotal)}</p>
                   </div>
-                  <Link to={`/dashboard/propostas/nova?empreendimentoId=${id}&unidadeId=${unidade.id}`}>
+                  <Link to={`/dashboard/propostas/simular?empreendimentoId=${id}&unidadeId=${unidade.id}`}>
                     <Button variant="primary" size="sm">Gerar Proposta</Button>
                   </Link>
                 </Card>
