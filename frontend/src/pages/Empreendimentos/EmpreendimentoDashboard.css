@@ -124,37 +124,44 @@
 /* Tabs */
 .tabs-container {
   display: flex;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.375rem;
   margin-bottom: 1.5rem;
-  background: white;
-  padding: 0.5rem;
-  border-radius: var(--radius-lg);
+  background: var(--white);
+  padding: 0.375rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
 }
 
 .meta-with-icon { display: inline-flex; align-items: center; gap: 0.25rem; }
 
 .tab {
-  flex: 1;
-  padding: 0.875rem 1.5rem;
+  flex: 1 1 auto;
+  white-space: nowrap;
+  padding: 0.625rem 1rem;
   background: transparent;
-  border: none;
-  border-radius: var(--radius);
-  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  color: #3f3f3f;
   font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .tab:hover {
   background: var(--bg-secondary);
+  border-color: var(--border-color);
   color: var(--text-primary);
 }
 
-.tab-active {
-  background: var(--gradient-primary);
-  color: white;
-  box-shadow: var(--shadow-md);
+.tab-active,
+.tab-active:hover {
+  background: var(--primary);
+  border-color: var(--primary-dark);
+  color: var(--dark);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Table */
