@@ -118,3 +118,31 @@
 .tp-empty { text-align: center; color: var(--text-secondary); padding: 1.5rem; }
 .tp-content-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
 .tp-meta .tp-btn-delete { margin-left: auto; font-size: .78rem; }
+
+/* Importar / exportar tabela */
+.tp-header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.tp-import { display: grid; gap: 14px; }
+.tp-import-help { font-size: .82rem; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+.tp-import-help strong, .tp-import-help em { color: var(--text-primary); font-style: normal; }
+.tp-import-file { display: flex; align-items: center; gap: 12px; }
+.tp-import-file span { font-size: .82rem; color: var(--text-secondary); }
+.tp-import-erro { color: #b91c1c; font-size: .84rem; margin: 0; }
+
+.tp-import-series { display: flex; flex-wrap: wrap; gap: 6px; }
+.tp-import-chip { font-size: .74rem; background: var(--bg-secondary, #f3f4f6); border: 1px solid var(--border-color, #e5e7eb); border-radius: 999px; padding: 3px 10px; color: var(--text-primary); }
+.tp-import-chip em { font-style: normal; color: var(--text-secondary); margin-left: 4px; }
+
+.tp-import-preview { max-height: 260px; overflow: auto; border: 1px solid var(--border-color, #e5e7eb); border-radius: 8px; }
+.tp-import-preview .tp-table { min-width: 640px; font-size: .8rem; }
+.tp-import-preview th, .tp-import-preview td { padding: 6px 8px; white-space: nowrap; border-bottom: 1px solid var(--border-color, #eee); }
+.tp-import-more { font-size: .78rem; color: var(--text-secondary); padding: 6px 8px; margin: 0; }
+
+.tp-import-form { display: grid; gap: 10px; }
+.tp-import-datas { display: flex; gap: 12px; flex-wrap: wrap; }
+.tp-import-check { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--text-primary); }
+.tp-import-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.tp-import-result ul { margin: 8px 0 0; padding-left: 18px; font-size: .86rem; display: grid; gap: 4px; }
+.tp-import-ok { font-size: .95rem; color: #15803d; margin: 0; }
+.tp-import-warn { color: #b45309; }

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import api from '../../services/api'
 import Button from '../../components/ui/Button'
 import Modal from '../../components/ui/Modal'
 import { Input, Select } from '../../components/ui/Input'
 import { Badge, EmptyState, Spinner } from '../../components/ui'
+import { parsePlanilhaAnapro } from '../../utils/anapro-planilha'
 import './TabelaPrecos.css'
 
 const modeloLabels = {
@@ -24,7 +25,82 @@ export default function TabelaPrecos({ empreendimentoId }) {
   const [series, setSeries] = useState([])
   const [dirty, setDirty] = useState(false)
 
+  const fileRef = useRef(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importForm, setImportForm] = useState({ nome: '', validadeInicio: '', validadeFim: '', atualizarUnidades: true })
+  const [parsed, setParsed] = useState(null)
+  const [importErr, setImportErr] = useState('')
+  const [importBusy, setImportBusy] = useState(false)
+  const [importResult, setImportResult] = useState(null)
+  const [exporting, setExporting] = useState(false)
+
   useEffect(() => { loadTabelas() }, [empreendimentoId])
+
+  function abrirImport() {
+    setParsed(null); setImportErr(''); setImportResult(null)
+    setImportForm({ nome: '', validadeInicio: '', validadeFim: '', atualizarUnidades: true })
+    setImportOpen(true)
+  }
+
+  async function onArquivo(e) {
+    const file = e.target.files?.[0]
+    if (fileRef.current) fileRef.current.value = ''
+    if (!file) return
+    setImportErr(''); setImportResult(null)
+    try {
+      const buf = await file.arrayBuffer()
+      const res = parsePlanilhaAnapro(buf)
+      if (!res.linhas.length) throw new Error('Nenhuma linha de unidade encontrada na planilha.')
+      setParsed(res)
+      setImportForm((f) => ({ ...f, nome: f.nome || file.name.replace(/\.(xlsx|xls|csv)$/i, '').trim() }))
+    } catch (err) {
+      setParsed(null)
+      setImportErr(err.message || 'Não consegui ler a planilha.')
+    }
+  }
+
+  async function confirmarImport() {
+    if (!parsed) return
+    setImportBusy(true); setImportErr('')
+    try {
+      const res = await api.post('/tabela-preco/importar', {
+        empreendimentoId: parseInt(empreendimentoId, 10),
+        nome: importForm.nome,
+        validadeInicio: importForm.validadeInicio || null,
+        validadeFim: importForm.validadeFim || null,
+        atualizarUnidades: importForm.atualizarUnidades,
+        series: parsed.series,
+        linhas: parsed.linhas,
+      })
+      setImportResult(res.data)
+      await loadTabelas()
+      if (res.data.tabelaId) setActiveTabela(res.data.tabelaId)
+    } catch (err) {
+      setImportErr(err.response?.data?.error || 'Erro ao importar a tabela.')
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
+  async function exportar() {
+    setExporting(true)
+    try {
+      const res = await api.get(`/tabela-preco/${empreendimentoId}/exportar`, {
+        params: activeTabela ? { tabelaId: activeTabela } : {},
+        responseType: 'blob',
+      })
+      const url = URL.createObjectURL(res.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `tabela-venda-${empreendimentoId}.csv`
+      document.body.appendChild(a); a.click(); a.remove()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao exportar a tabela.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   async function loadTabelas() {
     try {
@@ -87,7 +163,14 @@ export default function TabelaPrecos({ empreendimentoId }) {
     <div className="tabela-precos">
       <div className="tabela-precos-header">
         <h3>Tabelas de Venda</h3>
-        <Button size="sm" onClick={() => setShowModal(true)}>+ Nova Tabela</Button>
+        <div className="tp-header-actions">
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={onArquivo} />
+          <Button size="sm" variant="outline" onClick={abrirImport}>Importar planilha</Button>
+          {tabelas.length > 0 && (
+            <Button size="sm" variant="outline" onClick={exportar} loading={exporting}>Exportar CSV</Button>
+          )}
+          <Button size="sm" onClick={() => setShowModal(true)}>+ Nova Tabela</Button>
+        </div>
       </div>
 
       {tabelas.length === 0 ? (
@@ -175,6 +258,82 @@ export default function TabelaPrecos({ empreendimentoId }) {
             <Button type="submit" loading={saving}>Criar Tabela</Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={importOpen} onClose={() => setImportOpen(false)} title="Importar tabela de venda (formato Anapro)" size="lg">
+        {importResult ? (
+          <div className="tp-import-result">
+            <p className="tp-import-ok">Tabela <strong>{importResult.nome}</strong> importada.</p>
+            <ul>
+              <li>{importResult.seriesCriadas} séries por unidade criadas</li>
+              <li>{importResult.unidadesCasadas} unidades casadas · {importResult.unidadesAtualizadas} tiveram área/valor atualizados</li>
+              {importResult.naoEncontradas?.length > 0 && (
+                <li className="tp-import-warn">{importResult.naoEncontradas.length} códigos da planilha não bateram com nenhuma unidade: {importResult.naoEncontradas.slice(0, 20).join(', ')}{importResult.naoEncontradas.length > 20 ? '…' : ''}</li>
+              )}
+            </ul>
+            <div className="tp-import-actions"><Button onClick={() => setImportOpen(false)}>Fechar</Button></div>
+          </div>
+        ) : (
+          <div className="tp-import">
+            <p className="tp-import-help">
+              Suba a planilha exportada do Anapro (<strong>.xlsx</strong> ou <strong>.csv</strong>). Cada linha é uma unidade;
+              as colunas de série (ex.: <em>Mensais x 20 1º em 12/2026</em>) viram as condições de pagamento.
+              Casa pelo número/identificação da unidade — as unidades já precisam estar cadastradas.
+            </p>
+
+            <div className="tp-import-file">
+              <Button variant="secondary" onClick={() => fileRef.current?.click()}>Escolher arquivo…</Button>
+              {parsed && <span>{parsed.linhas.length} unidades · {parsed.series.length} séries</span>}
+            </div>
+
+            {importErr && <p className="tp-import-erro">{importErr}</p>}
+
+            {parsed && (
+              <>
+                <div className="tp-import-series">
+                  {parsed.series.map((s, i) => (
+                    <span key={i} className="tp-import-chip">{s.nome} <em>{s.tipo} · {s.quantidade}x · {String(s.inicioMes).padStart(2, '0')}/{s.inicioAno}</em></span>
+                  ))}
+                </div>
+
+                <div className="tp-table-wrap tp-import-preview">
+                  <table className="tp-table">
+                    <thead><tr><th>Unidade</th><th>Área</th><th>Comissão</th>{parsed.colunasSerie.map((c) => <th key={c}>{c}</th>)}<th>Valor total</th></tr></thead>
+                    <tbody>
+                      {parsed.linhas.slice(0, 8).map((l, i) => (
+                        <tr key={i}>
+                          <td>{l.unidade}</td>
+                          <td>{l.area ?? '—'}</td>
+                          <td>{money(l.comissao)}</td>
+                          {parsed.colunasSerie.map((c) => <td key={c}>{money(l.valores[c])}</td>)}
+                          <td>{money(l.valorTotal)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {parsed.linhas.length > 8 && <p className="tp-import-more">+ {parsed.linhas.length - 8} unidades</p>}
+                </div>
+
+                <div className="tp-import-form">
+                  <Input label="Nome da tabela" value={importForm.nome} onChange={(e) => setImportForm((f) => ({ ...f, nome: e.target.value }))} fullWidth />
+                  <div className="tp-import-datas">
+                    <Input label="Validade início" type="date" value={importForm.validadeInicio} onChange={(e) => setImportForm((f) => ({ ...f, validadeInicio: e.target.value }))} />
+                    <Input label="Validade fim" type="date" value={importForm.validadeFim} onChange={(e) => setImportForm((f) => ({ ...f, validadeFim: e.target.value }))} />
+                  </div>
+                  <label className="tp-import-check">
+                    <input type="checkbox" checked={importForm.atualizarUnidades} onChange={(e) => setImportForm((f) => ({ ...f, atualizarUnidades: e.target.checked }))} />
+                    Atualizar área privativa e valor total das unidades com os dados da planilha
+                  </label>
+                </div>
+
+                <div className="tp-import-actions">
+                  <Button variant="ghost" onClick={() => setImportOpen(false)}>Cancelar</Button>
+                  <Button onClick={confirmarImport} loading={importBusy} disabled={!importForm.nome.trim()}>Importar {parsed.linhas.length} unidades</Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   )
