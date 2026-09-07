@@ -95,10 +95,25 @@ function valorPresenteFaseado(fluxo, { antes, apos, dataHabitese, dataBase }) {
   );
 }
 
+// Escolhe as séries que valem para a unidade: se a tabela tem séries por unidade
+// (unidadeId preenchido, caso do importador Anapro), usa as dessa unidade; senão
+// usa as séries genéricas (unidadeId null); em último caso, todas.
+function seriesDaUnidade(series, unidadeId) {
+  const arr = series || [];
+  if (unidadeId != null) {
+    const daUnidade = arr.filter((s) => s.unidadeId === unidadeId);
+    if (daUnidade.length) return daUnidade;
+  }
+  const genericas = arr.filter((s) => s.unidadeId == null);
+  return genericas.length ? genericas : arr;
+}
+
 // Converte séries "cruas" (da tabela ou da proposta) para o formato interno,
 // escalonando os valores da tabela para o valor real da unidade.
 function resolverTabela(tabela, unidade, empreendimento, dataBase = new Date()) {
-  const seriesRaw = (tabela?.series || []).slice().sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+  const seriesRaw = seriesDaUnidade(tabela?.series, unidade?.id)
+    .slice()
+    .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
   const somaSeries = seriesRaw.reduce((s, x) => s + round2(x.valor) * (Number(x.quantidade) || 1), 0);
   const alvo = Number(unidade?.valorTotal) || somaSeries;
   const fator = somaSeries ? alvo / somaSeries : 1;
@@ -467,6 +482,7 @@ module.exports = {
   montarFluxoDetalhado,
   valorPresente,
   valorPresenteFaseado,
+  seriesDaUnidade,
   resolverTabela,
   analisar,
 };

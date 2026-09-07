@@ -5,6 +5,7 @@ const {
   valorPresente,
   valorPresenteFaseado,
   montarFluxo,
+  seriesDaUnidade,
   resolverTabela,
   analisar,
 } = require('../../src/utils/analise-proposta');
@@ -47,7 +48,40 @@ describe('helpers', () => {
   });
 });
 
+describe('seriesDaUnidade', () => {
+  const series = [
+    { nome: 'A', unidadeId: null, ordem: 0 },
+    { nome: 'B', unidadeId: null, ordem: 1 },
+    { nome: 'A', unidadeId: 7, ordem: 0 },
+    { nome: 'B', unidadeId: 7, ordem: 1 },
+    { nome: 'A', unidadeId: 9, ordem: 0 },
+  ];
+  it('usa as séries da própria unidade quando existem (tabela por unidade)', () => {
+    expect(seriesDaUnidade(series, 7).map((s) => s.unidadeId)).toEqual([7, 7]);
+  });
+  it('cai nas séries genéricas quando a unidade não tem as suas', () => {
+    expect(seriesDaUnidade(series, 123).every((s) => s.unidadeId == null)).toBe(true);
+  });
+  it('sem unidade, usa as genéricas', () => {
+    expect(seriesDaUnidade(series, null)).toHaveLength(2);
+  });
+});
+
 describe('resolverTabela', () => {
+  it('com tabela por unidade, resolve só as séries daquela unidade', () => {
+    const tabelaPorUnidade = {
+      id: 5,
+      series: [
+        { nome: 'Ato', tipo: 'ato', inicioMes: 1, inicioAno: 2026, valor: 20000, quantidade: 1, periodicidade: 1, unidadeId: 10, ordem: 0 },
+        { nome: 'Fin', tipo: 'financiamento', inicioMes: 1, inicioAno: 2029, valor: 80000, quantidade: 1, periodicidade: 1, unidadeId: 10, ordem: 1 },
+        { nome: 'Ato', tipo: 'ato', inicioMes: 1, inicioAno: 2026, valor: 999999, quantidade: 1, periodicidade: 1, unidadeId: 11, ordem: 0 },
+      ],
+    };
+    const r = resolverTabela(tabelaPorUnidade, { id: 10, valorTotal: 100000, area: 50 }, empreendimento, dataBase);
+    expect(r.total).toBe(100000);
+    expect(r.series).toHaveLength(2);
+  });
+
   it('escala as séries para o valor da unidade e fecha o total', () => {
     const u = { valorTotal: 200000, area: 50 };
     const r = resolverTabela(tabelaDemo, u, empreendimento, dataBase);

@@ -247,6 +247,7 @@ model Unidade {
   quartos          Int?
   suites           Int?
   vagas            Int?
+  comissaoCorretagem Float? // R$ da comissão de corretagem embutida no negócio (Anapro: valor total − comissão = valor contratual)
   propostas        Proposta[]
   visitas          Visita[]
   reservas         ReservaUnidade[]

@@ -4,6 +4,7 @@ const authenticate = require('../middlewares/auth');
 const prisma = require('../prisma/client');
 const { getAccessibleEmpreendimento, getManageableEmpreendimento } = require('../utils/empreendimento-access');
 const { resolverTabela } = require('../utils/analise-proposta');
+const { casarUnidades, montarSeriesPorUnidade, normalizarSerieDef } = require('../utils/tabela-import');
 
 const TIPOS_SERIE = ['ato', 'pontual', 'mensal', 'semestral', 'anual', 'unica', 'financiamento'];
 
@@ -76,6 +77,130 @@ router.get('/tabela/:id/resolvida', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Erro resolver tabela:', error);
     res.status(500).json({ error: 'Erro ao resolver tabela' });
+  }
+});
+
+// POST /tabela-preco/importar - importa a grade por unidade (formato Anapro).
+// A planilha é lida no frontend e chega aqui como JSON: { series[], linhas[] }.
+router.post('/importar', authenticate, async (req, res) => {
+  try {
+    const { empreendimentoId, nome, validadeInicio, validadeFim, atualizarUnidades = true, series, linhas } = req.body;
+    if (!empreendimentoId) return res.status(400).json({ error: 'empreendimentoId é obrigatório' });
+    if (!Array.isArray(series) || !series.length) return res.status(400).json({ error: 'Nenhuma série identificada na planilha' });
+    if (!Array.isArray(linhas) || !linhas.length) return res.status(400).json({ error: 'Nenhuma linha de unidade na planilha' });
+    if (!await getManageableEmpreendimento(req.user, empreendimentoId)) return res.status(404).json({ error: 'Empreendimento não encontrado ou não gerenciável' });
+
+    const empId = parseInt(empreendimentoId, 10);
+    const serieDefs = series.map(normalizarSerieDef);
+    const unidades = await prisma.unidade.findMany({
+      where: { empreendimentoId: empId },
+      select: { id: true, numero: true, identificacao: true, juros: true },
+    });
+    const { casadas, naoEncontradas } = casarUnidades(linhas, unidades);
+    if (!casadas.length) {
+      return res.status(422).json({ error: 'Nenhuma unidade da planilha casou com as unidades cadastradas neste empreendimento', naoEncontradas });
+    }
+
+    const seriesRows = montarSeriesPorUnidade(casadas, serieDefs);
+    const nomeTab = String(nome || 'Tabela importada').trim() || 'Tabela importada';
+
+    // Substitui uma importação anterior de mesmo nome (reimportar = atualizar).
+    const tabela = await prisma.$transaction(async (tx) => {
+      await tx.tabelaPreco.deleteMany({ where: { empreendimentoId: empId, nome: nomeTab } });
+      return tx.tabelaPreco.create({
+        data: {
+          empreendimentoId: empId,
+          nome: nomeTab,
+          grupo: 'padrao',
+          modelo: 'modelo_1',
+          validadeInicio: validadeInicio ? new Date(validadeInicio) : null,
+          validadeFim: validadeFim ? new Date(validadeFim) : null,
+          series: { create: seriesRows },
+        },
+        select: { id: true },
+      });
+    }, { timeout: 30000 });
+
+    // Atualiza área / valor / comissão das unidades casadas (fora da transação, em lote).
+    let atualizadas = 0;
+    if (atualizarUnidades) {
+      const updates = casadas.map(({ linha, unidade }) => {
+        const data = {};
+        const area = Number(linha.area);
+        const total = Number(linha.valorTotal);
+        const comissao = Number(linha.comissao);
+        if (linha.area != null && Number.isFinite(area) && area > 0) data.area = area;
+        if (linha.valorTotal != null && Number.isFinite(total) && total > 0) {
+          data.valorTotal = total;
+          data.valorBase = Math.max(0, total - (Number(unidade.juros) || 0));
+        }
+        if (linha.comissao != null && Number.isFinite(comissao)) data.comissaoCorretagem = comissao;
+        return Object.keys(data).length
+          ? prisma.unidade.update({ where: { id: unidade.id }, data }).then(() => { atualizadas += 1; })
+          : Promise.resolve();
+      });
+      await Promise.all(updates);
+    }
+
+    res.status(201).json({
+      tabelaId: tabela.id,
+      nome: nomeTab,
+      seriesCriadas: seriesRows.length,
+      unidadesCasadas: casadas.length,
+      unidadesAtualizadas: atualizadas,
+      naoEncontradas,
+      totalLinhas: linhas.length,
+    });
+  } catch (error) {
+    console.error('Erro importar tabela:', error);
+    res.status(500).json({ error: 'Erro ao importar a tabela', details: error.message });
+  }
+});
+
+// GET /tabela-preco/:empreendimentoId/exportar?tabelaId= - CSV no layout Anapro (uma linha por unidade).
+router.get('/:empreendimentoId/exportar', authenticate, async (req, res) => {
+  try {
+    const empId = parseInt(req.params.empreendimentoId, 10);
+    if (!await getAccessibleEmpreendimento(req.user, empId)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
+    const tabela = req.query.tabelaId
+      ? await prisma.tabelaPreco.findFirst({ where: { id: Number(req.query.tabelaId), empreendimentoId: empId }, include: { series: { orderBy: { ordem: 'asc' } } } })
+      : await prisma.tabelaPreco.findFirst({ where: { empreendimentoId: empId, ativa: true }, include: { series: { orderBy: { ordem: 'asc' } } }, orderBy: { createdAt: 'desc' } });
+    if (!tabela) return res.status(404).json({ error: 'Nenhuma tabela de venda para exportar' });
+
+    const unidades = await prisma.unidade.findMany({ where: { empreendimentoId: empId }, orderBy: [{ andar: 'asc' }, { numero: 'asc' }] });
+    const colunas = [...new Set(tabela.series.slice().sort((a, b) => a.ordem - b.ordem).map((s) => s.nome))];
+    const valorSerie = (nome, unidadeId) =>
+      tabela.series.find((s) => s.nome === nome && s.unidadeId === unidadeId)
+      || tabela.series.find((s) => s.nome === nome && s.unidadeId == null);
+
+    const numBR = (v) => (v == null || v === '' || Number.isNaN(Number(v)) ? '' : Number(v).toFixed(2).replace('.', ','));
+    const cell = (v) => {
+      const s = String(v ?? '');
+      return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const header = ['Unidade', 'Area privativa total', 'Comissao', ...colunas, 'Valor contratual', 'Valor total do negocio'];
+    const linhas = unidades.map((u) => {
+      const cols = colunas.map((nome) => numBR(valorSerie(nome, u.id)?.valor));
+      const total = Number(u.valorTotal) || 0;
+      const comissao = Number(u.comissaoCorretagem) || 0;
+      return [
+        u.identificacao || u.numero,
+        numBR(u.area),
+        numBR(u.comissaoCorretagem),
+        ...cols,
+        numBR(total - comissao),
+        numBR(total),
+      ];
+    });
+
+    const csv = [header, ...linhas].map((r) => r.map(cell).join(';')).join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="tabela-venda-emp-${empId}.csv"`);
+    res.send("\uFEFF" + csv); // BOM para o Excel pt-BR abrir com acentos corretos
+  } catch (error) {
+    console.error('Erro exportar tabela:', error);
+    res.status(500).json({ error: 'Erro ao exportar a tabela' });
   }
 });
 
