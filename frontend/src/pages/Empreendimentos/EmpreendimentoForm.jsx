@@ -5,6 +5,7 @@ import Card from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import { Input, Select, Textarea } from '../../components/ui/Input'
 import { AuthContext } from '../../contexts/AuthContext'
+import MiniMap from '../../components/shared/MiniMap'
 import './EmpreendimentoForm.css'
 
 const MODELOS_TABELA = [
@@ -41,6 +42,8 @@ export default function EmpreendimentoForm() {
   const [useTabelaPreco, setUseTabelaPreco] = useState(false)
   const [importingTabelaCsv, setImportingTabelaCsv] = useState(false)
   const [csvResumo, setCsvResumo] = useState(null)
+  const [geocoding, setGeocoding] = useState(false)
+  const [geoMsg, setGeoMsg] = useState('')
   const [tabelaPrecoForm, setTabelaPrecoForm] = useState({
     nome: 'Tabela Padrão',
     grupo: 'padrao',
@@ -65,6 +68,9 @@ export default function EmpreendimentoForm() {
     bairro: '',
     cidade: '',
     estado: 'SP',
+    endereco: '',
+    latitude: '',
+    longitude: '',
     imagemUrl: '',
     dataLancamento: '',
     dataPrevisaoConstrucao: '',
@@ -171,6 +177,30 @@ export default function EmpreendimentoForm() {
       navigate('/dashboard/empreendimentos')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const enderecoBusca = () => [formData.endereco, formData.bairro, formData.cidade, formData.estado, 'Brasil']
+    .map((p) => String(p || '').trim()).filter(Boolean).join(', ')
+
+  // Preenche latitude/longitude a partir do endereço (OpenStreetMap / Nominatim).
+  const buscarCoordenadas = async () => {
+    const q = enderecoBusca()
+    if (!q) { setGeoMsg('Preencha endereço/bairro/cidade primeiro.'); return }
+    setGeocoding(true); setGeoMsg('')
+    try {
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, { headers: { Accept: 'application/json' } })
+      const arr = await resp.json()
+      if (Array.isArray(arr) && arr[0]) {
+        setFormData(prev => ({ ...prev, latitude: Number(arr[0].lat).toFixed(7), longitude: Number(arr[0].lon).toFixed(7) }))
+        setGeoMsg('Coordenadas preenchidas pelo endereço. Confira o marcador no mapa.')
+      } else {
+        setGeoMsg('Endereço não encontrado. Ajuste o endereço ou preencha latitude/longitude na mão.')
+      }
+    } catch {
+      setGeoMsg('Não consegui buscar agora. Preencha latitude/longitude na mão ou use o link "abrir no mapa".')
+    } finally {
+      setGeocoding(false)
     }
   }
 
@@ -820,6 +850,37 @@ export default function EmpreendimentoForm() {
                   ))}
                 </Select>
               </div>
+              <div className="form-field form-field-full">
+                <Input
+                  label="Endereço (rua e número)"
+                  name="endereco"
+                  value={formData.endereco || ''}
+                  onChange={handleChange}
+                  placeholder="Ex: Av. Brasil, 1500"
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="form-field">
+                <Input label="Latitude" name="latitude" type="number" step="any" value={formData.latitude ?? ''} onChange={handleChange} placeholder="-23.5678901" disabled={loading} />
+              </div>
+              <div className="form-field">
+                <Input label="Longitude" name="longitude" type="number" step="any" value={formData.longitude ?? ''} onChange={handleChange} placeholder="-46.6543210" disabled={loading} />
+              </div>
+              <div className="form-field form-field-full emp-geo-actions">
+                <Button type="button" variant="secondary" onClick={buscarCoordenadas} loading={geocoding} disabled={loading}>
+                  Buscar coordenadas pelo endereço
+                </Button>
+                <a className="emp-geo-link" href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(enderecoBusca())}`} target="_blank" rel="noreferrer">
+                  abrir no mapa
+                </a>
+                {geoMsg && <span className="emp-geo-msg">{geoMsg}</span>}
+              </div>
+              <div className="form-field form-field-full">
+                <MiniMap latitude={parseFloat(formData.latitude) || null} longitude={parseFloat(formData.longitude) || null} endereco={enderecoBusca()} height="220px" />
+                <p className="emp-geo-hint">Esse é o mapinha que aparece na aba “Visão geral” do empreendimento.</p>
+              </div>
+
               <div className="form-field">
                 <Select label="Status comercial" name="status" value={formData.status} onChange={handleChange}><option value="planejamento">Planejamento</option><option value="construcao">Em construção</option><option value="pronto">Pronto</option><option value="concluido">Concluído</option></Select>
               </div>

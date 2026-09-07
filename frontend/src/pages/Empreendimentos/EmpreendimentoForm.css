@@ -319,3 +319,9 @@
     width: 100%;
   }
 }
+
+/* Localização: busca de coordenadas + preview do mapa */
+.emp-geo-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.emp-geo-link { font-size: .82rem; color: var(--primary, #d4af37); text-decoration: underline; }
+.emp-geo-msg { font-size: .8rem; color: var(--text-secondary); }
+.emp-geo-hint { font-size: .78rem; color: var(--text-secondary); margin: 6px 0 0; }
