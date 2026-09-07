@@ -82,17 +82,17 @@ export default function TabelaPrecos({ empreendimentoId }) {
     }
   }
 
-  async function exportar() {
+  async function exportar({ modelo = false } = {}) {
     setExporting(true)
     try {
-      const res = await api.get(`/tabela-preco/${empreendimentoId}/exportar`, {
-        params: activeTabela ? { tabelaId: activeTabela } : {},
-        responseType: 'blob',
-      })
+      const params = {}
+      if (modelo) params.modelo = 1
+      else if (activeTabela) params.tabelaId = activeTabela
+      const res = await api.get(`/tabela-preco/${empreendimentoId}/exportar`, { params, responseType: 'blob' })
       const url = URL.createObjectURL(res.data)
       const a = document.createElement('a')
       a.href = url
-      a.download = `tabela-venda-${empreendimentoId}.csv`
+      a.download = `${modelo ? 'modelo-tabela-venda' : 'tabela-venda'}-${empreendimentoId}.csv`
       document.body.appendChild(a); a.click(); a.remove()
       URL.revokeObjectURL(url)
     } catch (err) {
@@ -165,9 +165,12 @@ export default function TabelaPrecos({ empreendimentoId }) {
         <h3>Tabelas de Venda</h3>
         <div className="tp-header-actions">
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={onArquivo} />
+          <Button size="sm" variant="outline" onClick={() => exportar({ modelo: true })} loading={exporting} title="CSV com as unidades deste empreendimento e as colunas de série em branco, pronto para preencher e reimportar">
+            Baixar modelo (unidades)
+          </Button>
           <Button size="sm" variant="outline" onClick={abrirImport}>Importar planilha</Button>
           {tabelas.length > 0 && (
-            <Button size="sm" variant="outline" onClick={exportar} loading={exporting}>Exportar CSV</Button>
+            <Button size="sm" variant="outline" onClick={() => exportar()} loading={exporting}>Exportar CSV</Button>
           )}
           <Button size="sm" onClick={() => setShowModal(true)}>+ Nova Tabela</Button>
         </div>

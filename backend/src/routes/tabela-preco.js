@@ -157,46 +157,76 @@ router.post('/importar', authenticate, async (req, res) => {
   }
 });
 
-// GET /tabela-preco/:empreendimentoId/exportar?tabelaId= - CSV no layout Anapro (uma linha por unidade).
+// GET /tabela-preco/:empreendimentoId/exportar?tabelaId=&modelo=1
+// CSV no layout Anapro (uma linha por unidade). Sem tabela (ou modelo=1) sai um
+// MODELO já com as unidades do empreendimento e as colunas de série em branco.
 router.get('/:empreendimentoId/exportar', authenticate, async (req, res) => {
   try {
     const empId = parseInt(req.params.empreendimentoId, 10);
     if (!await getAccessibleEmpreendimento(req.user, empId)) return res.status(404).json({ error: 'Empreendimento não encontrado' });
-    const tabela = req.query.tabelaId
-      ? await prisma.tabelaPreco.findFirst({ where: { id: Number(req.query.tabelaId), empreendimentoId: empId }, include: { series: { orderBy: { ordem: 'asc' } } } })
-      : await prisma.tabelaPreco.findFirst({ where: { empreendimentoId: empId, ativa: true }, include: { series: { orderBy: { ordem: 'asc' } } }, orderBy: { createdAt: 'desc' } });
-    if (!tabela) return res.status(404).json({ error: 'Nenhuma tabela de venda para exportar' });
+    const empreendimento = await prisma.empreendimento.findUnique({ where: { id: empId } });
+    if (!empreendimento) return res.status(404).json({ error: 'Empreendimento não encontrado' });
+
+    const forcarModelo = ['1', 'true', 'modelo'].includes(String(req.query.modelo || ''));
+    const tabela = forcarModelo
+      ? null
+      : req.query.tabelaId
+        ? await prisma.tabelaPreco.findFirst({ where: { id: Number(req.query.tabelaId), empreendimentoId: empId }, include: { series: { orderBy: { ordem: 'asc' } } } })
+        : await prisma.tabelaPreco.findFirst({ where: { empreendimentoId: empId, ativa: true }, include: { series: { orderBy: { ordem: 'asc' } } }, orderBy: { createdAt: 'desc' } });
 
     const unidades = await prisma.unidade.findMany({ where: { empreendimentoId: empId }, orderBy: [{ andar: 'asc' }, { numero: 'asc' }] });
-    const colunas = [...new Set(tabela.series.slice().sort((a, b) => a.ordem - b.ordem).map((s) => s.nome))];
-    const valorSerie = (nome, unidadeId) =>
-      tabela.series.find((s) => s.nome === nome && s.unidadeId === unidadeId)
-      || tabela.series.find((s) => s.nome === nome && s.unidadeId == null);
 
     const numBR = (v) => (v == null || v === '' || Number.isNaN(Number(v)) ? '' : Number(v).toFixed(2).replace('.', ','));
     const cell = (v) => {
       const s = String(v ?? '');
       return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
+    const mmYYYY = (d, addMonths = 0) => {
+      const base = d ? new Date(d) : new Date();
+      base.setMonth(base.getMonth() + addMonths);
+      return `${String(base.getMonth() + 1).padStart(2, '0')}/${base.getFullYear()}`;
+    };
+
+    let colunas;
+    let valorCelula; // (unidade, nomeColuna) -> string pt-BR ou ''
+    if (tabela) {
+      colunas = [...new Set(tabela.series.slice().sort((a, b) => a.ordem - b.ordem).map((s) => s.nome))];
+      const achar = (nome, unidadeId) =>
+        tabela.series.find((s) => s.nome === nome && s.unidadeId === unidadeId)
+        || tabela.series.find((s) => s.nome === nome && s.unidadeId == null);
+      valorCelula = (u, nome) => numBR(achar(nome, u.id)?.valor);
+    } else {
+      const inicio = empreendimento.dataLancamento || new Date();
+      const habite = empreendimento.dataPrevisaoConstrucao || inicio;
+      colunas = [
+        `Entrada x 1 1º em ${mmYYYY(inicio)}`,
+        `30dd x 1 1º em ${mmYYYY(inicio, 1)}`,
+        `60dd x 1 1º em ${mmYYYY(inicio, 2)}`,
+        `Mensais x 20 1º em ${mmYYYY(inicio, 3)}`,
+        `Intermediaria x 2 1º em ${mmYYYY(habite)}`,
+        `Financiamento x 1 1º em ${mmYYYY(habite)}`,
+      ];
+      valorCelula = () => '';
+    }
 
     const header = ['Unidade', 'Area privativa total', 'Comissao', ...colunas, 'Valor contratual', 'Valor total do negocio'];
     const linhas = unidades.map((u) => {
-      const cols = colunas.map((nome) => numBR(valorSerie(nome, u.id)?.valor));
       const total = Number(u.valorTotal) || 0;
       const comissao = Number(u.comissaoCorretagem) || 0;
       return [
         u.identificacao || u.numero,
         numBR(u.area),
         numBR(u.comissaoCorretagem),
-        ...cols,
-        numBR(total - comissao),
+        ...colunas.map((nome) => valorCelula(u, nome)),
+        numBR(comissao ? total - comissao : ''),
         numBR(total),
       ];
     });
 
     const csv = [header, ...linhas].map((r) => r.map(cell).join(';')).join('\r\n');
+    const sufixo = tabela ? 'tabela-venda' : 'modelo-tabela-venda';
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="tabela-venda-emp-${empId}.csv"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${sufixo}-emp-${empId}.csv"`);
     res.send("\uFEFF" + csv); // BOM para o Excel pt-BR abrir com acentos corretos
   } catch (error) {
     console.error('Erro exportar tabela:', error);
