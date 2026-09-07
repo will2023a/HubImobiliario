@@ -447,11 +447,18 @@ model ParametrosAnalise {
   prazoFinanciamentoMax  Int? // meses
   captacaoAvistaMin      Float? // %
   captacaoAteHabiteseMin Float? // %
-  captacaoMensalMin      Float? // %
+  captacaoAteHabiteseMenos1Min Float? // % mín. de captação até o mês anterior ao habite-se
+  captacaoMensalMin      Float? // % (bloco mensal inteiro — legado, não usado nos critérios)
+  captacaoMensalMaxParcela Float? // % máx. de uma parcela mensal sobre o total
   diferencaAvMax         Float? // % de diferença tolerada no valor à vista
   descontoNominalMax     Float? // % de desconto nominal máximo
   exigirIntercalacao     Boolean        @default(false)
-  taxaAtratividade       Float? // % a.m. usada no valor presente / equivalência de fluxo
+  taxaAtratividade       Float? // % a.m. — legado / fallback para as taxas antes/após habite-se
+  taxaAtratividadeAntesHabitese Float? // % a.m. aplicada às parcelas anteriores ao habite-se
+  taxaAtratividadeAposHabitese Float? // % a.m. aplicada às parcelas após o habite-se
+  grl                    Float? // % GRL (ganho real de longo prazo), exibido nos indicadores
+  taxaDescontoFluxo      Float? // % a.m. do PV líquido (custo de capital / TMA da construtora)
+  dataReferenciaCaptacao DateTime? // data usada na linha "captação até a data" do comparativo
   toleranciaGeral        Float          @default(0) // % de tolerância aplicada aos limites
   toleranciasJson        Json? // tolerância fina por critério (opcional)
   formasPagamento        Json? // tipos de série aceitos na proposta (vazio/null = todos)

@@ -2,11 +2,18 @@
 // Módulo puro: recebe dados já carregados e devolve os critérios calculados.
 // Não acessa banco nem faz I/O.
 
-const AV_TIPOS = ['ato', 'pontual'];
+// AV (à vista): no Anapro só a entrada/ato entra no "valor à vista". As pontuais
+// (30/60/90dd) contam como captação, mas não compõem o AV.
+const AV_TIPOS = ['ato'];
 const INTERCALADAS_TIPOS = ['semestral', 'anual'];
 
 function round2(value) {
   return Math.round((Number(value) || 0) * 100) / 100;
+}
+
+function num(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
 }
 
 function pct(parte, total) {
@@ -16,6 +23,10 @@ function pct(parte, total) {
 
 function dateFromMesAno(mes, ano) {
   return new Date(Number(ano), Number(mes) - 1, 1);
+}
+
+function startOfMonth(date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
 function addMonths(date, months) {
@@ -63,6 +74,21 @@ function valorPresente(fluxo, taxaMensalPercent, dataBase) {
   if (!i) return round2(fluxo.reduce((s, p) => s + p.valor, 0));
   return round2(
     fluxo.reduce((soma, parcela) => {
+      const n = Math.max(0, mesesEntre(dataBase, parcela.data));
+      return soma + parcela.valor / (1 + i) ** n;
+    }, 0)
+  );
+}
+
+// VP com taxa distinta antes/depois do habite-se: cada parcela é descontada pela taxa
+// da sua fase. Aproxima o fluxo do Anapro quando há duas taxas de atratividade.
+function valorPresenteFaseado(fluxo, { antes, apos, dataHabitese, dataBase }) {
+  const ia = (Number(antes) || 0) / 100;
+  const ip = (Number(apos) || 0) / 100;
+  if (!ia && !ip) return round2(fluxo.reduce((s, p) => s + p.valor, 0));
+  return round2(
+    fluxo.reduce((soma, parcela) => {
+      const i = dataHabitese && parcela.data >= dataHabitese ? ip : ia;
       const n = Math.max(0, mesesEntre(dataBase, parcela.data));
       return soma + parcela.valor / (1 + i) ** n;
     }, 0)
@@ -124,6 +150,9 @@ function metricas(series, { dataHabitese, area, dataBase }) {
   const somaTipo = (tipos) => round2(norm.filter((s) => tipos.includes(s.tipo)).reduce((s, x) => s + x.total, 0));
   const av = somaTipo(AV_TIPOS);
   const mensais = somaTipo(['mensal']);
+  // Valor de UMA parcela mensal (a maior, quando há mais de uma série mensal) — é o que
+  // o Anapro mostra na linha "% de captação mensal".
+  const mensalParcela = round2(norm.filter((s) => s.tipo === 'mensal').reduce((mx, s) => Math.max(mx, s.valor), 0));
 
   const ateData = (limite) => (limite
     ? round2(fluxo.filter((p) => p.data <= limite).reduce((s, p) => s + p.valor, 0))
@@ -131,14 +160,20 @@ function metricas(series, { dataHabitese, area, dataBase }) {
   const ateHabitese = dataHabitese ? ateData(dataHabitese) : total;
   const aposHabitese = round2(total - ateHabitese);
 
-  const metadeObra = dataHabitese
-    ? new Date(dataBase.getTime() + (dataHabitese.getTime() - dataBase.getTime()) / 2)
+  // Captação até o mês anterior ao habite-se (Anapro: "habite-se − 1").
+  const ateHabiteseMenos1 = dataHabitese
+    ? round2(fluxo.filter((p) => p.data < startOfMonth(dataHabitese)).reduce((s, p) => s + p.valor, 0))
     : null;
 
-  // Prazo de financiamento: meses do habite-se até a última parcela de financiamento.
-  const parcelasFin = fluxo.filter((p) => p.tipo === 'financiamento');
-  const prazoFinanciamento = parcelasFin.length && dataHabitese
-    ? Math.max(0, Math.round(mesesEntre(dataHabitese, parcelasFin[parcelasFin.length - 1].data)))
+  // Metade do prazo de obra: da 1ª parcela do fluxo até o habite-se.
+  const inicioObra = fluxo.length ? fluxo[0].data : dataBase;
+  const metadeObraData = dataHabitese
+    ? new Date(inicioObra.getTime() + (dataHabitese.getTime() - inicioObra.getTime()) / 2)
+    : null;
+
+  // Prazo de financiamento (Anapro): meses da 1ª à última parcela do fluxo.
+  const prazoFinanciamento = fluxo.length >= 2
+    ? Math.max(0, Math.round(mesesEntre(fluxo[0].data, fluxo[fluxo.length - 1].data)))
     : 0;
 
   const temIntercalacao = norm.some((s) => INTERCALADAS_TIPOS.includes(s.tipo) && s.quantidade > 0)
@@ -150,15 +185,20 @@ function metricas(series, { dataHabitese, area, dataBase }) {
     avPct: pct(av, total),
     mensais,
     mensaisPct: pct(mensais, total),
+    mensalParcela,
+    mensalParcelaPct: pct(mensalParcela, total),
     ateHabitese,
     ateHabitesePct: pct(ateHabitese, total),
+    ateHabiteseMenos1,
+    ateHabiteseMenos1Pct: ateHabiteseMenos1 == null ? null : pct(ateHabiteseMenos1, total),
     aposHabitese,
     aposHabitesePct: pct(aposHabitese, total),
-    metadeObra: metadeObra ? ateData(metadeObra) : 0,
+    metadeObra: metadeObraData ? ateData(metadeObraData) : 0,
+    metadeObraData,
     prazoFinanciamento,
     temIntercalacao,
     valorM2: area ? round2(total / area) : null,
-    valorM2Av: area ? round2(av / area) : null,
+    valorM2Av: area ? round2(total / area) : null,
     fluxo,
   };
 }
@@ -169,7 +209,7 @@ function criterio(nome, label, tabela, proposta, limite, tolerancia, ok, detalhe
 
 // Fluxo mês a mês da proposta (estilo "Fluxo da proposta de compra e venda" do Anapro).
 // Agrupa as parcelas por nome de série e devolve o acumulado e o % sobre tabela/proposta.
-function montarFluxoDetalhado(series, { totalTabela = 0 } = {}) {
+function montarFluxoDetalhado(series, { totalTabela = 0, inicioDaPerda = null } = {}) {
   const norm = (series || []).map((s) => ({
     ...s,
     nome: s.nome || 'Série',
@@ -181,6 +221,10 @@ function montarFluxoDetalhado(series, { totalTabela = 0 } = {}) {
     expandirSerie(s).map((p) => ({ ...p, nomeSerie: s.nome }))
   );
   const total = round2(parcelas.reduce((acc, p) => acc + p.valor, 0));
+
+  const perdaChave = inicioDaPerda
+    ? `${new Date(inicioDaPerda).getFullYear()}-${String(new Date(inicioDaPerda).getMonth() + 1).padStart(2, '0')}`
+    : null;
 
   const porChave = new Map();
   for (const p of parcelas) {
@@ -203,6 +247,7 @@ function montarFluxoDetalhado(series, { totalTabela = 0 } = {}) {
         acumulado,
         pctSobreTabela: totalTabela ? round2((acumulado / totalTabela) * 100) : 0,
         pctSobreProposta: total ? round2((acumulado / total) * 100) : 0,
+        perda: perdaChave ? chave >= perdaChave : false,
       };
     });
 
@@ -222,25 +267,44 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
   const mProp = metricas(propostaSeries || [], ctx);
 
   const tol = Number(parametros?.toleranciaGeral) || 0;
-  const taxa = Number(parametros?.taxaAtratividade) || 0;
 
-  const vpTabela = valorPresente(mTab.fluxo, taxa, dataBase);
-  const vpProposta = valorPresente(mProp.fluxo, taxa, dataBase);
+  // Taxas de atratividade: antes/após habite-se, com fallback na taxa única legada.
+  const taxaAntes = num(parametros?.taxaAtratividadeAntesHabitese);
+  const taxaApos = num(parametros?.taxaAtratividadeAposHabitese);
+  const taxaLegada = num(parametros?.taxaAtratividade);
+  const taxaEquiv = taxaAntes || taxaApos || taxaLegada || 0;
+  // A construtora "desativa" a equivalência de fluxo zerando as taxas de atratividade.
+  const equivalenciaDesativada = !(taxaAntes || taxaApos || taxaLegada);
+
+  const vpArgs = { antes: taxaAntes || taxaLegada, apos: taxaApos || taxaLegada, dataHabitese, dataBase };
+  const usarFaseado = Boolean(taxaAntes || taxaApos);
+  const vpFluxo = (fluxo) => (usarFaseado
+    ? valorPresenteFaseado(fluxo, vpArgs)
+    : valorPresente(fluxo, taxaEquiv, dataBase));
+
+  const vpTabela = vpFluxo(mTab.fluxo);
+  const vpProposta = vpFluxo(mProp.fluxo);
 
   // Início da perda: primeira parcela onde o VP acumulado da proposta fica abaixo do da tabela.
   let inicioDaPerda = null;
   {
     const datas = [...new Set([...mTab.fluxo, ...mProp.fluxo].map((p) => p.data.getTime()))].sort((a, b) => a - b);
-    const acum = (fluxo, ate) => valorPresente(fluxo.filter((p) => p.data.getTime() <= ate), taxa, dataBase);
+    const acum = (fluxo, ate) => vpFluxo(fluxo.filter((p) => p.data.getTime() <= ate));
     for (const t of datas) {
       if (acum(mProp.fluxo, t) + 0.01 < acum(mTab.fluxo, t)) { inicioDaPerda = new Date(t); break; }
     }
   }
 
+  // PV líquido: usa a taxa de desconto de fluxo da construtora (custo de capital / TMA).
+  const taxaPv = num(parametros?.taxaDescontoFluxo) || taxaEquiv || 0;
+  const pvLiquidoProposta = valorPresente(mProp.fluxo, taxaPv, dataBase);
+  const pvLiquidoTabela = valorPresente(mTab.fluxo, taxaPv, dataBase);
+
   const limitePrazo = parametros?.prazoFinanciamentoMax ?? null;
   const limiteAv = parametros?.captacaoAvistaMin ?? null;
   const limiteHab = parametros?.captacaoAteHabiteseMin ?? null;
-  const limiteMensal = parametros?.captacaoMensalMin ?? null;
+  const limiteHabM1 = parametros?.captacaoAteHabiteseMenos1Min ?? null;
+  const limiteMensalParc = parametros?.captacaoMensalMaxParcela ?? null;
   const limiteDifAv = parametros?.diferencaAvMax ?? null;
   const limiteDesc = parametros?.descontoNominalMax ?? null;
   const exigeInterc = Boolean(parametros?.exigirIntercalacao);
@@ -255,19 +319,28 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
   const difFluxo = round2(vpProposta - vpTabela);
   const tolFluxo = round2((vpTabela * tol) / 100);
 
+  const traco = '--';
+  const pctStr = (v) => (v == null ? traco : `${v}%`);
+
   const criterios = [
     criterio('prazoFinanciamento', 'Prazo de financiamento',
-      mTab.prazoFinanciamento || '--', mProp.prazoFinanciamento || '--',
-      limitePrazo ?? '--', `${tol}%`,
+      mTab.prazoFinanciamento || traco, mProp.prazoFinanciamento || traco,
+      limitePrazo ?? traco, `${tol}%`,
       limitePrazo == null ? true : mProp.prazoFinanciamento <= limitePrazo * (1 + tol / 100)),
     criterio('captacaoAvista', '% de captação à vista',
-      `${mTab.avPct}%`, `${mProp.avPct}%`, limiteAv == null ? '--' : `${limiteAv}%`, `${tol}%`,
+      `${mTab.avPct}%`, `${mProp.avPct}%`, limiteAv == null ? traco : `${limiteAv}%`, `${tol}%`,
       limiteAv == null ? true : mProp.avPct >= limiteAv - tol),
     criterio('captacaoAteHabitese', '% de captação até habite-se',
-      `${mTab.ateHabitesePct}%`, `${mProp.ateHabitesePct}%`, limiteHab == null ? '--' : `${limiteHab}%`, `${tol}%`,
+      `${mTab.ateHabitesePct}%`, `${mProp.ateHabitesePct}%`, limiteHab == null ? traco : `${limiteHab}%`, `${tol}%`,
       limiteHab == null ? true : mProp.ateHabitesePct >= limiteHab - tol),
+    criterio('captacaoAteHabiteseMenos1', '% de captação até habite-se − 1',
+      pctStr(mTab.ateHabiteseMenos1Pct), pctStr(mProp.ateHabiteseMenos1Pct),
+      limiteHabM1 == null ? traco : `${limiteHabM1}%`, `${tol}%`,
+      limiteHabM1 == null || mProp.ateHabiteseMenos1Pct == null
+        ? true
+        : mProp.ateHabiteseMenos1Pct >= limiteHabM1 - tol),
     criterio('diferencaAv', 'Diferença AV',
-      round2(mTab.av), round2(mProp.av), limiteDifAv == null ? '--' : `-${limiteDifAv}%`, `${tol}%`,
+      round2(mTab.av), round2(mProp.av), limiteDifAv == null ? traco : `-${limiteDifAv}%`, `${tol}%`,
       limiteDifAv == null ? true : difAvPct >= -(limiteDifAv) - tol,
       [
         { label: 'Proposta AV', valor: round2(mProp.av) },
@@ -275,46 +348,89 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
         { label: 'Resultado', valor: `${difAvPct}%` },
       ]),
     criterio('captacaoMensal', '% de captação mensal',
-      `${mTab.mensaisPct}%`, `${mProp.mensaisPct}%`, limiteMensal == null ? '--' : `${limiteMensal}%`, `${tol}%`,
-      limiteMensal == null ? true : mProp.mensaisPct >= limiteMensal - tol),
+      `${mTab.mensalParcelaPct}%`, `${mProp.mensalParcelaPct}%`,
+      limiteMensalParc == null ? traco : `${limiteMensalParc}%`, `${tol}%`,
+      limiteMensalParc == null ? true : mProp.mensalParcelaPct <= limiteMensalParc + tol,
+      [
+        { label: 'Parcela mensal (tabela)', valor: round2(mTab.mensalParcela) },
+        { label: 'Parcela mensal (proposta)', valor: round2(mProp.mensalParcela) },
+        { label: 'Captação mensal total', valor: `${mProp.mensaisPct}%` },
+      ]),
     criterio('intercalacao', 'Intercalação de parcelas',
       mTab.temIntercalacao ? 'Sim' : 'Não', mProp.temIntercalacao ? 'Sim' : 'Não',
-      exigeInterc ? 'Sim' : '--', '--',
+      exigeInterc ? 'Sim' : traco, traco,
       exigeInterc ? mProp.temIntercalacao : true),
     criterio('equivalenciaFluxo', 'Equivalência de fluxo',
-      vpTabela, vpProposta, 0, tolFluxo,
-      difFluxo >= -tolFluxo,
-      [
-        { label: 'Diferença de fluxo', valor: difFluxo },
-        { label: 'Início da perda', valor: inicioDaPerda ? new Date(inicioDaPerda).toISOString().slice(0, 10) : '--' },
-      ]),
+      equivalenciaDesativada ? traco : vpTabela,
+      equivalenciaDesativada ? traco : vpProposta,
+      equivalenciaDesativada ? traco : 0,
+      equivalenciaDesativada ? traco : tolFluxo,
+      equivalenciaDesativada ? true : difFluxo >= -tolFluxo,
+      equivalenciaDesativada
+        ? [{ label: 'Situação', valor: 'A construtora desativou a validação da equivalência de fluxo' }]
+        : [
+          { label: 'Diferença de fluxo', valor: difFluxo },
+          { label: 'Início da perda', valor: inicioDaPerda ? new Date(inicioDaPerda).toISOString().slice(0, 10) : traco },
+        ]),
     criterio('formasPagamento', 'Formas de pagamento aceitas',
       formasAceitas.length ? formasAceitas.join(', ') : 'Todas',
-      tiposUsados.join(', ') || '--',
-      formasAceitas.length ? formasAceitas.join(', ') : '--', '--',
+      tiposUsados.join(', ') || traco,
+      formasAceitas.length ? formasAceitas.join(', ') : traco, traco,
       formasOk),
   ];
 
+  const meta = round2(mTab.total - desconto);
+
+  // Dicas numéricas para as barras de progresso da tela (valor × limite).
+  const metaPorNome = {
+    prazoFinanciamento: { tipo: 'max', propostaNum: mProp.prazoFinanciamento, tabelaNum: mTab.prazoFinanciamento, limiteNum: limitePrazo, unidade: 'meses' },
+    captacaoAvista: { tipo: 'min', propostaNum: mProp.avPct, tabelaNum: mTab.avPct, limiteNum: limiteAv, unidade: '%' },
+    captacaoAteHabitese: { tipo: 'min', propostaNum: mProp.ateHabitesePct, tabelaNum: mTab.ateHabitesePct, limiteNum: limiteHab, unidade: '%' },
+    captacaoAteHabiteseMenos1: { tipo: 'min', propostaNum: mProp.ateHabiteseMenos1Pct, tabelaNum: mTab.ateHabiteseMenos1Pct, limiteNum: limiteHabM1, unidade: '%' },
+    diferencaAv: { tipo: 'min', propostaNum: difAvPct, tabelaNum: 0, limiteNum: limiteDifAv == null ? null : -limiteDifAv, unidade: '%' },
+    captacaoMensal: { tipo: 'max', propostaNum: mProp.mensalParcelaPct, tabelaNum: mTab.mensalParcelaPct, limiteNum: limiteMensalParc, unidade: '%' },
+    intercalacao: { tipo: 'bool' },
+    equivalenciaFluxo: equivalenciaDesativada
+      ? { tipo: 'info' }
+      : { tipo: 'min', propostaNum: difFluxo, tabelaNum: 0, limiteNum: -tolFluxo, unidade: 'R$' },
+    formasPagamento: { tipo: 'bool' },
+  };
+  criterios.forEach((c) => { c.meta = metaPorNome[c.nome] || { tipo: 'info' }; });
+
+  const dataRef = parametros?.dataReferenciaCaptacao ? new Date(parametros.dataReferenciaCaptacao) : null;
+  const somaAte = (fluxo, limite) => (limite
+    ? round2(fluxo.filter((p) => p.data <= limite).reduce((s, p) => s + p.valor, 0))
+    : null);
+
   const comparativo = {
-    valorM2: { tabela: mTab.valorM2, proposta: mProp.valorM2 },
-    valorM2Av: { tabela: mTab.valorM2Av, proposta: mProp.valorM2Av },
+    valorM2: { tabela: mTab.valorM2, proposta: area ? round2(mProp.total / area) : null },
+    valorM2Av: { tabela: area ? round2(mTab.total / area) : null, proposta: area ? round2(meta / area) : null },
     captacaoAteHabitese: { tabela: mTab.ateHabitese, proposta: mProp.ateHabitese },
     captacaoAposHabitese: { tabela: mTab.aposHabitese, proposta: mProp.aposHabitese },
-    captacaoMetadeObra: { tabela: mTab.metadeObra, proposta: mProp.metadeObra },
-    captacaoAteData: { tabela: mTab.ateHabitese, proposta: mProp.ateHabitese },
+    captacaoMetadeObra: { tabela: mTab.metadeObra, proposta: mProp.metadeObra, data: mProp.metadeObraData },
+    captacaoAteData: { tabela: somaAte(mTab.fluxo, dataRef), proposta: somaAte(mProp.fluxo, dataRef), data: dataRef },
   };
 
-  const meta = round2(mTab.total - desconto);
   const descontoNominal = round2(mProp.total - mTab.total);
   const indicadores = {
     descontoNominal,
     descontoNominalPct: mTab.total ? round2((descontoNominal / mTab.total) * 100) : 0,
     descontoAplicado: desconto,
-    taxaAtratividade: taxa,
-    valorPresenteTabela: vpTabela,
-    valorPresenteProposta: vpProposta,
-    diferencaFluxo: difFluxo,
-    inicioDaPerda,
+    taxaAtratividade: taxaLegada,
+    taxaAtratividadeAntesHabitese: taxaAntes,
+    taxaAtratividadeAposHabitese: taxaApos,
+    grl: num(parametros?.grl),
+    equivalenciaDesativada,
+    valorPresenteTabela: equivalenciaDesativada ? null : vpTabela,
+    valorPresenteProposta: equivalenciaDesativada ? null : vpProposta,
+    diferencaFluxo: equivalenciaDesativada ? null : difFluxo,
+    inicioDaPerda: equivalenciaDesativada ? null : inicioDaPerda,
+    pvLiquido: {
+      proposta: pvLiquidoProposta,
+      tabela: pvLiquidoTabela,
+      diferenca: round2(pvLiquidoProposta - pvLiquidoTabela),
+      taxa: taxaPv,
+    },
   };
 
   // Desconto nominal dentro do limite => proposta aprovada automaticamente (sem gestor).
@@ -337,7 +453,8 @@ function analisar({ tabelaResolvida, propostaSeries, parametros = {}, unidade = 
     formasOk,
     tiposForaDaLista,
     aprovavel,
-    fluxo: montarFluxoDetalhado(propostaSeries || [], { totalTabela: mTab.total }),
+    inicioDaPerda: indicadores.inicioDaPerda,
+    fluxo: montarFluxoDetalhado(propostaSeries || [], { totalTabela: mTab.total, inicioDaPerda: indicadores.inicioDaPerda }),
   };
 }
 
@@ -349,6 +466,7 @@ module.exports = {
   montarFluxo,
   montarFluxoDetalhado,
   valorPresente,
+  valorPresenteFaseado,
   resolverTabela,
   analisar,
 };

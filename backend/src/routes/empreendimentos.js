@@ -388,8 +388,9 @@ router.patch('/:id/compartilhamentos/:shareId/revogar', requirePermission('empre
 
 // ===== Parâmetros de análise de proposta (por empreendimento) =====
 
-const PARAM_FLOAT = ['captacaoAvistaMin', 'captacaoAteHabiteseMin', 'captacaoMensalMin', 'diferencaAvMax', 'descontoNominalMax', 'taxaAtratividade', 'toleranciaGeral'];
+const PARAM_FLOAT = ['captacaoAvistaMin', 'captacaoAteHabiteseMin', 'captacaoAteHabiteseMenos1Min', 'captacaoMensalMin', 'captacaoMensalMaxParcela', 'diferencaAvMax', 'descontoNominalMax', 'taxaAtratividade', 'taxaAtratividadeAntesHabitese', 'taxaAtratividadeAposHabitese', 'grl', 'taxaDescontoFluxo', 'toleranciaGeral'];
 const PARAM_INT = ['prazoFinanciamentoMax'];
+const PARAM_DATE = ['dataReferenciaCaptacao'];
 
 router.get('/:id/parametros-analise', requirePermission('empreendimentos', 'ler'), async (req, res) => {
   const id = Number(req.params.id);
@@ -404,6 +405,7 @@ router.put('/:id/parametros-analise', requirePermission('empreendimentos', 'atua
   const data = {};
   for (const field of PARAM_FLOAT) if (req.body[field] !== undefined) data[field] = req.body[field] === '' || req.body[field] === null ? null : parseFloat(req.body[field]);
   for (const field of PARAM_INT) if (req.body[field] !== undefined) data[field] = req.body[field] === '' || req.body[field] === null ? null : parseInt(req.body[field], 10);
+  for (const field of PARAM_DATE) if (req.body[field] !== undefined) data[field] = req.body[field] ? new Date(req.body[field]) : null;
   if (req.body.exigirIntercalacao !== undefined) data.exigirIntercalacao = Boolean(req.body.exigirIntercalacao);
   if (req.body.toleranciasJson !== undefined) data.toleranciasJson = req.body.toleranciasJson || null;
   if (req.body.formasPagamento !== undefined) data.formasPagamento = Array.isArray(req.body.formasPagamento) ? req.body.formasPagamento.filter(Boolean) : null;
